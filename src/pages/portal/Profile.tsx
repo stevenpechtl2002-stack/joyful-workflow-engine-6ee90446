@@ -83,10 +83,19 @@ const Profile = () => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!passwordData.currentPassword) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie Ihr aktuelles Passwort ein.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         title: 'Fehler',
-        description: 'Die Passwörter stimmen nicht überein.',
+        description: 'Die neuen Passwörter stimmen nicht überein.',
         variant: 'destructive',
       });
       return;
@@ -95,13 +104,31 @@ const Profile = () => {
     if (passwordData.newPassword.length < 6) {
       toast({
         title: 'Fehler',
-        description: 'Das Passwort muss mindestens 6 Zeichen lang sein.',
+        description: 'Das neue Passwort muss mindestens 6 Zeichen lang sein.',
         variant: 'destructive',
       });
       return;
     }
 
     setIsLoading(true);
+
+    // Erst mit aktuellem Passwort verifizieren durch Re-Login
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: profile?.email || '',
+      password: passwordData.currentPassword,
+    });
+
+    if (signInError) {
+      setIsLoading(false);
+      toast({
+        title: 'Fehler',
+        description: 'Das aktuelle Passwort ist nicht korrekt.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Dann neues Passwort setzen
     const { error } = await supabase.auth.updateUser({
       password: passwordData.newPassword
     });
@@ -281,6 +308,18 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleChangePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="bg-secondary/50"
+                    placeholder="••••••••"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">Neues Passwort</Label>
@@ -295,7 +334,7 @@ const Profile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+                    <Label htmlFor="confirmPassword">Neues Passwort bestätigen</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
