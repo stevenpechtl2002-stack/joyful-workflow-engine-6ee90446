@@ -32,9 +32,9 @@ const services = [
   },
   {
     icon: Code2,
-    title: "Backoffice-Systeme",
-    description: "Maßgeschneiderte KI-Lösungen und Backoffice-Systeme, die genau auf Ihre Bedürfnisse zugeschnitten sind.",
-    features: ["API-Integrationen", "Custom Solutions", "Beratung"],
+    title: "Beratung & Entwicklung",
+    description: "Individuelle Beratung und maßgeschneiderte KI-Lösungen, die genau auf Ihre Bedürfnisse zugeschnitten sind.",
+    features: ["Strategieberatung", "Custom Solutions", "Implementierung"],
     image: backofficeVisual,
     gradient: "from-pink-500/20 to-cyan-500/20"
   }
