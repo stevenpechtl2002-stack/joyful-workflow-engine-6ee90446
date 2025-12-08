@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Users,
   Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -28,6 +29,7 @@ const PortalSidebar = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/portal' },
     { icon: Calendar, label: 'Termine', path: '/portal/appointments' },
     { icon: FileText, label: 'Dokumente', path: '/portal/documents' },
+    { icon: CreditCard, label: 'Abonnement', path: '/portal/subscriptions' },
     { icon: Bell, label: 'Benachrichtigungen', path: '/portal/notifications' },
     { icon: User, label: 'Profil', path: '/portal/profile' },
   ];

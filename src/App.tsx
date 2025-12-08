@@ -19,6 +19,7 @@ import Appointments from "./pages/portal/Appointments";
 import Documents from "./pages/portal/Documents";
 import Notifications from "./pages/portal/Notifications";
 import Profile from "./pages/portal/Profile";
+import Subscriptions from "./pages/portal/Subscriptions";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="appointments" element={<Appointments />} />
               <Route path="documents" element={<Documents />} />
               <Route path="notifications" element={<Notifications />} />
+              <Route path="subscriptions" element={<Subscriptions />} />
               <Route path="profile" element={<Profile />} />
             </Route>
             
