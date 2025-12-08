@@ -55,7 +55,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>info@aiassist.de</span>
+                <span>info@nextgen-smart.de</span>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="w-4 h-4 text-primary" />
@@ -90,7 +90,7 @@ const Footer = () => {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © 2024 AIAssist. Alle Rechte vorbehalten.
+            © 2024 NextGen Smart Solutions. Alle Rechte vorbehalten.
           </p>
         </div>
       </div>

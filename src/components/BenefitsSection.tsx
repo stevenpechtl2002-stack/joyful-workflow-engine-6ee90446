@@ -79,7 +79,7 @@ const BenefitsSection = () => {
                   WebkitTextFillColor: 'transparent'
                 }}
               >
-                AIAssist
+                NextGen Smart Solutions
               </span>
               ?
             </h2>

@@ -30,10 +30,10 @@ const Datenschutz = () => {
                   2. Verantwortlicher
                 </h2>
                 <div className="text-muted-foreground space-y-1">
-                  <p>AIAssist GmbH</p>
+                  <p>NextGen Smart Solutions GmbH</p>
                   <p>Musterstraße 123</p>
                   <p>12345 Musterstadt</p>
-                  <p>E-Mail: datenschutz@aiassist.de</p>
+                  <p>E-Mail: datenschutz@nextgen-smart.de</p>
                 </div>
               </section>
 

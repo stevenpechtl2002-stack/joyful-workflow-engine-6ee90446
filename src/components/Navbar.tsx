@@ -26,7 +26,7 @@ const Navbar = () => {
               <Bot className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="font-display font-bold text-xl text-foreground">
-              AI<span className="text-gradient">Assist</span>
+              NextGen<span className="text-gradient">Smart</span>
             </span>
           </Link>
 
