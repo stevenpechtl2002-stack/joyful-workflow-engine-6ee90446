@@ -18,7 +18,7 @@ const Impressum = () => {
                   Angaben gemäß § 5 TMG
                 </h2>
                 <div className="text-muted-foreground space-y-1">
-                  <p>AIAssist GmbH</p>
+                  <p>NextGen Smart Solutions GmbH</p>
                   <p>Musterstraße 123</p>
                   <p>12345 Musterstadt</p>
                   <p>Deutschland</p>
@@ -31,7 +31,7 @@ const Impressum = () => {
                 </h2>
                 <div className="text-muted-foreground space-y-1">
                   <p>Telefon: +49 123 456 7890</p>
-                  <p>E-Mail: info@aiassist.de</p>
+                  <p>E-Mail: info@nextgen-smart.de</p>
                 </div>
               </section>
 
