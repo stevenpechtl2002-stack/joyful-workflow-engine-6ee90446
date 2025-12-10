@@ -17,7 +17,7 @@ const Impressum = () => {
                 </h2>
                 <div className="text-muted-foreground space-y-1">
                   <p>NextGen Smart Solutions </p>
-                  <p>Musterstraße 123</p>
+                  <p>Drosselweg 11</p>
                   <p>75175 Pforzheim</p>
                   <p>Deutschland</p>
                 </div>
@@ -29,7 +29,7 @@ const Impressum = () => {
                 </h2>
                 <div className="text-muted-foreground space-y-1">
                   <p>Telefon: +49 1520 4540077</p>
-                  <p>E-Mail: info@nextgen-smart.de</p>
+                  <p>E-Mail:steven.pechtl@nextgensmartsolution.de</p>
                 </div>
               </section>
 
@@ -37,7 +37,7 @@ const Impressum = () => {
                 <h2 className="font-display text-xl font-semibold text-foreground mb-3">
                   Vertreten durch
                 </h2>
-                <p className="text-muted-foreground">Max Mustermann, Geschäftsführer</p>
+                <p className="text-muted-foreground">Steven Pechtl, Geschäftsführer</p>
               </section>
 
               <section>
