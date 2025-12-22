@@ -313,8 +313,9 @@ const Subscriptions = () => {
                       Abo startet automatisch nach 30 Tagen
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Mindestlaufzeit: {MIN_CONTRACT_MONTHS} Monate
+                  <div className="text-sm text-muted-foreground text-center">
+                    <div>Mindestlaufzeit: {MIN_CONTRACT_MONTHS} Monate</div>
+                    <div className="text-xs mt-1">Kündigung erst nach 1 Jahr möglich (angepasstes Produkt)</div>
                   </div>
                   <Badge variant="outline" className="mx-auto">
                     Status: Nicht aktiv
