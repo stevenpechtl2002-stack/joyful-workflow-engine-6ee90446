@@ -47,13 +47,17 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
-    // Create checkout session for subscription
+    // Create checkout session for subscription with setup fee
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SgxZ6C1vJESw3twMubKeWkR",
+          price: "price_1SgxZ6C1vJESw3twMubKeWkR", // Monthly subscription
+          quantity: 1,
+        },
+        {
+          price: "price_1SgxqBC1vJESw3twQieME3hl", // One-time setup fee
           quantity: 1,
         },
       ],
