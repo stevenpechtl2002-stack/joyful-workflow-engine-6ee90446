@@ -26,6 +26,7 @@ import {
 
 const SUBSCRIPTION_PRICE = 499.99;
 const SETUP_FEE = 2500;
+const MIN_CONTRACT_MONTHS = 12;
 const PRODUCT_ID = "prod_TeG5dVBHN5lNA5";
 
 interface SubscriptionStatus {
@@ -308,6 +309,12 @@ const Subscriptions = () => {
                     <span className="text-lg font-semibold text-foreground">{formatCurrency(SETUP_FEE)}</span>
                     <span className="text-sm">einmalige Setup-Gebühr</span>
                   </div>
+                  <div className="text-sm text-muted-foreground">
+                    Mindestlaufzeit: {MIN_CONTRACT_MONTHS} Monate
+                  </div>
+                  <Badge variant="outline" className="mx-auto">
+                    Status: Nicht aktiv
+                  </Badge>
                 </div>
 
                 {/* Features */}
