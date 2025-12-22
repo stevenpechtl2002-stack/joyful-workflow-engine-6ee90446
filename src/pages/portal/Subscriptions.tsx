@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 
 const SUBSCRIPTION_PRICE = 499.99;
+const SETUP_FEE = 2500;
 const PRODUCT_ID = "prod_TeG5dVBHN5lNA5";
 
 interface SubscriptionStatus {
@@ -295,11 +296,18 @@ const Subscriptions = () => {
               </CardHeader>
               <CardContent className="relative space-y-8 text-center">
                 {/* Price Display */}
-                <div className="flex items-baseline justify-center gap-2">
-                  <span className="text-5xl font-display font-bold text-foreground">
-                    {formatCurrency(SUBSCRIPTION_PRICE)}
-                  </span>
-                  <span className="text-muted-foreground text-lg">/ Monat</span>
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-display font-bold text-foreground">
+                      {formatCurrency(SUBSCRIPTION_PRICE)}
+                    </span>
+                    <span className="text-muted-foreground text-lg">/ Monat</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <span className="text-sm">+</span>
+                    <span className="text-lg font-semibold text-foreground">{formatCurrency(SETUP_FEE)}</span>
+                    <span className="text-sm">einmalige Setup-Gebühr</span>
+                  </div>
                 </div>
 
                 {/* Features */}
