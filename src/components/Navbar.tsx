@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Bot } from "lucide-react";
+import { Menu, X, Bot, LogIn } from "lucide-react";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -33,6 +34,12 @@ const Navbar = () => {
                   {link.name}
                 </Button>
               </Link>)}
+            <Link to="/portal/auth">
+              <Button variant="hero" size="sm" className="ml-2">
+                <LogIn className="w-4 h-4 mr-2" />
+                Portal Login
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -49,6 +56,12 @@ const Navbar = () => {
                     {link.name}
                   </Button>
                 </Link>)}
+              <Link to="/portal/auth" onClick={() => setIsOpen(false)}>
+                <Button variant="hero" className="w-full justify-start">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Portal Login
+                </Button>
+              </Link>
             </div>
           </div>}
       </div>

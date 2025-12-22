@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -30,6 +31,7 @@ const PortalAuth = () => {
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'login' | 'signup' | 'reset'>('login');
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ 
     email: '', 
@@ -37,12 +39,47 @@ const PortalAuth = () => {
     confirmPassword: '', 
     fullName: '' 
   });
+  const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
     if (!isLoading && user) {
       navigate('/portal');
     }
   }, [user, isLoading, navigate]);
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail || !z.string().email().safeParse(resetEmail).success) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/portal/auth`,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      toast({
+        title: 'Fehler',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'E-Mail gesendet',
+        description: 'Überprüfen Sie Ihren Posteingang für den Link zum Zurücksetzen.',
+      });
+      setActiveTab('login');
+      setResetEmail('');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,7 +192,7 @@ const PortalAuth = () => {
 
         <Card className="glass border-border/50">
           <CardHeader className="pb-4">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'signup' | 'reset')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-secondary/50">
                 <TabsTrigger value="login">Anmelden</TabsTrigger>
                 <TabsTrigger value="signup">Registrieren</TabsTrigger>
@@ -204,6 +241,59 @@ const PortalAuth = () => {
                     {isSubmitting ? 'Anmelden...' : 'Anmelden'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('reset')}
+                    className="w-full text-sm text-muted-foreground hover:text-primary transition-colors mt-2"
+                  >
+                    Passwort vergessen?
+                  </button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="reset" className="mt-6">
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen zu erhalten.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">E-Mail</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="ihre@email.de"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        className="pl-10 bg-secondary/50 border-border/50"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    variant="hero" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Senden...' : 'Link senden'}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('login')}
+                    className="w-full flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mt-2"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    Zurück zur Anmeldung
+                  </button>
                 </form>
               </TabsContent>
               
