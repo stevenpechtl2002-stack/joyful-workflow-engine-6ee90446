@@ -108,6 +108,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error checking subscription:', error);
+        // Don't throw, just set default state
+        setSubscription({
+          subscribed: false,
+          productId: null,
+          subscriptionEnd: null,
+          tier: null,
+        });
         return;
       }
 
@@ -122,6 +129,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
+      // Fail silently, set default state
+      setSubscription({
+        subscribed: false,
+        productId: null,
+        subscriptionEnd: null,
+        tier: null,
+      });
     } finally {
       setIsSubscriptionLoading(false);
     }

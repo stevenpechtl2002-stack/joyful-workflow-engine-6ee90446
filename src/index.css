@@ -104,6 +104,10 @@
     @apply bg-card/50 backdrop-blur-xl border border-border/50;
   }
 
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl;
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
