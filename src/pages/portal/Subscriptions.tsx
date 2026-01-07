@@ -25,11 +25,12 @@ import {
   Headphones
 } from 'lucide-react';
 
-// Subscription tiers configuration - Simple monthly subscriptions
+// Subscription tiers configuration - 12 months minimum contract
 const TIERS = {
   voiceAgent: {
     name: 'Voice Agent Pro',
     price: 499,
+    minContractMonths: 12,
     price_id: 'price_1Sn30uC1vJESw3twc7Re1msF',
     product_id: 'prod_TkY7zmW5P2PUSx',
     description: 'KI-Sprachassistent mit 24/7 Verfügbarkeit',
@@ -47,6 +48,7 @@ const TIERS = {
   voiceAgentSeo: {
     name: 'Voice Agent + SEO Website',
     price: 599,
+    minContractMonths: 12,
     price_id: 'price_1Sn31qC1vJESw3twXvpGGtnW',
     product_id: 'prod_TkY8vaLrbXyTAR',
     description: 'KI-Sprachassistent + SEO-optimierte Website',
@@ -279,7 +281,7 @@ const Subscriptions = () => {
                         <span className="text-muted-foreground">/Monat</span>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Monatlich kündbar
+                        Mindestlaufzeit: {tier.minContractMonths} Monate
                       </p>
                     </div>
 
