@@ -32,6 +32,7 @@ const TIERS = {
     price: 499,
     setupPrice: 2500,
     setupMonths: 2,
+    minContractMonths: 12,
     price_id: 'price_1Sn30uC1vJESw3twc7Re1msF',
     setup_price_id: 'price_1Sn32mC1vJESw3twLRONtlug',
     product_id: 'prod_TkY7zmW5P2PUSx',
@@ -52,6 +53,7 @@ const TIERS = {
     price: 499,
     setupPrice: 3000,
     setupMonths: 3,
+    minContractMonths: 12,
     price_id: 'price_1Sn31qC1vJESw3twXvpGGtnW',
     setup_price_id: 'price_1Sn33mC1vJESw3twoQWy5TJc',
     product_id: 'prod_TkY8vaLrbXyTAR',
@@ -295,6 +297,9 @@ const Subscriptions = () => {
                           aufgeteilt auf {tier.setupMonths} Monate (€{(tier.setupPrice / tier.setupMonths).toLocaleString('de-DE')}/Monat)
                         </p>
                       </div>
+                      <p className="mt-2 text-xs text-muted-foreground text-center">
+                        Mindestlaufzeit: {tier.minContractMonths} Monate
+                      </p>
                     </div>
 
                     {/* Features */}
