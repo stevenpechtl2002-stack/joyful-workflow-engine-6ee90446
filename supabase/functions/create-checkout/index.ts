@@ -1,4 +1,4 @@
-// Edge Function v4 - Simple subscription checkout
+// Edge Function v5 - 12 month minimum contract
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
@@ -55,7 +55,11 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
-    // Create simple subscription checkout
+    // Calculate minimum contract end date (12 months from now)
+    const minContractEnd = new Date();
+    minContractEnd.setMonth(minContractEnd.getMonth() + 12);
+
+    // Create subscription checkout with 12 month minimum commitment
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -66,10 +70,17 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: {
+        metadata: {
+          min_contract_months: "12",
+          min_contract_end: minContractEnd.toISOString(),
+        },
+      },
       success_url: `${req.headers.get("origin")}/portal/subscriptions?success=true`,
       cancel_url: `${req.headers.get("origin")}/portal/subscriptions?canceled=true`,
       metadata: {
         user_id: user.id,
+        min_contract_months: "12",
       },
     });
 
