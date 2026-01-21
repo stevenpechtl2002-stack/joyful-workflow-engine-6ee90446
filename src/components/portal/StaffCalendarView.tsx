@@ -37,7 +37,7 @@ export const StaffCalendarView = () => {
   const [selectedSlot, setSelectedSlot] = useState<{ date: Date; time: string; staffId: string } | null>(null);
   const [draggedReservation, setDraggedReservation] = useState<string | null>(null);
 
-  const { data: staffMembers = [] } = useStaffMembers();
+  const { staffMembers } = useStaffMembers();
   const { data: reservations = [], refetch } = useReservations();
   const updateStaffMutation = useUpdateReservationStaff();
 

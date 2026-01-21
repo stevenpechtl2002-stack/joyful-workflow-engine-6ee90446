@@ -21,7 +21,7 @@ export const StaffManagementDialog = ({ trigger }: StaffManagementDialogProps) =
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
 
-  const { data: staffMembers = [] } = useStaffMembers();
+  const { staffMembers } = useStaffMembers();
   const createMutation = useCreateStaffMember();
   const deleteMutation = useDeleteStaffMember();
 
