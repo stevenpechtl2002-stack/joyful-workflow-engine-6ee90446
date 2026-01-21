@@ -31,6 +31,8 @@ const PortalSidebar = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/portal' },
     { icon: Calendar, label: 'Kalender', path: '/portal/calendar' },
+    { icon: Users, label: 'Mitarbeiter', path: '/portal/staff' },
+    { icon: Workflow, label: 'Dienstplan', path: '/portal/shifts' },
     { icon: FileText, label: 'Reservierungen', path: '/portal/reservations' },
     { icon: CreditCard, label: 'Abonnement', path: '/portal/subscriptions' },
     { icon: Bell, label: 'Benachrichtigungen', path: '/portal/notifications' },

@@ -17,6 +17,8 @@ import PortalAuth from "./pages/portal/Auth";
 import PortalLayout from "./components/portal/PortalLayout";
 import Dashboard from "./pages/portal/Dashboard";
 import Calendar from "./pages/portal/Calendar";
+import Staff from "./pages/portal/Staff";
+import Shifts from "./pages/portal/Shifts";
 import Reservations from "./pages/portal/Reservations";
 import Analytics from "./pages/portal/Analytics";
 import VoiceAgent from "./pages/portal/VoiceAgent";
@@ -53,6 +55,8 @@ const App = () => (
             <Route path="/portal" element={<PortalLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="calendar" element={<Calendar />} />
+              <Route path="staff" element={<Staff />} />
+              <Route path="shifts" element={<Shifts />} />
               <Route path="reservations" element={<Reservations />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="voice-agent" element={<VoiceAgent />} />
