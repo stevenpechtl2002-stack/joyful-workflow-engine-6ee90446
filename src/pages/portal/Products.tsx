@@ -27,38 +27,10 @@ interface Product {
   sort_order: number;
 }
 
-const DEFAULT_PRODUCTS = [
-  { category: 'Maniküre', name: 'Maniküre ohne Lack', duration_minutes: 10, price: 10, price_type: 'fixed' as const, description: 'Klassische Maniküre ohne Lack, Nägel kürzen und pflegen' },
-  { category: 'Maniküre', name: 'Maniküre mit Lack & Massage', duration_minutes: 15, price: 15, price_type: 'fixed' as const, description: 'Maniküre inklusive Farblack und kurzer Handmassage' },
-  { category: 'Maniküre', name: 'Maniküre mit Shellac', duration_minutes: 30, price: 30, price_type: 'fixed' as const, description: 'Maniküre mit langanhaltendem Shellac-Lack' },
-  { category: 'Shellac', name: 'Farb-Shellac', duration_minutes: 35, price: 20, price_type: 'fixed' as const, description: 'Shellac Farbauftrag, Haltbarkeit ca. 2–3 Wochen' },
-  { category: 'Shellac', name: 'Farb-Shellac Auffüllen', duration_minutes: 35, price: 20, price_type: 'fixed' as const, description: 'Shellac Auffüllen inkl. Farbauffrischung' },
-  { category: 'Shellac', name: 'Neu Farb Shellac', duration_minutes: 35, price: 20, price_type: 'fixed' as const, description: 'Neuer Shellac Farbauftrag ohne Modellage' },
-  { category: 'Acryl', name: 'Acryl Natur Auffüllen', duration_minutes: 45, price: 25, price_type: 'fixed' as const, description: 'Acryl Nägel naturfarben, bestehende Modellage auffüllen' },
-  { category: 'Acryl', name: 'Acryl Natur Neumodellage', duration_minutes: 45, price: 27, price_type: 'fixed' as const, description: 'Neue Acrylmodellage in Naturoptik' },
-  { category: 'Acryl', name: 'Acryl mit Farbgel Auffüllen', duration_minutes: 45, price: 35, price_type: 'fixed' as const, description: 'Acryl Auffüllen mit Farbgel oder Gellack' },
-  { category: 'Acryl', name: 'Acryl mit Farbgel Neumodellage', duration_minutes: 50, price: 40, price_type: 'fixed' as const, description: 'Neue Acrylmodellage mit Farbgel oder Gellack' },
-  { category: 'Acryl', name: 'Schülerangebot Acryl Natur mit Tip', duration_minutes: 45, price: 25, price_type: 'from' as const, description: 'Schülerangebot bis 25 Jahre, Acrylmodellage natur mit Tips' },
-  { category: 'Pediküre', name: 'Luxus Spa Pediküre ohne Lack', duration_minutes: 30, price: 25, price_type: 'fixed' as const, description: 'Fußpflege inklusive Spa-Behandlung ohne Lack' },
-  { category: 'Pediküre', name: 'Luxus Spa Pediküre mit Lack', duration_minutes: 40, price: 35, price_type: 'fixed' as const, description: 'Spa-Pediküre inkl. Farblack und Massagestuhl' },
-  { category: 'Pediküre', name: 'Luxus Spa Pediküre mit Shellac', duration_minutes: 55, price: 50, price_type: 'fixed' as const, description: 'Spa-Pediküre mit Shellac, inkl. Massagestuhl' },
-  { category: 'Kosmetik', name: 'Augenbrauen färben & zupfen', duration_minutes: 30, price: 20, price_type: 'fixed' as const, description: 'Augenbrauen formen und färben' },
-  { category: 'Kosmetik', name: 'Augenbrauen & Wimpern Paket', duration_minutes: 40, price: 30, price_type: 'fixed' as const, description: 'Augenbrauen zupfen & färben plus Wimpernbehandlung' },
-  { category: 'Nagelmodellage', name: 'Acrylmodellage allgemein', duration_minutes: 60, price: 25, price_type: 'from' as const, description: 'Acrylmodellage je nach Länge, Farbe und Design' },
-  { category: 'Nagelmodellage', name: 'Bio-Gelnägel', duration_minutes: 60, price: 35, price_type: 'from' as const, description: 'Schonende Bio-Gel-Modellage, Preis abhängig vom Design' },
-  { category: 'Nagelmodellage', name: 'Gelmodellage', duration_minutes: 60, price: 35, price_type: 'from' as const, description: 'Gelmodellage inkl. Aufbau, Farbe optional' },
-  { category: 'Nägel', name: 'Shellac Haltbar 2–3 Wochen', duration_minutes: 35, price: 20, price_type: 'from' as const, description: 'Shellac mit ca. 2–3 Wochen Haltbarkeit' },
-  { category: 'Nägel', name: 'Zehenmodellage', duration_minutes: 60, price: 40, price_type: 'from' as const, description: 'Nagelmodellage für Zehennägel' },
-  { category: 'Extras', name: 'Nagel Extras', duration_minutes: 10, price: 3, price_type: 'from' as const, description: 'Strasssteine, Design, French, Ombre, Längenaufpreis' },
-  { category: 'Kosmetik', name: 'Gesichtsbehandlung', duration_minutes: 60, price: 39, price_type: 'from' as const, description: 'Basis-Gesichtsbehandlung, Preis je nach Aufwand' },
-  { category: 'Wimpern', name: 'Wimpernverlängerung', duration_minutes: 60, price: 10, price_type: 'from' as const, description: 'Wimpernverlängerung je nach Technik und Volumen' },
-  { category: 'Permanent Make-up', name: 'Permanent Make-up', duration_minutes: 120, price: 150, price_type: 'from' as const, description: 'PMU für Augenbrauen, Lippen oder Lidstrich' },
+const CATEGORIES = [
+  'Dienstleistung', 'Produkt', 'Paket', 'Sonstiges'
 ];
 
-const CATEGORIES = [
-  'Maniküre', 'Shellac', 'Acryl', 'Pediküre', 'Kosmetik', 
-  'Nagelmodellage', 'Nägel', 'Extras', 'Wimpern', 'Permanent Make-up'
-];
 
 const Products = () => {
   const { user } = useAuth();
@@ -104,31 +76,6 @@ const Products = () => {
     fetchProducts();
   }, [user?.id]);
 
-  const initializeDefaultProducts = async () => {
-    if (!user?.id) return;
-    
-    setSaving(true);
-    try {
-      const productsToInsert = DEFAULT_PRODUCTS.map((p, index) => ({
-        ...p,
-        user_id: user.id,
-        sort_order: index,
-      }));
-
-      const { error } = await supabase
-        .from('products')
-        .insert(productsToInsert);
-
-      if (error) throw error;
-      
-      toast.success('Standard-Produkte wurden hinzugefügt');
-      fetchProducts();
-    } catch (error: any) {
-      toast.error('Fehler: ' + error.message);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,12 +215,6 @@ const Products = () => {
           <p className="text-muted-foreground">Verwalten Sie Ihre Dienstleistungen und Preise</p>
         </div>
         <div className="flex gap-2">
-          {products.length === 0 && (
-            <Button onClick={initializeDefaultProducts} disabled={saving} variant="outline">
-              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Package className="w-4 h-4 mr-2" />}
-              Standard-Produkte laden
-            </Button>
-          )}
           <Dialog open={isFormOpen} onOpenChange={(open) => {
             setIsFormOpen(open);
             if (!open) {
@@ -427,11 +368,7 @@ const Products = () => {
             <div className="text-center py-12 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>Keine Produkte gefunden</p>
-              {products.length === 0 && (
-                <Button onClick={initializeDefaultProducts} variant="link" className="mt-2">
-                  Standard-Produkte laden
-                </Button>
-              )}
+              <p className="text-sm mt-2">Erstellen Sie Ihr erstes Produkt mit dem Button oben.</p>
             </div>
           ) : (
             <Table>
