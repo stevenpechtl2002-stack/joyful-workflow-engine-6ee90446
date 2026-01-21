@@ -580,7 +580,7 @@ async function handleBooking(
       reservation_time: time,
       end_time: endTime,
       party_size: payload.party_size || 1,
-      notes: payload.notes || (payload.service_type ? `Service: ${payload.service_type}` : null),
+      notes: payload.notes || payload.service_type || null,
       source: payload.source || 'n8n',
       status: 'pending',
       staff_member_id: staffMember?.id || null
