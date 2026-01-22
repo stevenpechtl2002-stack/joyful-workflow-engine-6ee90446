@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useStaffMembers, useUpdateReservationStaff, StaffMember } from '@/hooks/useStaffMembers';
@@ -41,6 +41,7 @@ export const StaffCalendarView = () => {
   const [draggedReservation, setDraggedReservation] = useState<string | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const { staffMembers } = useStaffMembers();
   const activeStaffMembers = staffMembers.filter(s => s.is_active);
@@ -486,21 +487,39 @@ export const StaffCalendarView = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Reservation detail dialog */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+      {/* Reservation detail/edit dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={(open) => {
+        setIsDetailOpen(open);
+        if (!open) setIsEditMode(false);
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              Reservierungsdetails
+              {isEditMode ? 'Reservierung bearbeiten' : 'Reservierungsdetails'}
             </DialogTitle>
-            <DialogDescription>
-              Details zur ausgewählten Reservierung
-            </DialogDescription>
+            {!isEditMode && (
+              <DialogDescription>
+                Details zur ausgewählten Reservierung
+              </DialogDescription>
+            )}
           </DialogHeader>
           
-          {selectedReservation && (
+          {selectedReservation && !isEditMode && (
             <div className="space-y-4">
+              {/* Edit Button */}
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsEditMode(true)}
+                  className="gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Bearbeiten
+                </Button>
+              </div>
+
               {/* Status Badge */}
               <div className="flex items-center justify-between">
                 <Badge className={`${getStatusColor(selectedReservation.status)} text-white`}>
@@ -595,6 +614,31 @@ export const StaffCalendarView = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {selectedReservation && isEditMode && (
+            <ReservationForm
+              mode="edit"
+              editData={{
+                id: selectedReservation.id,
+                customer_name: selectedReservation.customer_name,
+                customer_phone: selectedReservation.customer_phone,
+                customer_email: selectedReservation.customer_email,
+                reservation_date: selectedReservation.reservation_date,
+                reservation_time: selectedReservation.reservation_time,
+                end_time: selectedReservation.end_time,
+                party_size: selectedReservation.party_size,
+                notes: selectedReservation.notes,
+                status: selectedReservation.status,
+                staff_member_id: selectedReservation.staff_member_id,
+              }}
+              onSuccess={() => {
+                setIsDetailOpen(false);
+                setIsEditMode(false);
+                setSelectedReservation(null);
+                refetch();
+              }}
+            />
           )}
         </DialogContent>
       </Dialog>
