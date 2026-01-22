@@ -568,6 +568,39 @@ async function handleBooking(
     );
   }
 
+  // Find product if specified (by name or ID)
+  let productId: string | null = null;
+  let pricePaid: number | null = payload.price_paid ?? null;
+  
+  if (payload.product_id) {
+    productId = payload.product_id;
+  } else if (payload.product_name || payload.service_type) {
+    const productSearch = (payload.product_name || payload.service_type).toLowerCase().trim();
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name, price, is_active")
+      .eq("user_id", customer.id)
+      .eq("is_active", true);
+    
+    if (products?.length) {
+      // Exact match first, then partial
+      const exactMatch = products.find((p: any) => p.name.toLowerCase() === productSearch);
+      const partialMatch = products.find((p: any) => 
+        p.name.toLowerCase().includes(productSearch) || 
+        productSearch.includes(p.name.toLowerCase())
+      );
+      const foundProduct = exactMatch || partialMatch;
+      
+      if (foundProduct) {
+        productId = foundProduct.id;
+        // Auto-set price if not provided
+        if (pricePaid === null) {
+          pricePaid = foundProduct.price;
+        }
+      }
+    }
+  }
+
   // Create reservation
   const { data: reservation, error: reservationError } = await supabase
     .from("reservations")
@@ -583,7 +616,9 @@ async function handleBooking(
       notes: payload.notes || payload.service_type || null,
       source: payload.source || 'n8n',
       status: 'confirmed',
-      staff_member_id: staffMember?.id || null
+      staff_member_id: staffMember?.id || null,
+      product_id: productId,
+      price_paid: pricePaid
     })
     .select()
     .single();
@@ -630,7 +665,9 @@ async function handleBooking(
         end_time: endTime,
         employee: staffMember?.name || null,
         service_type: payload.service_type || null,
-        duration: payload.duration || "60 Minuten"
+        duration: payload.duration || "60 Minuten",
+        product_id: productId,
+        price_paid: pricePaid
       }
     }),
     { status: 201, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -700,7 +737,7 @@ serve(async (req: Request): Promise<Response> => {
         error: "Method not allowed",
         allowed_endpoints: [
           "GET /n8n-reservations/check?date=DD.MM.YYYY&time=HH:MM&employee=NAME&duration=60",
-          "POST /n8n-reservations (body: customer_name, reservation_date, reservation_time, ...)"
+          "POST /n8n-reservations (body: customer_name, reservation_date, reservation_time, product_name, price_paid, ...)"
         ]
       }),
       { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
