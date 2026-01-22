@@ -146,7 +146,7 @@ const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }
           end_time: formData.end_time || null,
           notes: formData.notes || null,
           source: 'manual',
-          status: 'pending',
+          status: 'confirmed',
           staff_member_id: formData.staff_member_id || null,
           product_id: formData.product_id || null,
           price_paid: formData.price_paid !== '' ? Number(formData.price_paid) : null,

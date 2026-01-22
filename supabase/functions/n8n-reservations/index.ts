@@ -582,7 +582,7 @@ async function handleBooking(
       party_size: payload.party_size || 1,
       notes: payload.notes || payload.service_type || null,
       source: payload.source || 'n8n',
-      status: 'pending',
+      status: 'confirmed',
       staff_member_id: staffMember?.id || null
     })
     .select()
