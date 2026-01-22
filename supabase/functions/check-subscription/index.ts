@@ -35,27 +35,28 @@ serve(async (req) => {
       throw new Error("No authorization header provided");
     }
 
-    // Create a new client with the user's token to get user info
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { 
-        auth: { persistSession: false },
-        global: { headers: { Authorization: authHeader } }
-      }
-    );
-
-    const { data: userData, error: userError } = await userClient.auth.getUser();
+    // Decode JWT to get user info without session lookup
+    const token = authHeader.replace("Bearer ", "");
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      throw new Error("Invalid token format");
+    }
     
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const payloadBase64 = parts[1];
+    const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(payloadJson);
     
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    const userId = payload.sub as string;
+    const userEmail = payload.email as string;
     
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    if (!userId || !userEmail) {
+      throw new Error("User not authenticated or email not available");
+    }
+    
+    logStep("User authenticated", { userId, email: userEmail });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     
     if (customers.data.length === 0) {
       logStep("No customer found, returning unsubscribed state");
