@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Calendar, 
   Phone, 
@@ -12,26 +14,50 @@ import {
   Clock,
   RefreshCw,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  DollarSign,
+  UserPlus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { useDashboardStats, useReservations, useDailyStats } from '@/hooks/usePortalData';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useRevenueStats, DateRange } from '@/hooks/useRevenueStats';
 
 const Dashboard = () => {
   const { profile } = useAuth();
+  const [dateRange, setDateRange] = useState<DateRange>('month');
   const { data: stats, isLoading: statsLoading, refetch } = useDashboardStats();
+  const { data: revenueStats, isLoading: revenueLoading, refetch: refetchRevenue } = useRevenueStats(dateRange);
   const { data: reservations } = useReservations();
   const { data: dailyStats } = useDailyStats(14);
   
   // Enable realtime updates
   useRealtimeSubscription();
+  
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Guten Morgen';
     if (hour < 18) return 'Guten Tag';
     return 'Guten Abend';
+  };
+  
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+  };
+  
+  const getDateRangeLabel = () => {
+    switch (dateRange) {
+      case 'today': return 'Heute';
+      case 'week': return 'Diese Woche';
+      case 'month': return 'Dieser Monat';
+      case 'all': return 'Gesamt';
+    }
+  };
+  
+  const handleRefresh = () => {
+    refetch();
+    refetchRevenue();
   };
 
   // Prepare chart data
@@ -72,47 +98,64 @@ const Dashboard = () => {
     new Date(r.reservation_date) >= new Date()
   ).length || 0;
 
+  const isLoading = statsLoading || revenueLoading;
+
   const kpiCards = [
     { 
-      label: 'Reservierungen gesamt', 
-      value: stats?.totalReservations ?? 0, 
-      icon: Calendar, 
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-      trend: '+12%',
-      trendUp: true
+      label: 'Umsatz ' + getDateRangeLabel(), 
+      value: formatCurrency(revenueStats?.periodRevenue ?? 0), 
+      icon: DollarSign, 
+      color: 'text-emerald-500',
+      bgColor: 'bg-emerald-500/10',
     },
     { 
-      label: 'Anstehende Reservierungen', 
-      value: upcomingReservationsCount, 
-      icon: Clock, 
+      label: 'Tagesumsatz', 
+      value: formatCurrency(revenueStats?.todayRevenue ?? 0), 
+      icon: TrendingUp, 
+      color: 'text-green-500',
+      bgColor: 'bg-green-500/10',
+    },
+    { 
+      label: 'Gesamtumsatz', 
+      value: formatCurrency(revenueStats?.totalRevenue ?? 0), 
+      icon: DollarSign, 
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
+    },
+    { 
+      label: 'Kunden heute', 
+      value: revenueStats?.todayCustomers ?? 0, 
+      icon: UserPlus, 
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
     },
     { 
-      label: 'Beantwortete Anrufe', 
-      value: stats?.answeredCalls ?? 0, 
-      icon: Phone, 
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10',
-      trend: '+8%',
-      trendUp: true
+      label: 'Neue Kunden heute', 
+      value: revenueStats?.newCustomersToday ?? 0, 
+      icon: Users, 
+      color: 'text-cyan-500',
+      bgColor: 'bg-cyan-500/10',
     },
     { 
-      label: 'Conversion Rate', 
-      value: `${stats?.conversionRate ?? 0}%`, 
-      icon: TrendingUp, 
+      label: 'Gesamt Kunden', 
+      value: revenueStats?.totalCustomers ?? 0, 
+      icon: Users, 
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
     },
     { 
-      label: 'Neue Kunden', 
-      value: stats?.newCustomers ?? 0, 
-      icon: Users, 
-      color: 'text-cyan-500',
-      bgColor: 'bg-cyan-500/10',
-      trend: '+15%',
-      trendUp: true
+      label: 'Reservierungen gesamt', 
+      value: stats?.totalReservations ?? 0, 
+      icon: Calendar, 
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-500/10',
+    },
+    { 
+      label: 'Anstehende Termine', 
+      value: upcomingReservationsCount, 
+      icon: Clock, 
+      color: 'text-amber-500',
+      bgColor: 'bg-amber-500/10',
     },
   ];
 
@@ -132,14 +175,27 @@ const Dashboard = () => {
             Hier ist Ihre Übersicht für heute.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Aktualisieren
-        </Button>
+        <div className="flex flex-wrap items-center gap-4">
+          <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Heute</SelectItem>
+              <SelectItem value="week">Diese Woche</SelectItem>
+              <SelectItem value="month">Dieser Monat</SelectItem>
+              <SelectItem value="all">Gesamt</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Aktualisieren
+          </Button>
+        </div>
       </motion.div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {kpiCards.map((kpi, index) => (
           <motion.div
             key={kpi.label}
@@ -153,14 +209,8 @@ const Dashboard = () => {
                   <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
                     <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
                   </div>
-                  {kpi.trend && (
-                    <div className={`flex items-center text-xs ${kpi.trendUp ? 'text-green-500' : 'text-red-500'}`}>
-                      {kpi.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {kpi.trend}
-                    </div>
-                  )}
                 </div>
-                {statsLoading ? (
+                {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <p className="text-2xl font-bold text-foreground">{kpi.value}</p>

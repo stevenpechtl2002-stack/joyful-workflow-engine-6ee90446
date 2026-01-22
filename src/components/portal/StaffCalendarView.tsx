@@ -28,6 +28,8 @@ interface Reservation {
   status: string;
   staff_member_id?: string | null;
   source?: string | null;
+  product_id?: string | null;
+  price_paid?: number | null;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 9); // 09:00 - 22:00

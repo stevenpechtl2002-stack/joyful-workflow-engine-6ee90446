@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
+import { useProducts } from '@/hooks/useProducts';
 
 interface ReservationData {
   id?: string;
@@ -27,6 +28,8 @@ interface ReservationData {
   notes?: string | null;
   status?: string;
   staff_member_id?: string | null;
+  product_id?: string | null;
+  price_paid?: number | null;
 }
 
 interface ReservationFormProps {
@@ -43,6 +46,7 @@ interface ReservationFormProps {
 const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }: ReservationFormProps) => {
   const { user } = useAuth();
   const { staffMembers } = useStaffMembers();
+  const { data: products } = useProducts(true);
   const activeStaffMembers = staffMembers.filter(s => s.is_active);
   const [submitting, setSubmitting] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
@@ -63,7 +67,20 @@ const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }
     notes: editData?.notes || '',
     staff_member_id: editData?.staff_member_id || defaultValues?.staff_member_id || '',
     status: editData?.status || 'pending',
+    product_id: editData?.product_id || '',
+    price_paid: editData?.price_paid ?? '',
   });
+  
+  // Auto-fill price when product is selected
+  const handleProductChange = (productId: string) => {
+    setFormData(prev => ({ ...prev, product_id: productId === 'none' ? '' : productId }));
+    if (productId && productId !== 'none') {
+      const selectedProduct = products?.find(p => p.id === productId);
+      if (selectedProduct && !formData.price_paid) {
+        setFormData(prev => ({ ...prev, price_paid: selectedProduct.price }));
+      }
+    }
+  };
 
   useEffect(() => {
     if (editData) {
@@ -78,6 +95,8 @@ const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }
         notes: editData.notes || '',
         staff_member_id: editData.staff_member_id || '',
         status: editData.status || 'pending',
+        product_id: editData.product_id || '',
+        price_paid: editData.price_paid ?? '',
       });
     }
   }, [editData]);
@@ -93,41 +112,49 @@ const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }
     setSubmitting(true);
     try {
       if (mode === 'edit' && editData?.id) {
+        const updateData: Record<string, unknown> = {
+          customer_name: formData.customer_name,
+          customer_phone: formData.customer_phone || null,
+          customer_email: formData.customer_email || null,
+          party_size: formData.party_size,
+          reservation_date: format(date, 'yyyy-MM-dd'),
+          reservation_time: formData.reservation_time,
+          end_time: formData.end_time || null,
+          notes: formData.notes || null,
+          staff_member_id: formData.staff_member_id || null,
+          status: formData.status,
+          product_id: formData.product_id || null,
+          price_paid: formData.price_paid !== '' ? Number(formData.price_paid) : null,
+        };
+        
         const { error } = await supabase
           .from('reservations')
-          .update({
-            customer_name: formData.customer_name,
-            customer_phone: formData.customer_phone || null,
-            customer_email: formData.customer_email || null,
-            party_size: formData.party_size,
-            reservation_date: format(date, 'yyyy-MM-dd'),
-            reservation_time: formData.reservation_time,
-            end_time: formData.end_time || null,
-            notes: formData.notes || null,
-            staff_member_id: formData.staff_member_id || null,
-            status: formData.status,
-          })
+          .update(updateData as any)
           .eq('id', editData.id);
 
         if (error) throw error;
         toast.success('Reservierung aktualisiert');
       } else {
+        const insertData: Record<string, unknown> = {
+          user_id: user.id,
+          customer_name: formData.customer_name,
+          customer_phone: formData.customer_phone || null,
+          customer_email: formData.customer_email || null,
+          party_size: formData.party_size,
+          reservation_date: format(date, 'yyyy-MM-dd'),
+          reservation_time: formData.reservation_time,
+          end_time: formData.end_time || null,
+          notes: formData.notes || null,
+          source: 'manual',
+          status: 'pending',
+          staff_member_id: formData.staff_member_id || null,
+          product_id: formData.product_id || null,
+          price_paid: formData.price_paid !== '' ? Number(formData.price_paid) : null,
+        };
+        
         const { error } = await supabase
           .from('reservations')
-          .insert({
-            user_id: user.id,
-            customer_name: formData.customer_name,
-            customer_phone: formData.customer_phone || null,
-            customer_email: formData.customer_email || null,
-            party_size: formData.party_size,
-            reservation_date: format(date, 'yyyy-MM-dd'),
-            reservation_time: formData.reservation_time,
-            end_time: formData.end_time || null,
-            notes: formData.notes || null,
-            source: 'manual',
-            status: 'pending',
-            staff_member_id: formData.staff_member_id || null,
-          });
+          .insert(insertData as any);
 
         if (error) throw error;
         toast.success('Reservierung erstellt');
@@ -280,13 +307,57 @@ const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }
         )}
       </div>
 
+      {/* Product Selection */}
+      {products && products.length > 0 && (
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            Dienstleistung / Produkt
+          </Label>
+          <Select 
+            value={formData.product_id} 
+            onValueChange={handleProductChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Produkt auswählen..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Kein Produkt</SelectItem>
+              {products.map(product => (
+                <SelectItem key={product.id} value={product.id}>
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <span>{product.name}</span>
+                    <span className="text-muted-foreground text-sm">
+                      {product.price_type === 'from' ? 'ab ' : ''}{Number(product.price).toFixed(2)} €
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Price */}
       <div className="space-y-2">
-        <Label>Notizen / Dienstleistung</Label>
+        <Label>Preis (€)</Label>
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.price_paid}
+          onChange={(e) => setFormData(prev => ({ ...prev, price_paid: e.target.value }))}
+          placeholder="0.00"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Notizen</Label>
         <Textarea
           value={formData.notes}
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          placeholder="Besondere Wünsche, Dienstleistung, etc."
-          rows={3}
+          placeholder="Besondere Wünsche, etc."
+          rows={2}
         />
       </div>
 
