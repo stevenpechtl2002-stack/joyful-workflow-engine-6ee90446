@@ -416,6 +416,8 @@ export type Database = {
           id: string
           notes: string | null
           party_size: number
+          price_paid: number | null
+          product_id: string | null
           reservation_date: string
           reservation_time: string
           source: string
@@ -433,6 +435,8 @@ export type Database = {
           id?: string
           notes?: string | null
           party_size?: number
+          price_paid?: number | null
+          product_id?: string | null
           reservation_date: string
           reservation_time: string
           source?: string
@@ -450,6 +454,8 @@ export type Database = {
           id?: string
           notes?: string | null
           party_size?: number
+          price_paid?: number | null
+          product_id?: string | null
           reservation_date?: string
           reservation_time?: string
           source?: string
@@ -459,6 +465,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_staff_member_id_fkey"
             columns: ["staff_member_id"]
