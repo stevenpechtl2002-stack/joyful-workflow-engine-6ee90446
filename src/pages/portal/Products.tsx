@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil, Trash2, Package, Loader2, Search, CheckSquare, XSquare, Percent } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Loader2, Search, CheckSquare, XSquare, Percent, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -46,9 +46,10 @@ const Products = () => {
   // Bulk edit state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
-  const [bulkAction, setBulkAction] = useState<'price' | 'category' | 'status' | null>(null);
+  const [bulkAction, setBulkAction] = useState<'price' | 'category' | 'status' | 'duration' | null>(null);
   const [bulkPriceChange, setBulkPriceChange] = useState({ type: 'percent', value: 0 });
   const [bulkCategory, setBulkCategory] = useState('');
+  const [bulkDuration, setBulkDuration] = useState({ type: 'set', value: 30 });
   const [bulkStatus, setBulkStatus] = useState(true);
   const [bulkSaving, setBulkSaving] = useState(false);
 
@@ -166,6 +167,25 @@ const Products = () => {
             .eq('id', product.id);
         }
         toast.success(`Preise für ${ids.length} Produkte angepasst`);
+      }
+      else if (bulkAction === 'duration') {
+        const selectedProducts = products.filter(p => selectedIds.has(p.id));
+        
+        for (const product of selectedProducts) {
+          let newDuration: number;
+          if (bulkDuration.type === 'set') {
+            newDuration = bulkDuration.value;
+          } else {
+            newDuration = product.duration_minutes + bulkDuration.value;
+          }
+          newDuration = Math.max(5, newDuration);
+          
+          await supabase
+            .from('products')
+            .update({ duration_minutes: newDuration })
+            .eq('id', product.id);
+        }
+        toast.success(`Dauer für ${ids.length} Produkte angepasst`);
       }
       
       setIsBulkEditOpen(false);
@@ -334,6 +354,7 @@ const Products = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="price">Preise anpassen</SelectItem>
+                      <SelectItem value="duration">Dauer anpassen</SelectItem>
                       <SelectItem value="category">Kategorie ändern</SelectItem>
                       <SelectItem value="status">Status ändern</SelectItem>
                     </SelectContent>
@@ -394,6 +415,40 @@ const Products = () => {
                   <div className="flex items-center gap-3">
                     <Switch checked={bulkStatus} onCheckedChange={setBulkStatus} />
                     <Label>{bulkStatus ? 'Aktivieren' : 'Deaktivieren'}</Label>
+                  </div>
+                )}
+
+                {bulkAction === 'duration' && (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Select 
+                        value={bulkDuration.type} 
+                        onValueChange={(v) => setBulkDuration(prev => ({ ...prev, type: v }))}
+                      >
+                        <SelectTrigger className="w-36">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="set">Setzen auf</SelectItem>
+                          <SelectItem value="add">Hinzufügen</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        value={bulkDuration.value}
+                        onChange={(e) => setBulkDuration(prev => ({ ...prev, value: parseInt(e.target.value) || 0 }))}
+                        placeholder="Minuten"
+                        min={5}
+                        step={5}
+                      />
+                      <span className="flex items-center text-sm text-muted-foreground">Min.</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {bulkDuration.type === 'set' 
+                        ? `Dauer wird auf ${bulkDuration.value} Minuten gesetzt`
+                        : `${bulkDuration.value >= 0 ? '+' : ''}${bulkDuration.value} Minuten auf jede Dauer`
+                      }
+                    </p>
                   </div>
                 )}
 
@@ -574,6 +629,17 @@ const Products = () => {
             >
               <Percent className="w-4 h-4 mr-1" />
               Preise
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => {
+                setBulkAction('duration');
+                setIsBulkEditOpen(true);
+              }}
+            >
+              <Clock className="w-4 h-4 mr-1" />
+              Dauer
             </Button>
             <Button 
               size="sm" 
