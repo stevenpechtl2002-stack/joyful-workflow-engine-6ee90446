@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2, Package, Loader2, Search } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Pencil, Trash2, Package, Loader2, Search, CheckSquare, XSquare, Percent } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -41,6 +42,15 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  
+  // Bulk edit state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'price' | 'category' | 'status' | null>(null);
+  const [bulkPriceChange, setBulkPriceChange] = useState({ type: 'percent', value: 0 });
+  const [bulkCategory, setBulkCategory] = useState('');
+  const [bulkStatus, setBulkStatus] = useState(true);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     category: '',
@@ -76,6 +86,98 @@ const Products = () => {
     fetchProducts();
   }, [user?.id]);
 
+  // Selection handlers
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredProducts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredProducts.map(p => p.id)));
+    }
+  };
+
+  // Bulk actions
+  const handleBulkDelete = async () => {
+    if (!confirm(`${selectedIds.size} Produkte wirklich löschen?`)) return;
+    
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .in('id', Array.from(selectedIds));
+      
+      if (error) throw error;
+      toast.success(`${selectedIds.size} Produkte gelöscht`);
+      setSelectedIds(new Set());
+      fetchProducts();
+    } catch (error: any) {
+      toast.error('Fehler: ' + error.message);
+    }
+  };
+
+  const handleBulkEdit = async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    
+    setBulkSaving(true);
+    try {
+      const ids = Array.from(selectedIds);
+      
+      if (bulkAction === 'status') {
+        const { error } = await supabase
+          .from('products')
+          .update({ is_active: bulkStatus })
+          .in('id', ids);
+        if (error) throw error;
+        toast.success(`${ids.length} Produkte ${bulkStatus ? 'aktiviert' : 'deaktiviert'}`);
+      } 
+      else if (bulkAction === 'category' && bulkCategory) {
+        const { error } = await supabase
+          .from('products')
+          .update({ category: bulkCategory })
+          .in('id', ids);
+        if (error) throw error;
+        toast.success(`Kategorie für ${ids.length} Produkte geändert`);
+      }
+      else if (bulkAction === 'price') {
+        // Update prices one by one for percent changes
+        const selectedProducts = products.filter(p => selectedIds.has(p.id));
+        
+        for (const product of selectedProducts) {
+          let newPrice: number;
+          if (bulkPriceChange.type === 'percent') {
+            newPrice = Number(product.price) * (1 + bulkPriceChange.value / 100);
+          } else {
+            newPrice = Number(product.price) + bulkPriceChange.value;
+          }
+          newPrice = Math.max(0, Math.round(newPrice * 100) / 100);
+          
+          await supabase
+            .from('products')
+            .update({ price: newPrice })
+            .eq('id', product.id);
+        }
+        toast.success(`Preise für ${ids.length} Produkte angepasst`);
+      }
+      
+      setIsBulkEditOpen(false);
+      setBulkAction(null);
+      setSelectedIds(new Set());
+      fetchProducts();
+    } catch (error: any) {
+      toast.error('Fehler: ' + error.message);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,6 +317,98 @@ const Products = () => {
           <p className="text-muted-foreground">Verwalten Sie Ihre Dienstleistungen und Preise</p>
         </div>
         <div className="flex gap-2">
+          {/* Bulk Edit Dialog */}
+          <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedIds.size} Produkte bearbeiten
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Aktion wählen</Label>
+                  <Select value={bulkAction || ''} onValueChange={(v) => setBulkAction(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Aktion wählen..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="price">Preise anpassen</SelectItem>
+                      <SelectItem value="category">Kategorie ändern</SelectItem>
+                      <SelectItem value="status">Status ändern</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {bulkAction === 'price' && (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Select 
+                        value={bulkPriceChange.type} 
+                        onValueChange={(v) => setBulkPriceChange(prev => ({ ...prev, type: v }))}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percent">Prozent %</SelectItem>
+                          <SelectItem value="fixed">Betrag €</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        value={bulkPriceChange.value}
+                        onChange={(e) => setBulkPriceChange(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
+                        placeholder={bulkPriceChange.type === 'percent' ? 'z.B. 10 oder -5' : 'z.B. 5 oder -2'}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {bulkPriceChange.type === 'percent' 
+                        ? `Preise werden um ${bulkPriceChange.value}% angepasst`
+                        : `${bulkPriceChange.value >= 0 ? '+' : ''}${bulkPriceChange.value}€ auf jeden Preis`
+                      }
+                    </p>
+                  </div>
+                )}
+
+                {bulkAction === 'category' && (
+                  <div className="space-y-2">
+                    <Label>Neue Kategorie</Label>
+                    <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kategorie wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                        {uniqueCategories.filter(c => !CATEGORIES.includes(c)).map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {bulkAction === 'status' && (
+                  <div className="flex items-center gap-3">
+                    <Switch checked={bulkStatus} onCheckedChange={setBulkStatus} />
+                    <Label>{bulkStatus ? 'Aktivieren' : 'Deaktivieren'}</Label>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={handleBulkEdit} 
+                  disabled={!bulkAction || bulkSaving}
+                  className="w-full"
+                >
+                  {bulkSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Änderungen anwenden
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={isFormOpen} onOpenChange={(open) => {
             setIsFormOpen(open);
             if (!open) {
@@ -327,6 +521,79 @@ const Products = () => {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20 rounded-lg"
+        >
+          <span className="text-sm font-medium">
+            {selectedIds.size} ausgewählt
+          </span>
+          <div className="flex gap-2 ml-auto">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => setIsBulkEditOpen(true)}
+            >
+              <Pencil className="w-4 h-4 mr-1" />
+              Bearbeiten
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => {
+                setBulkAction('status');
+                setBulkStatus(true);
+                setIsBulkEditOpen(true);
+              }}
+            >
+              <CheckSquare className="w-4 h-4 mr-1" />
+              Aktivieren
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => {
+                setBulkAction('status');
+                setBulkStatus(false);
+                setIsBulkEditOpen(true);
+              }}
+            >
+              <XSquare className="w-4 h-4 mr-1" />
+              Deaktivieren
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => {
+                setBulkAction('price');
+                setIsBulkEditOpen(true);
+              }}
+            >
+              <Percent className="w-4 h-4 mr-1" />
+              Preise
+            </Button>
+            <Button 
+              size="sm" 
+              variant="destructive"
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Löschen
+            </Button>
+          </div>
+          <Button 
+            size="sm" 
+            variant="ghost"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Abbrechen
+          </Button>
+        </motion.div>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -374,6 +641,12 @@ const Products = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={selectedIds.size === filteredProducts.length && filteredProducts.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>Kategorie</TableHead>
                   <TableHead>Produktname</TableHead>
                   <TableHead className="text-center">Dauer</TableHead>
@@ -384,7 +657,13 @@ const Products = () => {
               </TableHeader>
               <TableBody>
                 {filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
+                  <TableRow key={product.id} className={selectedIds.has(product.id) ? 'bg-muted/50' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(product.id)}
+                        onCheckedChange={() => toggleSelect(product.id)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{product.category}</Badge>
                     </TableCell>
