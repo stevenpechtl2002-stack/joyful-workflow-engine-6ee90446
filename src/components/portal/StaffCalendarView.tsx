@@ -110,8 +110,16 @@ export const StaffCalendarView = () => {
   const calculateBlockPosition = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
     const startHour = 9;
+    const endHour = 22;
     const totalMinutesFromStart = (hours - startHour) * 60 + minutes;
-    return (totalMinutesFromStart / 30) * SLOT_HEIGHT;
+    
+    // Clamp position to visible range (0 to max grid height)
+    const maxPosition = ((endHour - startHour) * 60 / 30) * SLOT_HEIGHT;
+    const position = (totalMinutesFromStart / 30) * SLOT_HEIGHT;
+    
+    // Allow negative positions to be clamped to 0 (early appointments)
+    // and late appointments to be clamped to the last slot
+    return Math.max(0, Math.min(position, maxPosition - SLOT_HEIGHT));
   };
 
   const calculateBlockHeight = (startTime: string, endTime: string | null) => {
