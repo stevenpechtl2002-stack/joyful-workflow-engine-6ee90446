@@ -453,12 +453,12 @@ Maniküre + Pediküre`}
                   </div>
                   <div className="space-y-2">
                     <Label>Mitarbeiter</Label>
-                    <Select value={editStaffId} onValueChange={setEditStaffId}>
+                    <Select value={editStaffId || "none"} onValueChange={(val) => setEditStaffId(val === "none" ? "" : val)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Nicht zugewiesen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Nicht zugewiesen</SelectItem>
+                        <SelectItem value="none">Nicht zugewiesen</SelectItem>
                         {activeStaff.map(staff => (
                           <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
                         ))}
