@@ -22,6 +22,11 @@ import { de } from 'date-fns/locale';
 interface TimeSlot {
   time: string;
   available: boolean;
+  conflictingReservation?: {
+    customer_name: string;
+    reservation_time: string;
+    end_time?: string;
+  };
 }
 
 export const AvailabilityView = () => {
@@ -69,23 +74,31 @@ export const AvailabilityView = () => {
         const slotEnd = new Date(slotStart.getTime() + slotDurationMinutes * 60000);
 
         // Check if this 30-min slot overlaps with any existing reservation
+        let conflictingRes: typeof staffReservations[0] | undefined;
         const hasConflict = staffReservations.some(res => {
           const resStart = new Date(`${dateStr}T${res.reservation_time}`);
-          // Use actual end_time if available, otherwise estimate from duration or default to 60min
+          // Use actual end_time if available, otherwise default to 30min
           let resEnd: Date;
           if (res.end_time) {
             resEnd = new Date(`${dateStr}T${res.end_time}`);
           } else {
-            // Default to 60 minutes if no end_time
-            resEnd = new Date(resStart.getTime() + 60 * 60000);
+            // Default to 30 minutes if no end_time
+            resEnd = new Date(resStart.getTime() + 30 * 60000);
           }
           // Overlap check: slot overlaps if it starts before reservation ends AND ends after reservation starts
-          return (slotStart < resEnd && slotEnd > resStart);
+          const overlaps = (slotStart < resEnd && slotEnd > resStart);
+          if (overlaps) conflictingRes = res;
+          return overlaps;
         });
 
         return {
           time: slotTime,
-          available: !hasConflict
+          available: !hasConflict,
+          conflictingReservation: conflictingRes ? {
+            customer_name: conflictingRes.customer_name,
+            reservation_time: conflictingRes.reservation_time,
+            end_time: conflictingRes.end_time
+          } : undefined
         };
       });
     });
@@ -217,6 +230,8 @@ export const AvailabilityView = () => {
                         const slot = availabilityMatrix[staff.id]?.find(s => s.time === slotTime);
                         const isAvailable = slot?.available || false;
 
+                        const conflictInfo = slot?.conflictingReservation;
+                        
                         return (
                           <div key={`${staff.id}-${slotTime}`} className="flex justify-center">
                             {isAvailable ? (
@@ -226,6 +241,15 @@ export const AvailabilityView = () => {
                               >
                                 <CheckCircle2 className="w-3 h-3 mr-1" />
                                 Frei
+                              </Badge>
+                            ) : conflictInfo ? (
+                              <Badge 
+                                variant="outline" 
+                                className="bg-red-500/10 text-red-600 border-red-500/30 cursor-default text-xs"
+                              >
+                                <XCircle className="w-3 h-3 mr-1" />
+                                {conflictInfo.reservation_time.slice(0, 5)}
+                                {conflictInfo.end_time ? `-${conflictInfo.end_time.slice(0, 5)}` : ''}
                               </Badge>
                             ) : (
                               <span className="text-muted-foreground/40">—</span>

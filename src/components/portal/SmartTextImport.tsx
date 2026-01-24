@@ -433,13 +433,22 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     setIsSaving(true);
     try {
       const priceValue = editPrice ? parseFloat(editPrice) : null;
+      
+      // Calculate end_time based on 30 min default duration
+      const startTime = editTime || '10:00';
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const endDate = new Date();
+      endDate.setHours(hours, minutes + 30, 0, 0);
+      const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+      
       const { error } = await supabase.from('reservations').insert({
         user_id: user.id,
         customer_name: editName,
         customer_phone: editPhone || null,
         customer_email: editEmail || null,
         reservation_date: editDate ? format(editDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-        reservation_time: editTime || '10:00',
+        reservation_time: startTime,
+        end_time: endTime,
         party_size: editPartySize,
         notes: editNotes || null,
         staff_member_id: editStaffId || null,
