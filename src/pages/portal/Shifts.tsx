@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { useStaffShifts } from '@/hooks/useStaffShifts';
+import { useShiftExceptions } from '@/hooks/useShiftExceptions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Dialog, 
   DialogContent, 
@@ -18,8 +21,11 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, CalendarDays, Save, UserCircle, Users, Loader2 } from 'lucide-react';
+import { Clock, CalendarDays, Save, UserCircle, Users, Loader2, CalendarOff, Plus, Trash2, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const WEEKDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 const DEFAULT_START = '09:00';
@@ -28,6 +34,7 @@ const DEFAULT_END = '18:00';
 const Shifts = () => {
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { shifts, isLoading: shiftsLoading, upsertShift, upsertBulkShifts, getShiftForStaffAndDay, isUpserting, isBulkUpserting } = useStaffShifts();
+  const { exceptions, createException, deleteException, isCreating, isDeleting } = useShiftExceptions();
   
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
   const [editingSchedule, setEditingSchedule] = useState<{
@@ -44,6 +51,14 @@ const Shifts = () => {
   const [bulkEndTime, setBulkEndTime] = useState(DEFAULT_END);
   const [bulkDays, setBulkDays] = useState<number[]>([0, 1, 2, 3, 4]); // Mo-Fr default
   const [bulkIsWorking, setBulkIsWorking] = useState(true);
+
+  // Exception state
+  const [isExceptionDialogOpen, setIsExceptionDialogOpen] = useState(false);
+  const [exceptionStaffId, setExceptionStaffId] = useState<string>('');
+  const [exceptionDate, setExceptionDate] = useState<Date | undefined>(new Date());
+  const [exceptionStartTime, setExceptionStartTime] = useState('09:00');
+  const [exceptionEndTime, setExceptionEndTime] = useState('18:00');
+  const [exceptionReason, setExceptionReason] = useState('');
 
   const handleSaveSchedule = async () => {
     if (!editingSchedule) return;
@@ -81,6 +96,29 @@ const Shifts = () => {
     } else {
       setBulkDays([...bulkDays, dayIndex].sort());
     }
+  };
+
+  const handleCreateException = async () => {
+    if (!exceptionStaffId || !exceptionDate) {
+      toast.error('Bitte Mitarbeiter und Datum auswählen');
+      return;
+    }
+
+    await createException.mutateAsync({
+      staff_member_id: exceptionStaffId,
+      exception_date: format(exceptionDate, 'yyyy-MM-dd'),
+      start_time: exceptionStartTime,
+      end_time: exceptionEndTime,
+      reason: exceptionReason || undefined
+    });
+
+    setIsExceptionDialogOpen(false);
+    setExceptionStaffId('');
+    setExceptionReason('');
+  };
+
+  const handleDeleteException = async (exceptionId: string) => {
+    await deleteException.mutateAsync(exceptionId);
   };
 
   const getInitials = (name: string) => {
@@ -213,6 +251,10 @@ const Shifts = () => {
             <TabsTrigger value="individual" className="gap-2">
               <Clock className="w-4 h-4" />
               Einzelansicht
+            </TabsTrigger>
+            <TabsTrigger value="exceptions" className="gap-2">
+              <CalendarOff className="w-4 h-4" />
+              Freistellungen
             </TabsTrigger>
           </TabsList>
 
@@ -469,6 +511,162 @@ const Shifts = () => {
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Exceptions Tab */}
+          <TabsContent value="exceptions">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-muted-foreground">
+                  Tragen Sie hier Freistellungen für bestimmte Tage ein (z.B. Urlaub, Arzttermine).
+                </p>
+                <Dialog open={isExceptionDialogOpen} onOpenChange={setIsExceptionDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Freistellung hinzufügen
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Neue Freistellung</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Mitarbeiter</Label>
+                        <Select value={exceptionStaffId} onValueChange={setExceptionStaffId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Mitarbeiter auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {activeStaff.map((staff) => (
+                              <SelectItem key={staff.id} value={staff.id}>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: staff.color }} />
+                                  {staff.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Datum</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !exceptionDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {exceptionDate ? format(exceptionDate, "PPP", { locale: de }) : "Datum wählen"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={exceptionDate}
+                              onSelect={setExceptionDate}
+                              locale={de}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Von</Label>
+                          <Input
+                            type="time"
+                            value={exceptionStartTime}
+                            onChange={(e) => setExceptionStartTime(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Bis</Label>
+                          <Input
+                            type="time"
+                            value={exceptionEndTime}
+                            onChange={(e) => setExceptionEndTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Grund (optional)</Label>
+                        <Input
+                          placeholder="z.B. Arzttermin, Urlaub..."
+                          value={exceptionReason}
+                          onChange={(e) => setExceptionReason(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Abbrechen</Button>
+                      </DialogClose>
+                      <Button onClick={handleCreateException} className="gap-2" disabled={isCreating}>
+                        {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Speichern
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {exceptions.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <CalendarOff className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground">Keine Freistellungen</h3>
+                    <p className="text-muted-foreground text-center mt-1">
+                      Fügen Sie Freistellungen hinzu, um Zeiten im Kalender zu sperren.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {exceptions.map((exc) => {
+                    const staff = activeStaff.find(s => s.id === exc.staff_member_id);
+                    return (
+                      <Card key={exc.id}>
+                        <CardContent className="flex items-center justify-between p-4">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="w-10 h-10 border-2" style={{ borderColor: staff?.color }}>
+                              <AvatarFallback style={{ backgroundColor: (staff?.color || '#888') + '20', color: staff?.color }}>
+                                {staff?.name.slice(0, 2).toUpperCase() || '??'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{staff?.name || 'Unbekannt'}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(exc.exception_date), "EEEE, d. MMMM yyyy", { locale: de })}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {exc.start_time.slice(0, 5)} - {exc.end_time.slice(0, 5)}
+                                {exc.reason && <span className="ml-2">• {exc.reason}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeleteException(exc.id)}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
                         </CardContent>
                       </Card>
                     );

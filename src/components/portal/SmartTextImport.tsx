@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format, parse, isValid, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { FileText, Sparkles, CalendarIcon, Check, AlertCircle, Clipboard, Upload } from 'lucide-react';
+import { FileText, Sparkles, CalendarIcon, Check, AlertCircle, Clipboard, Upload, ImageIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -73,6 +73,9 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [parsedAppointments, setParsedAppointments] = useState<any[]>([]);
+  const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState(0);
   const { user } = useAuth();
   const { staffMembers } = useStaffMembers();
   const activeStaff = staffMembers.filter(s => s.is_active);
@@ -412,6 +415,14 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    
+    // Check for files (images)
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+      handleImageFile(files[0]);
+      return;
+    }
+    
     const text = e.dataTransfer.getData('text/plain');
     if (text) {
       handleTextChange(text);
@@ -425,6 +436,112 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
 
   const handleDragLeave = () => {
     setIsDragOver(false);
+  };
+
+  // Handle image file upload for AI parsing
+  const handleImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Bitte nur Bilddateien hochladen');
+      return;
+    }
+
+    setIsProcessingImage(true);
+    setParsedAppointments([]);
+    
+    try {
+      // Convert to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Call edge function to parse image
+      const response = await supabase.functions.invoke('parse-calendar-image', {
+        body: { imageBase64: base64 }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Fehler bei der Bildverarbeitung');
+      }
+
+      const { appointments } = response.data;
+      
+      if (appointments && appointments.length > 0) {
+        setParsedAppointments(appointments);
+        toast.success(`${appointments.length} Termin(e) erkannt!`);
+        // Auto-select first appointment
+        selectAppointmentFromImage(appointments[0], 0);
+      } else {
+        toast.info('Keine Termine im Bild erkannt');
+      }
+    } catch (error: any) {
+      console.error('Image parsing error:', error);
+      toast.error(error.message || 'Fehler bei der Bildverarbeitung');
+    } finally {
+      setIsProcessingImage(false);
+    }
+  };
+
+  // Select an appointment from image parsing results
+  const selectAppointmentFromImage = (appointment: any, index: number) => {
+    setSelectedAppointmentIndex(index);
+    
+    // Find matching staff
+    let staffId = defaultStaffId || '';
+    if (appointment.staff_name) {
+      const matchedStaff = activeStaff.find(s => 
+        s.name.toLowerCase().includes(appointment.staff_name.toLowerCase()) ||
+        appointment.staff_name.toLowerCase().includes(s.name.toLowerCase())
+      );
+      if (matchedStaff) staffId = matchedStaff.id;
+    }
+    
+    // Find matching product
+    let productId = '';
+    let price = '';
+    if (appointment.service) {
+      const matchedProduct = products.find(p => 
+        p.name.toLowerCase().includes(appointment.service.toLowerCase()) ||
+        appointment.service.toLowerCase().includes(p.name.toLowerCase())
+      );
+      if (matchedProduct) {
+        productId = matchedProduct.id;
+        price = matchedProduct.price.toString();
+      }
+    }
+    
+    setEditName(appointment.customer_name || 'Unbekannter Kunde');
+    setEditPhone('');
+    setEditEmail('');
+    setEditDate(appointment.reservation_date ? parse(appointment.reservation_date, 'yyyy-MM-dd', new Date()) : (defaultDate || new Date()));
+    setEditTime(appointment.reservation_time || '10:00');
+    setEditPartySize(1);
+    setEditNotes(appointment.service || appointment.notes || '');
+    setEditStaffId(staffId);
+    setEditProductId(productId);
+    setEditPrice(price);
+    
+    // Create a parsed data object
+    setParsedData({
+      customer_name: appointment.customer_name || 'Unbekannter Kunde',
+      reservation_date: appointment.reservation_date || format(defaultDate || new Date(), 'yyyy-MM-dd'),
+      reservation_time: appointment.reservation_time || '10:00',
+      party_size: 1,
+      notes: appointment.service || appointment.notes,
+      staff_member_id: staffId,
+      product_id: productId,
+      price_paid: price ? parseFloat(price) : undefined,
+      confidence: 'medium'
+    });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageFile(file);
+    }
   };
 
   const handleSave = async () => {
@@ -474,6 +591,8 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     setRawText('');
     setParsedData(null);
     setIsEditing(false);
+    setParsedAppointments([]);
+    setSelectedAppointmentIndex(0);
     onClose();
   };
 
@@ -491,14 +610,65 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            Smart Text-Import
+            Smart Import
           </DialogTitle>
           <DialogDescription>
-            Fügen Sie Text per Drag & Drop oder Copy-Paste ein. Die Daten werden automatisch erkannt.
+            Text einfügen oder Kalender-Screenshot hochladen. Termine werden automatisch erkannt.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Image upload button */}
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              onClick={() => document.getElementById('calendar-image-input')?.click()}
+              disabled={isProcessingImage}
+            >
+              {isProcessingImage ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bild wird analysiert...
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Kalender-Screenshot hochladen
+                </>
+              )}
+            </Button>
+            <input
+              id="calendar-image-input"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+          </div>
+
+          {/* Parsed appointments from image */}
+          {parsedAppointments.length > 1 && (
+            <Card className="p-3 bg-primary/5 border-primary/20">
+              <div className="flex items-center gap-2 mb-2">
+                <ImageIcon className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">{parsedAppointments.length} Termine erkannt</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {parsedAppointments.map((apt, idx) => (
+                  <Button
+                    key={idx}
+                    variant={selectedAppointmentIndex === idx ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => selectAppointmentFromImage(apt, idx)}
+                  >
+                    {apt.reservation_time} - {apt.customer_name || 'Termin ' + (idx + 1)}
+                  </Button>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Drop zone / Text input */}
           <div
             className={cn(
@@ -511,7 +681,7 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
             onDragLeave={handleDragLeave}
           >
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium">Text eingeben oder einfügen</Label>
+              <Label className="text-sm font-medium">Text oder Bild hier ablegen</Label>
               <Button variant="outline" size="sm" onClick={handlePaste}>
                 <Clipboard className="w-4 h-4 mr-2" />
                 Einfügen
@@ -532,7 +702,7 @@ Maniküre + Pediküre`}
             {isDragOver && (
               <div className="flex items-center justify-center gap-2 text-primary mt-2">
                 <Upload className="w-4 h-4" />
-                <span>Text hier ablegen</span>
+                <span>Text oder Bild hier ablegen</span>
               </div>
             )}
           </div>
