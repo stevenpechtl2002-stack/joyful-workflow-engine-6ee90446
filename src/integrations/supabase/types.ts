@@ -520,6 +520,50 @@ export type Database = {
           },
         ]
       }
+      shift_exceptions: {
+        Row: {
+          created_at: string
+          end_time: string
+          exception_date: string
+          id: string
+          reason: string | null
+          staff_member_id: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          exception_date: string
+          id?: string
+          reason?: string | null
+          staff_member_id: string
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          exception_date?: string
+          id?: string
+          reason?: string | null
+          staff_member_id?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_exceptions_staff_member_id_fkey"
+            columns: ["staff_member_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_members: {
         Row: {
           avatar_url: string | null

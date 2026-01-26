@@ -11,6 +11,7 @@ import { de } from 'date-fns/locale';
 import { useStaffMembers, useUpdateReservationStaff, StaffMember } from '@/hooks/useStaffMembers';
 import { useReservations } from '@/hooks/usePortalData';
 import { useStaffShifts } from '@/hooks/useStaffShifts';
+import { useShiftExceptions } from '@/hooks/useShiftExceptions';
 import { StaffManagementDialog } from './StaffManagementDialog';
 import ReservationForm from './ReservationForm';
 import { SmartTextImport } from './SmartTextImport';
@@ -59,9 +60,17 @@ export const StaffCalendarView = () => {
   const { data: reservations = [], refetch } = useReservations();
   const updateStaffMutation = useUpdateReservationStaff();
   const { shifts, getShiftForStaffAndDay } = useStaffShifts();
+  const { hasExceptionAt } = useShiftExceptions();
 
   // Check if a staff member is working at a specific time on a given date
   const isStaffWorkingAt = useCallback((staffId: string, date: Date, hour: number, minutes: number): boolean => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    // First check if there's an exception (time-off) for this slot
+    if (hasExceptionAt(staffId, dateStr, hour, minutes)) {
+      return false; // Freigestellt = nicht verfügbar
+    }
+    
     // getDay returns 0=Sunday, we need to check the shift for this day
     const dayOfWeek = getDay(date);
     const shift = getShiftForStaffAndDay(staffId, dayOfWeek);
@@ -80,7 +89,7 @@ export const StaffCalendarView = () => {
     const shiftEndMinutes = endH * 60 + endM;
     
     return timeInMinutes >= shiftStartMinutes && timeInMinutes < shiftEndMinutes;
-  }, [getShiftForStaffAndDay]);
+  }, [getShiftForStaffAndDay, hasExceptionAt]);
 
   const weekDays = useMemo(() => {
     if (viewMode === 'week') {
