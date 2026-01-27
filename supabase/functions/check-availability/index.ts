@@ -160,6 +160,42 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
+    // Fetch shift exceptions (Freistellungen) for this date
+    let exceptionsQuery = supabase
+      .from("shift_exceptions")
+      .select("id, staff_member_id, start_time, end_time")
+      .eq("user_id", customer.id)
+      .eq("exception_date", checkDate);
+
+    if (staffMemberId) {
+      exceptionsQuery = exceptionsQuery.eq("staff_member_id", staffMemberId);
+    }
+
+    const { data: shiftExceptions, error: exceptionsError } = await exceptionsQuery;
+
+    if (exceptionsError) {
+      console.error("Error fetching shift exceptions:", exceptionsError);
+      // Continue without exceptions if there's an error
+    }
+
+    console.log("Shift exceptions for date:", shiftExceptions);
+
+    // Helper function to check if a time slot conflicts with shift exceptions
+    const hasExceptionConflict = (slotStart: Date, slotEnd: Date, staffId?: string | null): boolean => {
+      if (!shiftExceptions || shiftExceptions.length === 0) return false;
+      
+      return shiftExceptions.some(exc => {
+        // If checking specific staff, only consider their exceptions
+        if (staffId && exc.staff_member_id !== staffId) return false;
+        
+        const excStart = new Date(`${checkDate}T${exc.start_time}:00`);
+        const excEnd = new Date(`${checkDate}T${exc.end_time}:00`);
+        
+        // Overlap check
+        return (slotStart < excEnd && slotEnd > excStart);
+      });
+    };
+
     const businessHours = { start: 11, end: 22 };
 
     // If no specific time requested, return all available slots
@@ -172,15 +208,19 @@ Deno.serve(async (req) => {
           const slotStart = new Date(`${checkDate}T${slotTime}:00`);
           const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60000);
           
-          const slotHasConflict = existingReservations?.some(res => {
+          // Check for reservation conflicts
+          const slotHasReservationConflict = existingReservations?.some(res => {
             const resStart = new Date(`${checkDate}T${res.reservation_time}:00`);
             const resEnd = res.end_time 
               ? new Date(`${checkDate}T${res.end_time}:00`)
               : new Date(resStart.getTime() + durationMinutes * 60000);
             return (slotStart < resEnd && slotEnd > resStart);
           });
+
+          // Check for shift exception (Freistellung) conflicts
+          const slotHasExceptionConflict = hasExceptionConflict(slotStart, slotEnd, staffMemberId);
           
-          if (!slotHasConflict) {
+          if (!slotHasReservationConflict && !slotHasExceptionConflict) {
             availableSlots.push(slotTime);
           }
         }
@@ -209,8 +249,8 @@ Deno.serve(async (req) => {
     const requestedStart = new Date(`${checkDate}T${requestedTime}:00`);
     const requestedEnd = new Date(requestedStart.getTime() + durationMinutes * 60000);
 
-    // Check for conflicts
-    const hasConflict = existingReservations?.some(res => {
+    // Check for reservation conflicts
+    const hasReservationConflict = existingReservations?.some(res => {
       const resStart = new Date(`${checkDate}T${res.reservation_time}:00`);
       const resEnd = res.end_time 
         ? new Date(`${checkDate}T${res.end_time}:00`)
@@ -218,6 +258,11 @@ Deno.serve(async (req) => {
       
       return (requestedStart < resEnd && requestedEnd > resStart);
     });
+
+    // Check for shift exception (Freistellung) conflict
+    const hasExceptionBlockConflict = hasExceptionConflict(requestedStart, requestedEnd, staffMemberId);
+    
+    const hasConflict = hasReservationConflict || hasExceptionBlockConflict;
 
     // Find alternative slots if conflict
     const alternatives: string[] = [];
@@ -229,15 +274,17 @@ Deno.serve(async (req) => {
           const slotStart = new Date(`${checkDate}T${slotTime}:00`);
           const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60000);
           
-          const slotHasConflict = existingReservations?.some(res => {
+          const slotHasReservationConflict = existingReservations?.some(res => {
             const resStart = new Date(`${checkDate}T${res.reservation_time}:00`);
             const resEnd = res.end_time 
               ? new Date(`${checkDate}T${res.end_time}:00`)
               : new Date(resStart.getTime() + durationMinutes * 60000);
             return (slotStart < resEnd && slotEnd > resStart);
           });
+
+          const slotHasExceptionConflict = hasExceptionConflict(slotStart, slotEnd, staffMemberId);
           
-          if (!slotHasConflict && alternatives.length < 5) {
+          if (!slotHasReservationConflict && !slotHasExceptionConflict && alternatives.length < 5) {
             alternatives.push(slotTime);
           }
         }

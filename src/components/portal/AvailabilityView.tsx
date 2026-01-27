@@ -12,16 +12,19 @@ import {
   CalendarIcon,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Ban
 } from 'lucide-react';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { useReservations } from '@/hooks/usePortalData';
+import { useShiftExceptions } from '@/hooks/useShiftExceptions';
 import { format, addDays, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 interface TimeSlot {
   time: string;
   available: boolean;
+  blockedByException?: boolean;
   conflictingReservation?: {
     customer_name: string;
     reservation_time: string;
@@ -35,6 +38,7 @@ export const AvailabilityView = () => {
   
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
   const { data: reservations, isLoading: reservationsLoading } = useReservations();
+  const { hasExceptionAt, isLoading: exceptionsLoading } = useShiftExceptions();
 
   const activeStaff = useMemo(() => 
     staffMembers?.filter(s => s.is_active) || [], 
@@ -52,8 +56,7 @@ export const AvailabilityView = () => {
   }, []);
 
   // Calculate availability per staff member
-  // A slot is available if NO reservation overlaps with it
-  // We only block the exact time of the reservation, not assuming future duration
+  // A slot is blocked if: 1) There's a reservation OR 2) There's a shift exception (Freistellung)
   const availabilityMatrix = useMemo(() => {
     if (!reservations || !activeStaff.length) return {};
 
@@ -70,22 +73,31 @@ export const AvailabilityView = () => {
       );
 
       matrix[staff.id] = timeSlots.map(slotTime => {
+        const [slotHour, slotMinutes] = slotTime.split(':').map(Number);
         const slotStart = new Date(`${dateStr}T${slotTime}:00`);
         const slotEnd = new Date(slotStart.getTime() + slotDurationMinutes * 60000);
 
-        // Check if this 30-min slot overlaps with any existing reservation
+        // FIRST: Check if there's a shift exception (Freistellung) blocking this slot
+        const isExceptionBlocked = hasExceptionAt(staff.id, dateStr, slotHour, slotMinutes);
+        
+        if (isExceptionBlocked) {
+          return {
+            time: slotTime,
+            available: false,
+            blockedByException: true
+          };
+        }
+
+        // THEN: Check if this 30-min slot overlaps with any existing reservation
         let conflictingRes: typeof staffReservations[0] | undefined;
         const hasConflict = staffReservations.some(res => {
           const resStart = new Date(`${dateStr}T${res.reservation_time}`);
-          // Use actual end_time if available, otherwise default to 30min
           let resEnd: Date;
           if (res.end_time) {
             resEnd = new Date(`${dateStr}T${res.end_time}`);
           } else {
-            // Default to 30 minutes if no end_time
             resEnd = new Date(resStart.getTime() + 30 * 60000);
           }
-          // Overlap check: slot overlaps if it starts before reservation ends AND ends after reservation starts
           const overlaps = (slotStart < resEnd && slotEnd > resStart);
           if (overlaps) conflictingRes = res;
           return overlaps;
@@ -94,6 +106,7 @@ export const AvailabilityView = () => {
         return {
           time: slotTime,
           available: !hasConflict,
+          blockedByException: false,
           conflictingReservation: conflictingRes ? {
             customer_name: conflictingRes.customer_name,
             reservation_time: conflictingRes.reservation_time,
@@ -104,7 +117,7 @@ export const AvailabilityView = () => {
     });
 
     return matrix;
-  }, [reservations, activeStaff, selectedDate, timeSlots]);
+  }, [reservations, activeStaff, selectedDate, timeSlots, hasExceptionAt]);
 
   // Count free slots per staff
   const freeSlotCounts = useMemo(() => {
@@ -115,7 +128,7 @@ export const AvailabilityView = () => {
     return counts;
   }, [availabilityMatrix]);
 
-  const isLoading = staffLoading || reservationsLoading;
+  const isLoading = staffLoading || reservationsLoading || exceptionsLoading;
 
   return (
     <Card className="glass border-border/50">
