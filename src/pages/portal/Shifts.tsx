@@ -27,7 +27,8 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-const WEEKDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+// WICHTIG: Index muss mit JavaScript getDay() übereinstimmen: 0=Sonntag, 1=Montag, ..., 6=Samstag
+const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 const DEFAULT_START = '09:00';
 const DEFAULT_END = '18:00';
 
@@ -49,7 +50,7 @@ const Shifts = () => {
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [bulkStartTime, setBulkStartTime] = useState(DEFAULT_START);
   const [bulkEndTime, setBulkEndTime] = useState(DEFAULT_END);
-  const [bulkDays, setBulkDays] = useState<number[]>([0, 1, 2, 3, 4]); // Mo-Fr default
+  const [bulkDays, setBulkDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mo-Fr default (1=Montag, 5=Freitag)
   const [bulkIsWorking, setBulkIsWorking] = useState(true);
 
   // Exception state
