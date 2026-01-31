@@ -161,8 +161,28 @@ const Shifts = () => {
                 <DialogTitle>Zeiten auf alle Mitarbeiter anwenden</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {/* Tage-Auswahl immer sichtbar */}
+                <div className="space-y-2">
+                  <Label>Tage auswählen</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {WEEKDAYS.map((day, index) => (
+                      <button
+                        key={day}
+                        onClick={() => toggleBulkDay(index)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          bulkDays.includes(index)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        {day.slice(0, 2)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
-                  <Label>Arbeitet</Label>
+                  <Label>Arbeitet an diesen Tagen</Label>
                   <Switch
                     checked={bulkIsWorking}
                     onCheckedChange={setBulkIsWorking}
@@ -170,49 +190,32 @@ const Shifts = () => {
                 </div>
                 
                 {bulkIsWorking && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Beginn</Label>
-                        <Input
-                          type="time"
-                          value={bulkStartTime}
-                          onChange={(e) => setBulkStartTime(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Ende</Label>
-                        <Input
-                          type="time"
-                          value={bulkEndTime}
-                          onChange={(e) => setBulkEndTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Tage auswählen</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {WEEKDAYS.map((day, index) => (
-                          <button
-                            key={day}
-                            onClick={() => toggleBulkDay(index)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                              bulkDays.includes(index)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                            }`}
-                          >
-                            {day.slice(0, 2)}
-                          </button>
-                        ))}
-                      </div>
+                      <Label>Beginn</Label>
+                      <Input
+                        type="time"
+                        value={bulkStartTime}
+                        onChange={(e) => setBulkStartTime(e.target.value)}
+                      />
                     </div>
-                  </>
+                    <div className="space-y-2">
+                      <Label>Ende</Label>
+                      <Input
+                        type="time"
+                        value={bulkEndTime}
+                        onChange={(e) => setBulkEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 )}
                 
                 <div className="text-sm text-muted-foreground">
-                  Diese Zeiten werden auf <span className="font-medium text-foreground">{activeStaff.length} Mitarbeiter</span> für die ausgewählten Tage angewendet.
+                  {bulkIsWorking ? (
+                    <>Diese Zeiten werden auf <span className="font-medium text-foreground">{activeStaff.length} Mitarbeiter</span> für die ausgewählten Tage angewendet.</>
+                  ) : (
+                    <>Die ausgewählten Tage werden für <span className="font-medium text-foreground">{activeStaff.length} Mitarbeiter</span> als <span className="font-medium text-destructive">Frei</span> markiert.</>
+                  )}
                 </div>
               </div>
               <DialogFooter>
