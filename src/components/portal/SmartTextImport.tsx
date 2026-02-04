@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format, parse, isValid, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { FileText, Sparkles, CalendarIcon, Check, AlertCircle, Clipboard, Upload, ImageIcon, Loader2 } from 'lucide-react';
+import { FileText, Sparkles, CalendarIcon, Check, AlertCircle, Clipboard, Upload, ImageIcon, Loader2, Ban } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -78,6 +78,8 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const [selectedAppointmentIndex, setSelectedAppointmentIndex] = useState(0);
   const [selectedForBulk, setSelectedForBulk] = useState<number[]>([]);
   const [isBulkSaving, setIsBulkSaving] = useState(false);
+  const [existingReservations, setExistingReservations] = useState<any[]>([]);
+  const [duplicateIndices, setDuplicateIndices] = useState<number[]>([]);
   const { user } = useAuth();
   const { staffMembers } = useStaffMembers();
   const activeStaff = staffMembers.filter(s => s.is_active);
@@ -94,6 +96,74 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const [editStaffId, setEditStaffId] = useState<string>('');
   const [editProductId, setEditProductId] = useState<string>('');
   const [editPrice, setEditPrice] = useState<string>('');
+
+  // Load existing reservations for duplicate detection
+  const loadExistingReservations = useCallback(async () => {
+    if (!user?.id) return;
+    
+    const { data } = await supabase
+      .from('reservations')
+      .select('id, customer_name, reservation_date, reservation_time, staff_member_id')
+      .eq('user_id', user.id)
+      .gte('reservation_date', format(addDays(new Date(), -30), 'yyyy-MM-dd'));
+    
+    if (data) {
+      setExistingReservations(data);
+    }
+  }, [user?.id]);
+
+  // Load reservations when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      loadExistingReservations();
+    }
+  }, [isOpen, loadExistingReservations]);
+
+  // Check if an appointment is a duplicate
+  const isDuplicateAppointment = useCallback((appointment: any): boolean => {
+    if (!appointment) return false;
+    
+    const appointmentDate = appointment.reservation_date;
+    const appointmentTime = appointment.reservation_time;
+    const appointmentName = (appointment.customer_name || '').toLowerCase().trim();
+    
+    // Find matching staff ID for comparison
+    let staffId: string | null = null;
+    if (appointment.staff_name) {
+      const matchedStaff = activeStaff.find(s => 
+        s.name.toLowerCase().includes(appointment.staff_name.toLowerCase()) ||
+        appointment.staff_name.toLowerCase().includes(s.name.toLowerCase())
+      );
+      if (matchedStaff) staffId = matchedStaff.id;
+    }
+    
+    return existingReservations.some(existing => {
+      // Check if same date and time
+      const sameDateTime = existing.reservation_date === appointmentDate && 
+                           existing.reservation_time === appointmentTime;
+      
+      if (!sameDateTime) return false;
+      
+      // Check if same customer name OR same staff member at that time
+      const sameName = existing.customer_name.toLowerCase().trim() === appointmentName;
+      const sameStaff = staffId && existing.staff_member_id === staffId;
+      
+      return sameName || sameStaff;
+    });
+  }, [existingReservations, activeStaff]);
+
+  // Check for duplicates when appointments are parsed
+  const checkForDuplicates = useCallback((appointments: any[]): number[] => {
+    const duplicates: number[] = [];
+    
+    appointments.forEach((apt, index) => {
+      if (isDuplicateAppointment(apt)) {
+        duplicates.push(index);
+      }
+    });
+    
+    return duplicates;
+  }, [isDuplicateAppointment]);
 
   // Find staff member by matching name in text - IMPROVED for precise matching
   const findMatchingStaff = useCallback((text: string): string | undefined => {
@@ -491,11 +561,29 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
       
       if (appointments && appointments.length > 0) {
         setParsedAppointments(appointments);
-        // Auto-select all for bulk import
-        setSelectedForBulk(appointments.map((_: any, i: number) => i));
-        toast.success(`${appointments.length} Termin(e) erkannt! Wähle Termine für Bulk-Import.`);
-        // Auto-select first appointment for preview
-        selectAppointmentFromImage(appointments[0], 0);
+        
+        // Check for duplicates
+        const duplicates = checkForDuplicates(appointments);
+        setDuplicateIndices(duplicates);
+        
+        // Auto-select all NON-duplicate appointments for bulk import
+        const nonDuplicateIndices = appointments
+          .map((_: any, i: number) => i)
+          .filter((i: number) => !duplicates.includes(i));
+        setSelectedForBulk(nonDuplicateIndices);
+        
+        const duplicateCount = duplicates.length;
+        const newCount = appointments.length - duplicateCount;
+        
+        if (duplicateCount > 0) {
+          toast.warning(`${appointments.length} Termine erkannt. ${duplicateCount} Duplikat(e) ausgeschlossen.`);
+        } else {
+          toast.success(`${appointments.length} Termin(e) erkannt! Wähle Termine für Bulk-Import.`);
+        }
+        
+        // Auto-select first non-duplicate appointment for preview
+        const firstNonDuplicate = nonDuplicateIndices[0] ?? 0;
+        selectAppointmentFromImage(appointments[firstNonDuplicate], firstNonDuplicate);
       } else {
         toast.info('Keine Termine im Bild erkannt');
       }
@@ -668,11 +756,15 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     setParsedAppointments([]);
     setSelectedAppointmentIndex(0);
     setSelectedForBulk([]);
+    setDuplicateIndices([]);
     onClose();
   };
 
-  // Toggle selection for bulk import
+  // Toggle selection for bulk import (prevent selecting duplicates)
   const toggleBulkSelection = (index: number) => {
+    // Don't allow selecting duplicates
+    if (duplicateIndices.includes(index)) return;
+    
     setSelectedForBulk(prev => 
       prev.includes(index) 
         ? prev.filter(i => i !== index)
@@ -680,12 +772,16 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     );
   };
 
-  // Select/deselect all for bulk
+  // Select/deselect all for bulk (excluding duplicates)
   const toggleSelectAll = () => {
-    if (selectedForBulk.length === parsedAppointments.length) {
+    const nonDuplicateIndices = parsedAppointments
+      .map((_, i) => i)
+      .filter(i => !duplicateIndices.includes(i));
+    
+    if (selectedForBulk.length === nonDuplicateIndices.length) {
       setSelectedForBulk([]);
     } else {
-      setSelectedForBulk(parsedAppointments.map((_, i) => i));
+      setSelectedForBulk(nonDuplicateIndices);
     }
   };
 
@@ -831,11 +927,18 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">{parsedAppointments.length} Termine erkannt</span>
+                  <span className="text-sm font-medium">
+                    {parsedAppointments.length - duplicateIndices.length} neue Termine
+                    {duplicateIndices.length > 0 && (
+                      <span className="text-destructive ml-1">
+                        ({duplicateIndices.length} Duplikat{duplicateIndices.length !== 1 ? 'e' : ''})
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
-                    {selectedForBulk.length === parsedAppointments.length ? 'Keine auswählen' : 'Alle auswählen'}
+                    {selectedForBulk.length === parsedAppointments.length - duplicateIndices.length ? 'Keine auswählen' : 'Alle auswählen'}
                   </Button>
                   <Badge variant="secondary">
                     {selectedForBulk.length} ausgewählt
@@ -845,41 +948,52 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
               
               {/* Appointment list with checkboxes */}
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                {parsedAppointments.map((apt, idx) => (
-                  <div 
-                    key={idx}
-                    className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors",
-                      selectedForBulk.includes(idx) ? "bg-primary/10 border-primary/30" : "bg-background border-border",
-                      selectedAppointmentIndex === idx && "ring-2 ring-primary"
-                    )}
-                    onClick={() => selectAppointmentFromImage(apt, idx)}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedForBulk.includes(idx)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleBulkSelection(idx);
-                      }}
-                      className="w-4 h-4 rounded border-primary text-primary focus:ring-primary"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate">{apt.customer_name || 'Unbekannt'}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {apt.reservation_date} {apt.reservation_time}
-                        </Badge>
+                {parsedAppointments.map((apt, idx) => {
+                  const isDuplicate = duplicateIndices.includes(idx);
+                  return (
+                    <div 
+                      key={idx}
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg border transition-colors",
+                        isDuplicate 
+                          ? "bg-destructive/10 border-destructive/30 opacity-60 cursor-not-allowed" 
+                          : selectedForBulk.includes(idx) 
+                            ? "bg-primary/10 border-primary/30 cursor-pointer" 
+                            : "bg-background border-border cursor-pointer",
+                        !isDuplicate && selectedAppointmentIndex === idx && "ring-2 ring-primary"
+                      )}
+                      onClick={() => !isDuplicate && selectAppointmentFromImage(apt, idx)}
+                    >
+                      {isDuplicate ? (
+                        <Ban className="w-4 h-4 text-destructive flex-shrink-0" />
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={selectedForBulk.includes(idx)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleBulkSelection(idx);
+                          }}
+                          className="w-4 h-4 rounded border-primary text-primary focus:ring-primary"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={cn("font-medium truncate", isDuplicate && "line-through")}>{apt.customer_name || 'Unbekannt'}</span>
+                          <Badge variant={isDuplicate ? "destructive" : "outline"} className="text-xs">
+                            {isDuplicate ? 'Duplikat' : `${apt.reservation_date} ${apt.reservation_time}`}
+                          </Badge>
+                        </div>
+                        {apt.service && (
+                          <p className="text-xs text-muted-foreground truncate">{apt.service}</p>
+                        )}
                       </div>
-                      {apt.service && (
-                        <p className="text-xs text-muted-foreground truncate">{apt.service}</p>
+                      {apt.staff_name && (
+                        <Badge variant="secondary" className="text-xs">{apt.staff_name}</Badge>
                       )}
                     </div>
-                    {apt.staff_name && (
-                      <Badge variant="secondary" className="text-xs">{apt.staff_name}</Badge>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               {/* Bulk import button */}
