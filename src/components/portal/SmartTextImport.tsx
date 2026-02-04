@@ -95,32 +95,51 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const [editProductId, setEditProductId] = useState<string>('');
   const [editPrice, setEditPrice] = useState<string>('');
 
-  // Find staff member by matching name in text
+  // Find staff member by matching name in text - IMPROVED for precise matching
   const findMatchingStaff = useCallback((text: string): string | undefined => {
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase().trim();
     
-    // Look for staff names after keywords like "Teammitglied", "Mitarbeiter", "bei"
-    const staffKeywords = ['teammitglied', 'mitarbeiter', 'bei', 'mit', 'stylist', 'therapeut'];
+    // Sort staff by name length descending to match longer names first (e.g., "Lisa Marie" before "Lisa")
+    const sortedStaff = [...activeStaff].sort((a, b) => b.name.length - a.name.length);
     
-    for (const staff of activeStaff) {
-      const staffNameLower = staff.name.toLowerCase();
+    // PRIORITY 1: Exact name match (highest confidence)
+    for (const staff of sortedStaff) {
+      const staffNameLower = staff.name.toLowerCase().trim();
+      // Exact match at word boundary
+      const exactRegex = new RegExp(`\\b${staffNameLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (exactRegex.test(text)) {
+        return staff.id;
+      }
+    }
+    
+    // PRIORITY 2: First name only match (for names like "Christy" matching "Christy Müller")
+    for (const staff of sortedStaff) {
+      const staffNameLower = staff.name.toLowerCase().trim();
+      const firstName = staffNameLower.split(/\s+/)[0];
+      if (firstName.length >= 3) {
+        const firstNameRegex = new RegExp(`\\b${firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (firstNameRegex.test(text)) {
+          return staff.id;
+        }
+      }
+    }
+    
+    // PRIORITY 3: Keyword-based match ("Teammitglied", "bei", etc.)
+    const staffKeywords = ['teammitglied', 'mitarbeiter', 'bei', 'mit', 'stylist', 'therapeut', 'von', 'durch'];
+    
+    for (const staff of sortedStaff) {
+      const staffNameLower = staff.name.toLowerCase().trim();
+      const firstName = staffNameLower.split(/\s+/)[0];
       
-      // Check if staff name appears after a keyword
       for (const keyword of staffKeywords) {
         const keywordIndex = lowerText.indexOf(keyword);
         if (keywordIndex !== -1) {
-          // Check if staff name appears after the keyword (within 50 chars)
-          const afterKeyword = lowerText.slice(keywordIndex, keywordIndex + 50);
-          if (afterKeyword.includes(staffNameLower)) {
+          // Check if staff name appears after the keyword (within 30 chars)
+          const afterKeyword = lowerText.slice(keywordIndex, keywordIndex + 30);
+          if (afterKeyword.includes(staffNameLower) || afterKeyword.includes(firstName)) {
             return staff.id;
           }
         }
-      }
-      
-      // Direct name match (case insensitive, whole word)
-      const nameRegex = new RegExp(`\\b${staffNameLower}\\b`, 'i');
-      if (nameRegex.test(text)) {
-        return staff.id;
       }
     }
     
@@ -488,18 +507,69 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     }
   };
 
+  // Helper function to find matching staff with improved precision
+  const findStaffByName = useCallback((staffName: string): string | undefined => {
+    if (!staffName) return undefined;
+    
+    const searchName = staffName.toLowerCase().trim();
+    
+    // Sort staff by name length descending to match longer names first
+    const sortedStaff = [...activeStaff].sort((a, b) => b.name.length - a.name.length);
+    
+    // PRIORITY 1: Exact match
+    for (const staff of sortedStaff) {
+      if (staff.name.toLowerCase().trim() === searchName) {
+        return staff.id;
+      }
+    }
+    
+    // PRIORITY 2: Search name is contained in staff name (e.g., "Christy" in "Christy Müller")
+    for (const staff of sortedStaff) {
+      const staffNameLower = staff.name.toLowerCase().trim();
+      if (staffNameLower.includes(searchName) || searchName.includes(staffNameLower)) {
+        return staff.id;
+      }
+    }
+    
+    // PRIORITY 3: First name match
+    for (const staff of sortedStaff) {
+      const staffFirstName = staff.name.toLowerCase().trim().split(/\s+/)[0];
+      const searchFirstName = searchName.split(/\s+/)[0];
+      if (staffFirstName === searchFirstName && searchFirstName.length >= 3) {
+        return staff.id;
+      }
+    }
+    
+    // PRIORITY 4: Partial match with minimum 3 characters
+    for (const staff of sortedStaff) {
+      const staffNameLower = staff.name.toLowerCase().trim();
+      // Check if any part of the name matches
+      const staffParts = staffNameLower.split(/\s+/);
+      const searchParts = searchName.split(/\s+/);
+      
+      for (const staffPart of staffParts) {
+        for (const searchPart of searchParts) {
+          if (staffPart.length >= 3 && searchPart.length >= 3) {
+            if (staffPart.startsWith(searchPart) || searchPart.startsWith(staffPart)) {
+              return staff.id;
+            }
+          }
+        }
+      }
+    }
+    
+    return undefined;
+  }, [activeStaff]);
+
   // Select an appointment from image parsing results
   const selectAppointmentFromImage = (appointment: any, index: number) => {
     setSelectedAppointmentIndex(index);
     
-    // Find matching staff
+    // Find matching staff using improved matching
     let staffId = defaultStaffId || '';
     if (appointment.staff_name) {
-      const matchedStaff = activeStaff.find(s => 
-        s.name.toLowerCase().includes(appointment.staff_name.toLowerCase()) ||
-        appointment.staff_name.toLowerCase().includes(s.name.toLowerCase())
-      );
-      if (matchedStaff) staffId = matchedStaff.id;
+      const matchedStaffId = findStaffByName(appointment.staff_name);
+      if (matchedStaffId) staffId = matchedStaffId;
     }
     
     // Find matching product
@@ -631,14 +701,11 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
       for (const index of selectedForBulk) {
         const appointment = parsedAppointments[index];
         
-        // Find matching staff
+        // Find matching staff using improved matching
         let staffId: string | null = null;
         if (appointment.staff_name) {
-          const matchedStaff = activeStaff.find(s => 
-            s.name.toLowerCase().includes(appointment.staff_name.toLowerCase()) ||
-            appointment.staff_name.toLowerCase().includes(s.name.toLowerCase())
-          );
-          if (matchedStaff) staffId = matchedStaff.id;
+          const matchedStaffId = findStaffByName(appointment.staff_name);
+          if (matchedStaffId) staffId = matchedStaffId;
         }
         
         // Find matching product
