@@ -4,8 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2 } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useStaffMembers, useUpdateReservationStaff, StaffMember } from '@/hooks/useStaffMembers';
@@ -16,6 +17,8 @@ import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 import { StaffManagementDialog } from './StaffManagementDialog';
 import ReservationForm from './ReservationForm';
 import { SmartTextImport } from './SmartTextImport';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type StaffViewMode = 'day' | 'week';
 
@@ -55,8 +58,10 @@ export const StaffCalendarView = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSmartImportOpen, setIsSmartImportOpen] = useState(false);
   const [smartImportStaffId, setSmartImportStaffId] = useState<string | undefined>();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { staffMembers } = useStaffMembers();
+  const { toast } = useToast();
   const activeStaffMembers = staffMembers.filter(s => s.is_active);
   const { data: reservations = [], refetch } = useReservations();
   const updateStaffMutation = useUpdateReservationStaff();
@@ -288,6 +293,36 @@ export const StaffCalendarView = () => {
     if (!staffId) return 'Nicht zugewiesen';
     const staff = activeStaffMembers.find(s => s.id === staffId);
     return staff?.name || 'Unbekannt';
+  };
+
+  const handleDeleteReservation = async (reservationId: string) => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .delete()
+        .eq('id', reservationId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Reservierung gelöscht',
+        description: 'Die Reservierung wurde erfolgreich gelöscht.',
+      });
+
+      setIsDetailOpen(false);
+      setSelectedReservation(null);
+      refetch();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Die Reservierung konnte nicht gelöscht werden.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Render single day columns
@@ -611,7 +646,7 @@ export const StaffCalendarView = () => {
           {selectedReservation && !isEditMode && (
             <div className="space-y-4">
               {/* Edit Button */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -621,6 +656,39 @@ export const StaffCalendarView = () => {
                   <Pencil className="w-4 h-4" />
                   Bearbeiten
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="gap-2"
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Löschen
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Reservierung löschen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Möchten Sie die Reservierung für <strong>{selectedReservation.customer_name}</strong> am{' '}
+                        <strong>{format(new Date(selectedReservation.reservation_date), 'd. MMMM yyyy', { locale: de })}</strong> um{' '}
+                        <strong>{selectedReservation.reservation_time.slice(0, 5)} Uhr</strong> wirklich löschen?
+                        Diese Aktion kann nicht rückgängig gemacht werden.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDeleteReservation(selectedReservation.id)}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        Löschen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
 
               {/* Status Badge */}
