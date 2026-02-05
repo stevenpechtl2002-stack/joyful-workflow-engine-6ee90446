@@ -22,6 +22,7 @@ import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { useReservations } from '@/hooks/usePortalData';
 import { useShiftExceptions } from '@/hooks/useShiftExceptions';
 import { useBusinessSettings } from '@/hooks/useBusinessSettings';
+import { useStaffShifts } from '@/hooks/useStaffShifts';
 import { format, addDays, subDays, isSameDay, getDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +34,7 @@ interface TimeSlot {
   available: boolean;
   blockedByException?: boolean;
   blockedByClosedDay?: boolean;
+  outsideShift?: boolean;
   conflictingReservation?: {
     customer_name: string;
     reservation_time: string;
@@ -49,6 +51,7 @@ export const AvailabilityView = () => {
   const { data: reservations, isLoading: reservationsLoading, refetch } = useReservations();
   const { hasExceptionAt, isLoading: exceptionsLoading } = useShiftExceptions();
   const { isDayClosed } = useBusinessSettings();
+  const { shifts, getShiftForStaffAndDay, isLoading: shiftsLoading } = useStaffShifts();
   const { user } = useAuth();
 
   const activeStaff = useMemo(() => 
@@ -56,15 +59,62 @@ export const AvailabilityView = () => {
     [staffMembers]
   );
 
-  // Business hours: 11:00 - 22:00, 30-minute slots
-  const timeSlots = useMemo(() => {
+  // Get the day of week for selected date
+  const selectedDayOfWeek = getDay(selectedDate);
+
+  // Calculate time slots based on all staff shifts for this day
+  const { timeSlots, staffShiftRanges } = useMemo(() => {
+    const dayOfWeek = getDay(selectedDate);
+    
+    // Collect all shift ranges for this day
+    const shiftRanges: Record<string, { start: string; end: string } | null> = {};
+    let earliestStart = 22; // default end
+    let latestEnd = 9; // default start
+    
+    activeStaff.forEach(staff => {
+      const shift = getShiftForStaffAndDay(staff.id, dayOfWeek);
+      if (shift && shift.is_working) {
+        shiftRanges[staff.id] = { start: shift.start_time, end: shift.end_time };
+        const [startH] = shift.start_time.split(':').map(Number);
+        const [endH] = shift.end_time.split(':').map(Number);
+        if (startH < earliestStart) earliestStart = startH;
+        if (endH > latestEnd) latestEnd = endH;
+      } else {
+        shiftRanges[staff.id] = null; // Not working this day
+      }
+    });
+    
+    // If no shifts defined, use default hours
+    if (earliestStart >= latestEnd) {
+      earliestStart = 9;
+      latestEnd = 18;
+    }
+    
+    // Generate time slots from earliest to latest
     const slots: string[] = [];
-    for (let hour = 11; hour < 22; hour++) {
+    for (let hour = earliestStart; hour < latestEnd; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
-    return slots;
-  }, []);
+    
+    return { timeSlots: slots, staffShiftRanges: shiftRanges };
+  }, [selectedDate, activeStaff, getShiftForStaffAndDay]);
+
+  // Helper to check if a time is within a staff's shift
+  const isWithinShift = (staffId: string, slotTime: string): boolean => {
+    const range = staffShiftRanges[staffId];
+    if (!range) return false; // Not working
+    
+    const [slotH, slotM] = slotTime.split(':').map(Number);
+    const slotMinutes = slotH * 60 + slotM;
+    
+    const [startH, startM] = range.start.split(':').map(Number);
+    const [endH, endM] = range.end.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+    
+    return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+  };
 
   // Check if selected date is a global closed day
   const isClosedDay = useMemo(() => {
@@ -92,6 +142,18 @@ export const AvailabilityView = () => {
         return;
       }
 
+      // Check if staff is working this day
+      const staffShiftRange = staffShiftRanges[staff.id];
+      if (!staffShiftRange) {
+        // Staff not working this day - all slots marked as outside shift
+        matrix[staff.id] = timeSlots.map(slotTime => ({
+          time: slotTime,
+          available: false,
+          outsideShift: true
+        }));
+        return;
+      }
+
       const staffReservations = reservations.filter(res => 
         res.reservation_date === dateStr && 
         res.staff_member_id === staff.id &&
@@ -102,6 +164,15 @@ export const AvailabilityView = () => {
         const [slotHour, slotMinutes] = slotTime.split(':').map(Number);
         const slotStart = new Date(`${dateStr}T${slotTime}:00`);
         const slotEnd = new Date(slotStart.getTime() + slotDurationMinutes * 60000);
+
+        // Check if slot is within this staff's shift hours
+        if (!isWithinShift(staff.id, slotTime)) {
+          return {
+            time: slotTime,
+            available: false,
+            outsideShift: true
+          };
+        }
 
         // Check if there's a shift exception (Freistellung) blocking this slot
         const isExceptionBlocked = hasExceptionAt(staff.id, dateStr, slotHour, slotMinutes);
@@ -143,7 +214,7 @@ export const AvailabilityView = () => {
     });
 
     return matrix;
-  }, [reservations, activeStaff, selectedDate, timeSlots, hasExceptionAt, isClosedDay]);
+  }, [reservations, activeStaff, selectedDate, timeSlots, hasExceptionAt, isClosedDay, staffShiftRanges, isWithinShift]);
 
   // Count free slots per staff
   const freeSlotCounts = useMemo(() => {
@@ -154,7 +225,16 @@ export const AvailabilityView = () => {
     return counts;
   }, [availabilityMatrix]);
 
-  const isLoading = staffLoading || reservationsLoading || exceptionsLoading;
+  // Count total working slots per staff (for percentage)
+  const workingSlotCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.entries(availabilityMatrix).forEach(([staffId, slots]) => {
+      counts[staffId] = slots.filter(s => !s.outsideShift && !s.blockedByClosedDay).length;
+    });
+    return counts;
+  }, [availabilityMatrix]);
+
+  const isLoading = staffLoading || reservationsLoading || exceptionsLoading || shiftsLoading;
 
   const handleSlotClick = async (staffId: string, staffName: string, slotTime: string) => {
     if (!user?.id) {
@@ -326,6 +406,7 @@ export const AvailabilityView = () => {
                         const conflictInfo = slot?.conflictingReservation;
                         const isClosedDayBlocked = slot?.blockedByClosedDay;
                         const isExceptionBlocked = slot?.blockedByException;
+                        const isOutsideShift = slot?.outsideShift;
                         
                         return (
                           <div key={`${staff.id}-${slotTime}`} className="flex justify-center">
@@ -354,6 +435,8 @@ export const AvailabilityView = () => {
                                 <Building2 className="w-3 h-3 mr-1" />
                                 Ruhetag
                               </Badge>
+                            ) : isOutsideShift ? (
+                              <span className="text-muted-foreground/30">—</span>
                             ) : isExceptionBlocked ? (
                               <Badge 
                                 variant="outline" 
@@ -387,7 +470,7 @@ export const AvailabilityView = () => {
                 <div className="flex flex-wrap gap-4 justify-center">
                   {activeStaff.map(staff => {
                     const freeCount = freeSlotCounts[staff.id] || 0;
-                    const totalSlots = timeSlots.length;
+                    const totalSlots = workingSlotCounts[staff.id] || 0;
                     const percentage = Math.round((freeCount / totalSlots) * 100);
                     
                     return (
@@ -398,7 +481,7 @@ export const AvailabilityView = () => {
                         />
                         <span className="font-medium">{staff.name}:</span>
                         <span className={freeCount > 0 ? 'text-green-600' : 'text-muted-foreground'}>
-                          {freeCount}/{totalSlots} frei ({percentage}%)
+                          {totalSlots > 0 ? `${freeCount}/${totalSlots} frei (${percentage}%)` : 'Nicht im Dienst'}
                         </span>
                       </div>
                     );
