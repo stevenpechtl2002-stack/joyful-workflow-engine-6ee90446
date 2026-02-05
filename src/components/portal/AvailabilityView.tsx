@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -14,7 +15,8 @@ import {
   CheckCircle2,
   XCircle,
   Ban,
-  Building2
+  Building2,
+  Plus
 } from 'lucide-react';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { useReservations } from '@/hooks/usePortalData';
@@ -22,6 +24,7 @@ import { useShiftExceptions } from '@/hooks/useShiftExceptions';
 import { useBusinessSettings } from '@/hooks/useBusinessSettings';
 import { format, addDays, subDays, isSameDay, getDay } from 'date-fns';
 import { de } from 'date-fns/locale';
+import ReservationForm from './ReservationForm';
 
 interface TimeSlot {
   time: string;
@@ -38,9 +41,11 @@ interface TimeSlot {
 export const AvailabilityView = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{ time: string; staffId: string; staffName: string } | null>(null);
   
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
-  const { data: reservations, isLoading: reservationsLoading } = useReservations();
+  const { data: reservations, isLoading: reservationsLoading, refetch } = useReservations();
   const { hasExceptionAt, isLoading: exceptionsLoading } = useShiftExceptions();
   const { isDayClosed } = useBusinessSettings();
 
@@ -149,7 +154,13 @@ export const AvailabilityView = () => {
 
   const isLoading = staffLoading || reservationsLoading || exceptionsLoading;
 
+  const handleSlotClick = (staffId: string, staffName: string, slotTime: string) => {
+    setSelectedSlot({ time: slotTime, staffId, staffName });
+    setIsBookingOpen(true);
+  };
+
   return (
+    <>
     <Card className="glass border-border/50">
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -280,9 +291,10 @@ export const AvailabilityView = () => {
                             {isAvailable ? (
                               <Badge 
                                 variant="outline" 
-                                className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20 cursor-default"
+                                className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/30 cursor-pointer transition-colors"
+                                onClick={() => handleSlotClick(staff.id, staff.name, slotTime)}
                               >
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                <Plus className="w-3 h-3 mr-1" />
                                 Frei
                               </Badge>
                             ) : isClosedDayBlocked ? (
@@ -349,5 +361,41 @@ export const AvailabilityView = () => {
         )}
       </CardContent>
     </Card>
+
+    {/* Booking Dialog */}
+    <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Neuer Termin
+          </DialogTitle>
+        </DialogHeader>
+        {selectedSlot && (
+          <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              <strong>{format(selectedDate, 'EEEE, d. MMMM', { locale: de })}</strong> um <strong>{selectedSlot.time} Uhr</strong> bei <strong>{selectedSlot.staffName}</strong>
+            </p>
+          </div>
+        )}
+        <ReservationForm
+          onSuccess={() => {
+            setIsBookingOpen(false);
+            setSelectedSlot(null);
+            refetch();
+          }}
+          defaultValues={
+            selectedSlot
+              ? {
+                  reservation_date: format(selectedDate, 'yyyy-MM-dd'),
+                  reservation_time: selectedSlot.time,
+                  staff_member_id: selectedSlot.staffId,
+                }
+              : undefined
+          }
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
