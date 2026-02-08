@@ -90,11 +90,13 @@ export const AvailabilityView = () => {
       latestEnd = 18;
     }
     
-    // Generate time slots from earliest to latest
+    // Generate time slots from earliest to latest (15-min intervals)
     const slots: string[] = [];
     for (let hour = earliestStart; hour < latestEnd; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, '0')}:15`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
+      slots.push(`${hour.toString().padStart(2, '0')}:45`);
     }
     
     return { timeSlots: slots, staffShiftRanges: shiftRanges };
@@ -127,7 +129,7 @@ export const AvailabilityView = () => {
     if (!reservations || !activeStaff.length) return {};
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    const slotDurationMinutes = 30; // Each slot represents 30 minutes
+    const slotDurationMinutes = 15; // Each slot represents 15 minutes
 
     const matrix: Record<string, TimeSlot[]> = {};
 
@@ -246,10 +248,10 @@ export const AvailabilityView = () => {
     setBookingSlot(slotKey);
 
     try {
-      // Calculate end time (30 min after start)
+      // Calculate end time (15 min after start)
       const [hours, minutes] = slotTime.split(':').map(Number);
       const endDate = new Date();
-      endDate.setHours(hours, minutes + 30, 0, 0);
+      endDate.setHours(hours, minutes + 15, 0, 0);
       const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
 
       const { error } = await supabase
