@@ -80,6 +80,7 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const [isBulkSaving, setIsBulkSaving] = useState(false);
   const [existingReservations, setExistingReservations] = useState<any[]>([]);
   const [duplicateIndices, setDuplicateIndices] = useState<number[]>([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { user } = useAuth();
   const { staffMembers } = useStaffMembers();
   const activeStaff = staffMembers.filter(s => s.is_active);
@@ -548,9 +549,10 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
         reader.readAsDataURL(file);
       });
 
-      // Call edge function to parse image
+      // Call edge function to parse image with staff names for better matching
+      const staffNamesList = activeStaff.map(s => s.name);
       const response = await supabase.functions.invoke('parse-calendar-image', {
-        body: { imageBase64: base64 }
+        body: { imageBase64: base64, staffNames: staffNamesList }
       });
 
       if (response.error) {
@@ -572,18 +574,11 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
           .filter((i: number) => !duplicates.includes(i));
         setSelectedForBulk(nonDuplicateIndices);
         
+        // Show confirmation step first
+        setShowConfirmation(true);
+        
         const duplicateCount = duplicates.length;
-        const newCount = appointments.length - duplicateCount;
-        
-        if (duplicateCount > 0) {
-          toast.warning(`${appointments.length} Termine erkannt. ${duplicateCount} Duplikat(e) ausgeschlossen.`);
-        } else {
-          toast.success(`${appointments.length} Termin(e) erkannt! Wähle Termine für Bulk-Import.`);
-        }
-        
-        // Auto-select first non-duplicate appointment for preview
-        const firstNonDuplicate = nonDuplicateIndices[0] ?? 0;
-        selectAppointmentFromImage(appointments[firstNonDuplicate], firstNonDuplicate);
+        toast.success(`${appointments.length} Termin(e) erkannt! Bitte bestätige die Daten.`);
       } else {
         toast.info('Keine Termine im Bild erkannt');
       }
@@ -757,6 +752,7 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     setSelectedAppointmentIndex(0);
     setSelectedForBulk([]);
     setDuplicateIndices([]);
+    setShowConfirmation(false);
     onClose();
   };
 
@@ -785,7 +781,7 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     }
   };
 
-  // Bulk save all selected appointments
+  // Bulk save all selected appointments as blocked slots
   const handleBulkSave = async () => {
     if (!user || selectedForBulk.length === 0) return;
 
@@ -797,41 +793,29 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
       for (const index of selectedForBulk) {
         const appointment = parsedAppointments[index];
         
-        // Find matching staff using improved matching
+        // Find matching staff
         let staffId: string | null = null;
         if (appointment.staff_name) {
           const matchedStaffId = findStaffByName(appointment.staff_name);
           if (matchedStaffId) staffId = matchedStaffId;
         }
         
-        // Find matching product
-        let productId: string | null = null;
-        let pricePaid: number | null = null;
-        let durationMinutes = 30; // Default duration
-        if (appointment.service) {
-          const matchedProduct = products.find(p => 
-            p.name.toLowerCase().includes(appointment.service.toLowerCase()) ||
-            appointment.service.toLowerCase().includes(p.name.toLowerCase())
-          );
-          if (matchedProduct) {
-            productId = matchedProduct.id;
-            pricePaid = matchedProduct.price;
-            durationMinutes = matchedProduct.duration_minutes || 30;
-          }
-        }
-        
-        // Calculate end_time
+        // Calculate end_time from AI response or default 30 min
         const startTime = appointment.reservation_time || '10:00';
-        const [hours, minutes] = startTime.split(':').map(Number);
-        const endDate = new Date();
-        endDate.setHours(hours, minutes + durationMinutes, 0, 0);
-        const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+        let endTime = appointment.end_time;
+        
+        if (!endTime) {
+          const [hours, minutes] = startTime.split(':').map(Number);
+          const endDate = new Date();
+          endDate.setHours(hours, minutes + 30, 0, 0);
+          endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+        }
         
         const reservationDate = appointment.reservation_date || format(defaultDate || new Date(), 'yyyy-MM-dd');
         
         const { error } = await supabase.from('reservations').insert({
           user_id: user.id,
-          customer_name: appointment.customer_name || 'Unbekannter Kunde',
+          customer_name: 'Blockiert',
           customer_phone: null,
           customer_email: null,
           reservation_date: reservationDate,
@@ -840,8 +824,8 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
           party_size: 1,
           notes: appointment.service || appointment.notes || null,
           staff_member_id: staffId,
-          product_id: productId,
-          price_paid: pricePaid,
+          product_id: null,
+          price_paid: null,
           status: 'confirmed',
           source: 'manual'
         });
@@ -855,16 +839,16 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
       }
 
       if (successCount > 0) {
-        toast.success(`${successCount} Termin(e) erfolgreich importiert!`);
+        toast.success(`${successCount} Zeitslot(s) erfolgreich blockiert!`);
         onSuccess();
       }
       if (errorCount > 0) {
-        toast.error(`${errorCount} Termin(e) konnten nicht importiert werden.`);
+        toast.error(`${errorCount} Slot(s) konnten nicht blockiert werden.`);
       }
       
       handleClose();
     } catch (error: any) {
-      toast.error('Fehler beim Bulk-Import: ' + error.message);
+      toast.error('Fehler beim Import: ' + error.message);
     } finally {
       setIsBulkSaving(false);
     }
@@ -922,13 +906,40 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
           </div>
 
           {/* Parsed appointments from image - Bulk Import UI */}
-          {parsedAppointments.length > 0 && (
+          {parsedAppointments.length > 0 && showConfirmation && (
             <Card className="p-4 bg-primary/5 border-primary/20">
+              {/* Confirmation Summary */}
+              <div className="mb-4 p-3 rounded-lg bg-background border">
+                <h4 className="font-semibold text-sm mb-2">📋 Erkannte Termine - Zusammenfassung</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Anzahl Termine:</span>
+                    <span className="ml-2 font-medium">{parsedAppointments.length}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Duplikate:</span>
+                    <span className="ml-2 font-medium text-destructive">{duplicateIndices.length}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Daten:</span>
+                    <span className="ml-2 font-medium">
+                      {[...new Set(parsedAppointments.map(a => a.reservation_date))].sort().join(', ')}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Mitarbeiter:</span>
+                    <span className="ml-2 font-medium">
+                      {[...new Set(parsedAppointments.map(a => a.staff_name).filter(Boolean))].join(', ') || 'Nicht zugeordnet'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium">
-                    {parsedAppointments.length - duplicateIndices.length} neue Termine
+                    {parsedAppointments.length - duplicateIndices.length} Slots zu blockieren
                     {duplicateIndices.length > 0 && (
                       <span className="text-destructive ml-1">
                         ({duplicateIndices.length} Duplikat{duplicateIndices.length !== 1 ? 'e' : ''})
@@ -947,9 +958,14 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
               </div>
               
               {/* Appointment list with checkboxes */}
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              <div className="space-y-2 max-h-[250px] overflow-y-auto">
                 {parsedAppointments.map((apt, idx) => {
                   const isDuplicate = duplicateIndices.includes(idx);
+                  const matchedStaff = apt.staff_name ? activeStaff.find(s => 
+                    s.name.toLowerCase().includes(apt.staff_name.toLowerCase()) ||
+                    apt.staff_name.toLowerCase().includes(s.name.toLowerCase())
+                  ) : null;
+                  
                   return (
                     <div 
                       key={idx}
@@ -959,10 +975,9 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
                           ? "bg-destructive/10 border-destructive/30 opacity-60 cursor-not-allowed" 
                           : selectedForBulk.includes(idx) 
                             ? "bg-primary/10 border-primary/30 cursor-pointer" 
-                            : "bg-background border-border cursor-pointer",
-                        !isDuplicate && selectedAppointmentIndex === idx && "ring-2 ring-primary"
+                            : "bg-background border-border cursor-pointer"
                       )}
-                      onClick={() => !isDuplicate && selectAppointmentFromImage(apt, idx)}
+                      onClick={() => !isDuplicate && toggleBulkSelection(idx)}
                     >
                       {isDuplicate ? (
                         <Ban className="w-4 h-4 text-destructive flex-shrink-0" />
@@ -979,18 +994,23 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={cn("font-medium truncate", isDuplicate && "line-through")}>{apt.customer_name || 'Unbekannt'}</span>
                           <Badge variant={isDuplicate ? "destructive" : "outline"} className="text-xs">
-                            {isDuplicate ? 'Duplikat' : `${apt.reservation_date} ${apt.reservation_time}`}
+                            {isDuplicate ? 'Duplikat' : `${apt.reservation_time}${apt.end_time ? ' - ' + apt.end_time : ''}`}
                           </Badge>
+                          <span className="text-xs text-muted-foreground">{apt.reservation_date}</span>
                         </div>
                         {apt.service && (
-                          <p className="text-xs text-muted-foreground truncate">{apt.service}</p>
+                          <p className="text-xs text-muted-foreground truncate mt-1">{apt.service}</p>
                         )}
                       </div>
-                      {apt.staff_name && (
-                        <Badge variant="secondary" className="text-xs">{apt.staff_name}</Badge>
-                      )}
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs"
+                        style={matchedStaff ? { backgroundColor: matchedStaff.color + '30', color: matchedStaff.color } : undefined}
+                      >
+                        {apt.staff_name || 'Unbekannt'}
+                        {matchedStaff ? ' ✓' : ' ⚠'}
+                      </Badge>
                     </div>
                   );
                 })}
@@ -1006,12 +1026,12 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
                   {isBulkSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Importiere {selectedForBulk.length} Termine...
+                      Blockiere {selectedForBulk.length} Slots...
                     </>
                   ) : (
                     <>
                       <Check className="w-4 h-4 mr-2" />
-                      {selectedForBulk.length} Termine importieren
+                      {selectedForBulk.length} Slots blockieren
                     </>
                   )}
                 </Button>
