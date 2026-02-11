@@ -74,6 +74,7 @@ const Profile = () => {
     currentPin: '',
     newPin: '',
     confirmPin: '',
+    loginPassword: '',
     showCurrentPin: false,
     showNewPin: false,
   });
@@ -262,7 +263,17 @@ const Profile = () => {
     
     if (!user?.id) return;
     
-    // Validation
+    // Always require login password for PIN changes
+    if (!pinData.loginPassword) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie Ihr Login-Passwort zur Bestätigung ein.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validation for existing PIN
     if (hasExistingPin && !pinData.currentPin) {
       toast({
         title: 'Fehler',
@@ -292,7 +303,23 @@ const Profile = () => {
     
     setIsSavingPin(true);
     
-    // If changing existing PIN, verify current PIN first
+    // Verify login password first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: profile?.email || '',
+      password: pinData.loginPassword,
+    });
+
+    if (signInError) {
+      setIsSavingPin(false);
+      toast({
+        title: 'Fehler',
+        description: 'Das Login-Passwort ist nicht korrekt.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // If changing existing PIN, verify current PIN
     if (hasExistingPin) {
       const { data } = await supabase
         .from('customers')
@@ -332,6 +359,7 @@ const Profile = () => {
         currentPin: '',
         newPin: '',
         confirmPin: '',
+        loginPassword: '',
         showCurrentPin: false,
         showNewPin: false,
       });
@@ -574,6 +602,22 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSavePin} className="space-y-4">
+                {/* Login password required for all PIN changes */}
+                <div className="space-y-2">
+                  <Label htmlFor="pinLoginPassword">Login-Passwort (zur Bestätigung)</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="pinLoginPassword"
+                      type="password"
+                      value={pinData.loginPassword}
+                      onChange={(e) => setPinData({ ...pinData, loginPassword: e.target.value })}
+                      className="bg-secondary/50 pl-10"
+                      placeholder="Ihr Login-Passwort"
+                    />
+                  </div>
+                </div>
+
                 {hasExistingPin && (
                   <div className="space-y-2">
                     <Label htmlFor="currentPin">Aktueller PIN</Label>
