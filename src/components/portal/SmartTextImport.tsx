@@ -549,10 +549,11 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
         reader.readAsDataURL(file);
       });
 
-      // Call edge function to parse image with staff names for better matching
+      // Call edge function to parse image with staff names and current date for better matching
       const staffNamesList = activeStaff.map(s => s.name);
+      const calendarDate = defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
       const response = await supabase.functions.invoke('parse-calendar-image', {
-        body: { imageBase64: base64, staffNames: staffNamesList }
+        body: { imageBase64: base64, staffNames: staffNamesList, calendarDate }
       });
 
       if (response.error) {
@@ -590,59 +591,64 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
     }
   };
 
-  // Helper function to find matching staff with improved precision
+  // Levenshtein distance for fuzzy matching
+  const levenshtein = useCallback((a: string, b: string): number => {
+    const matrix: number[][] = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        matrix[i][j] = b[i - 1] === a[j - 1]
+          ? matrix[i - 1][j - 1]
+          : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+      }
+    }
+    return matrix[b.length][a.length];
+  }, []);
+
+  // Helper function to find matching staff with fuzzy/prefix matching for OCR tolerance
   const findStaffByName = useCallback((staffName: string): string | undefined => {
     if (!staffName) return undefined;
     
     const searchName = staffName.toLowerCase().trim();
-    
-    // Sort staff by name length descending to match longer names first
     const sortedStaff = [...activeStaff].sort((a, b) => b.name.length - a.name.length);
     
     // PRIORITY 1: Exact match
     for (const staff of sortedStaff) {
-      if (staff.name.toLowerCase().trim() === searchName) {
-        return staff.id;
-      }
+      if (staff.name.toLowerCase().trim() === searchName) return staff.id;
     }
     
-    // PRIORITY 2: Search name is contained in staff name (e.g., "Christy" in "Christy Müller")
+    // PRIORITY 2: Contains match (e.g., "Christy" in "Christy Müller")
     for (const staff of sortedStaff) {
       const staffNameLower = staff.name.toLowerCase().trim();
-      if (staffNameLower.includes(searchName) || searchName.includes(staffNameLower)) {
-        return staff.id;
-      }
+      if (staffNameLower.includes(searchName) || searchName.includes(staffNameLower)) return staff.id;
     }
     
-    // PRIORITY 3: First name match
+    // PRIORITY 3: First name prefix match (e.g., "Lill" matches "Lilly")
     for (const staff of sortedStaff) {
       const staffFirstName = staff.name.toLowerCase().trim().split(/\s+/)[0];
       const searchFirstName = searchName.split(/\s+/)[0];
-      if (staffFirstName === searchFirstName && searchFirstName.length >= 3) {
+      if (searchFirstName.length >= 3 && (staffFirstName.startsWith(searchFirstName) || searchFirstName.startsWith(staffFirstName))) {
         return staff.id;
       }
     }
     
-    // PRIORITY 4: Partial match with minimum 3 characters
+    // PRIORITY 4: Levenshtein distance ≤ 2 for OCR typo tolerance
+    let bestMatch: { id: string; distance: number } | null = null;
     for (const staff of sortedStaff) {
-      const staffNameLower = staff.name.toLowerCase().trim();
-      // Check if any part of the name matches
-      const staffParts = staffNameLower.split(/\s+/);
-      const searchParts = searchName.split(/\s+/);
-      
-      for (const staffPart of staffParts) {
-        for (const searchPart of searchParts) {
-          if (staffPart.length >= 3 && searchPart.length >= 3) {
-            if (staffPart.startsWith(searchPart) || searchPart.startsWith(staffPart)) {
-              return staff.id;
-            }
-          }
+      const staffFirstName = staff.name.toLowerCase().trim().split(/\s+/)[0];
+      const searchFirstName = searchName.split(/\s+/)[0];
+      if (searchFirstName.length >= 3) {
+        const dist = levenshtein(staffFirstName, searchFirstName);
+        if (dist <= 2 && (!bestMatch || dist < bestMatch.distance)) {
+          bestMatch = { id: staff.id, distance: dist };
         }
       }
     }
+    if (bestMatch) return bestMatch.id;
     
     return undefined;
-  }, [activeStaff]);
+  }, [activeStaff, levenshtein]);
 
   // Select an appointment from image parsing results
   const selectAppointmentFromImage = (appointment: any, index: number) => {
@@ -961,10 +967,8 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
               <div className="space-y-2 max-h-[250px] overflow-y-auto">
                 {parsedAppointments.map((apt, idx) => {
                   const isDuplicate = duplicateIndices.includes(idx);
-                  const matchedStaff = apt.staff_name ? activeStaff.find(s => 
-                    s.name.toLowerCase().includes(apt.staff_name.toLowerCase()) ||
-                    apt.staff_name.toLowerCase().includes(s.name.toLowerCase())
-                  ) : null;
+                  const matchedStaffId = apt.staff_name ? findStaffByName(apt.staff_name) : undefined;
+                  const matchedStaff = matchedStaffId ? activeStaff.find(s => s.id === matchedStaffId) : null;
                   
                   return (
                     <div 
