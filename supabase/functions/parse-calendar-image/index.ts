@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const { imageBase64, staffNames } = await req.json();
     
     if (!imageBase64) {
       return new Response(
@@ -25,26 +25,40 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `Du bist ein Experte für die Extraktion von Termindaten aus Kalender-Screenshots.
-Analysiere das Bild und extrahiere ALLE sichtbaren Termine.
+    const staffList = staffNames && staffNames.length > 0 
+      ? `\n\nDie folgenden Mitarbeiter/Spalten existieren im System: ${staffNames.join(', ')}. Ordne jeden Termin dem passenden Mitarbeiter zu. Verwende exakt diese Namen.`
+      : '';
 
-Für jeden Termin extrahiere:
-- customer_name: Name des Kunden (falls sichtbar)
+    const systemPrompt = `Du bist ein Experte für die Extraktion von Termindaten aus Kalender-Screenshots (z.B. Treatwell, Google Calendar, Terminplaner).
+
+WICHTIGE REGELN:
+1. Analysiere das Bild SEHR SORGFÄLTIG. Schaue dir JEDE Spalte und JEDE Zeile genau an.
+2. Kalender-Screenshots haben typischerweise Spalten für jeden Mitarbeiter/Stylist und Zeilen für Zeitslots.
+3. Jeder farbige Block oder Eintrag in einer Spalte ist ein Termin.
+4. Extrahiere die EXAKTE Startzeit und Endzeit aus der Position des Blocks im Zeitraster.
+5. Der Mitarbeitername steht in der Spaltenüberschrift.
+6. Das Datum steht oft oben im Screenshot oder im Header.
+7. Kundennamen sind NICHT wichtig - setze sie auf leer oder "Blockiert".
+8. Achte auf ALLE Termine, auch kleine Blöcke oder überlappende Einträge.
+9. Wenn Zeiten nicht exakt lesbar sind, schätze sie basierend auf der Position im Zeitraster.
+10. Achte auf die Dienstleistung/Service-Bezeichnung die oft IM farbigen Block steht.
+${staffList}
+
+Für jeden erkannten Termin/Block extrahiere:
+- staff_name: Name des Mitarbeiters (aus der Spaltenüberschrift)
 - reservation_date: Datum im Format YYYY-MM-DD
 - reservation_time: Startzeit im Format HH:MM (24-Stunden)
-- end_time: Endzeit im Format HH:MM (falls sichtbar)
-- staff_name: Name des Mitarbeiters/Stylisten (falls sichtbar)
-- service: Art der Dienstleistung/Behandlung (falls sichtbar)
-- notes: Zusätzliche Informationen
+- end_time: Endzeit im Format HH:MM (24-Stunden)
+- service: Dienstleistung/Behandlung (falls im Block lesbar)
+- notes: Zusätzliche Informationen (falls lesbar)
 
-Antworte NUR mit einem JSON-Array im Format:
+Antworte NUR mit einem JSON-Array:
 [
   {
-    "customer_name": "Name",
-    "reservation_date": "2024-01-26",
+    "staff_name": "Mitarbeitername",
+    "reservation_date": "2025-02-11",
     "reservation_time": "09:00",
     "end_time": "10:00",
-    "staff_name": "Mitarbeiter",
     "service": "Behandlung",
     "notes": ""
   }
@@ -60,7 +74,7 @@ Gib NUR das JSON zurück, keinen anderen Text.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -68,7 +82,7 @@ Gib NUR das JSON zurück, keinen anderen Text.`;
             content: [
               {
                 type: "text",
-                text: "Extrahiere alle Termine aus diesem Kalender-Screenshot:"
+                text: "Analysiere diesen Kalender-Screenshot SEHR GENAU. Extrahiere ALLE sichtbaren Termine/Blöcke mit ihren exakten Zeiten und Mitarbeiterzuordnungen:"
               },
               {
                 type: "image_url",
@@ -106,7 +120,6 @@ Gib NUR das JSON zurück, keinen anderen Text.`;
     // Parse the JSON response
     let appointments = [];
     try {
-      // Extract JSON from the response (in case there's extra text)
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         appointments = JSON.parse(jsonMatch[0]);
