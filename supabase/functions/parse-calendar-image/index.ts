@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, staffNames } = await req.json();
+    const { imageBase64, staffNames, calendarDate } = await req.json();
     
     if (!imageBase64) {
       return new Response(
@@ -26,46 +26,60 @@ serve(async (req) => {
     }
 
     const staffList = staffNames && staffNames.length > 0 
-      ? `\n\nDie folgenden Mitarbeiter/Spalten existieren im System: ${staffNames.join(', ')}. Ordne jeden Termin dem passenden Mitarbeiter zu. Verwende exakt diese Namen.`
+      ? `\n\nDie folgenden Mitarbeiter existieren im System: ${staffNames.join(', ')}. Du MUSST exakt diese Namen in "staff_name" verwenden. Ordne jeden farbigen Block der Spalte zu, in der er sich befindet, und verwende den entsprechenden Mitarbeiternamen aus der Spaltenüberschrift.`
       : '';
 
-    const systemPrompt = `Du bist ein Experte für die Extraktion von Termindaten aus Kalender-Screenshots (z.B. Treatwell, Google Calendar, Terminplaner).
+    const dateHint = calendarDate 
+      ? `\n\nDas aktuelle Datum des Kalenders ist: ${calendarDate}. Verwende dieses Datum für ALLE Termine, es sei denn, im Screenshot ist ein anderes Datum klar erkennbar.`
+      : '';
+
+    const systemPrompt = `Du bist ein Experte für die Extraktion von Termindaten aus Kalender-Screenshots, insbesondere von Treatwell und ähnlichen Buchungssystemen.
+
+LAYOUT-ANALYSE (Treatwell und ähnliche Systeme):
+- Der Screenshot zeigt einen TAGESKALENDER mit SPALTEN für jeden Mitarbeiter/Stylist
+- Die SPALTENÜBERSCHRIFTEN oben enthalten die Mitarbeiternamen (oft mit kleinen Profilbildern/Avataren)
+- Links befindet sich eine ZEITACHSE mit Uhrzeiten (z.B. 08:00, 08:30, 09:00, ...)
+- FARBIGE BLÖCKE in den Spalten = Termine/Buchungen
+- Die VERTIKALE POSITION eines Blocks im Zeitraster bestimmt die START- und ENDZEIT
+- Die SPALTE in der ein Block liegt bestimmt den MITARBEITER
+- Im farbigen Block steht oft der SERVICE/die Behandlung und eventuell ein Kundenname
+
+VORGEHEN - SCHRITT FÜR SCHRITT:
+1. Identifiziere ZUERST alle Spaltenüberschriften (= Mitarbeiternamen) von LINKS nach RECHTS
+2. Identifiziere die Zeitachse links (Stundenraster)
+3. Gehe dann SPALTE FÜR SPALTE von links nach rechts durch
+4. Für JEDEN farbigen Block in einer Spalte:
+   a) Bestimme die STARTZEIT anhand der oberen Kante des Blocks im Zeitraster
+   b) Bestimme die ENDZEIT anhand der unteren Kante des Blocks
+   c) Lies den TEXT im Block (Service/Behandlung)
+   d) Der MITARBEITER ist der Name aus der Spaltenüberschrift
+5. ZÄHLE die Gesamtzahl der farbigen Blöcke und stelle sicher, dass du EXAKT so viele Einträge zurückgibst
+6. Überprüfe dein Ergebnis: Stimmen die Zeiten? Stimmen die Mitarbeiter-Zuordnungen?
 
 WICHTIGE REGELN:
-1. Analysiere das Bild SEHR SORGFÄLTIG. Schaue dir JEDE Spalte und JEDE Zeile genau an.
-2. Kalender-Screenshots haben typischerweise Spalten für jeden Mitarbeiter/Stylist und Zeilen für Zeitslots.
-3. Jeder farbige Block oder Eintrag in einer Spalte ist ein Termin.
-4. Extrahiere die EXAKTE Startzeit und Endzeit aus der Position des Blocks im Zeitraster.
-5. Der Mitarbeitername steht in der Spaltenüberschrift.
-6. Das Datum steht oft oben im Screenshot oder im Header.
-7. Kundennamen sind NICHT wichtig - setze sie auf leer oder "Blockiert".
-8. Achte auf ALLE Termine, auch kleine Blöcke oder überlappende Einträge.
-9. Wenn Zeiten nicht exakt lesbar sind, schätze sie basierend auf der Position im Zeitraster.
-10. Achte auf die Dienstleistung/Service-Bezeichnung die oft IM farbigen Block steht.
-${staffList}
+- Setze customer_name IMMER auf "Blockiert" - ignoriere Kundennamen komplett
+- Achte auf ALLE Blöcke, auch kleine (15-Minuten-Termine) oder teilweise verdeckte
+- Wenn Zeiten nicht exakt lesbar sind, schätze basierend auf der Position im Raster
+- Runde Zeiten auf 5-Minuten-Intervalle (z.B. 09:00, 09:05, 09:10, ...)
+- Service/Behandlung aus dem Text IM farbigen Block extrahieren
+- Wenn kein Service lesbar ist, setze "service" auf ""
+${staffList}${dateHint}
 
-Für jeden erkannten Termin/Block extrahiere:
-- staff_name: Name des Mitarbeiters (aus der Spaltenüberschrift)
-- reservation_date: Datum im Format YYYY-MM-DD
-- reservation_time: Startzeit im Format HH:MM (24-Stunden)
-- end_time: Endzeit im Format HH:MM (24-Stunden)
-- service: Dienstleistung/Behandlung (falls im Block lesbar)
-- notes: Zusätzliche Informationen (falls lesbar)
-
-Antworte NUR mit einem JSON-Array:
+AUSGABEFORMAT - NUR JSON-Array:
 [
   {
-    "staff_name": "Mitarbeitername",
-    "reservation_date": "2025-02-11",
-    "reservation_time": "09:00",
-    "end_time": "10:00",
-    "service": "Behandlung",
+    "staff_name": "Exakter Mitarbeitername",
+    "customer_name": "Blockiert",
+    "reservation_date": "YYYY-MM-DD",
+    "reservation_time": "HH:MM",
+    "end_time": "HH:MM",
+    "service": "Behandlungsname falls lesbar",
     "notes": ""
   }
 ]
 
-Wenn du keine Termine findest, antworte mit einem leeren Array: []
-Gib NUR das JSON zurück, keinen anderen Text.`;
+Wenn du keine Termine findest, antworte mit: []
+Gib NUR das JSON zurück, KEINEN anderen Text.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -75,6 +89,7 @@ Gib NUR das JSON zurück, keinen anderen Text.`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-pro",
+        temperature: 0,
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -82,7 +97,7 @@ Gib NUR das JSON zurück, keinen anderen Text.`;
             content: [
               {
                 type: "text",
-                text: "Analysiere diesen Kalender-Screenshot SEHR GENAU. Extrahiere ALLE sichtbaren Termine/Blöcke mit ihren exakten Zeiten und Mitarbeiterzuordnungen:"
+                text: "Analysiere diesen Kalender-Screenshot SEHR GENAU. Gehe Spalte für Spalte durch und extrahiere JEDEN farbigen Block als Termin. Zähle alle Blöcke und stelle sicher, dass kein einziger fehlt:"
               },
               {
                 type: "image_url",
