@@ -1,40 +1,48 @@
 
 
-## Verbesserung der Kalender-Bild-Analyse
+## Automatische API-Key-Erstellung bei Registrierung
 
-### Ziel
-Die Bildanalyse von Treatwell-Screenshots soll deutlich verbessert werden, sodass alle Termine korrekt erkannt, den richtigen Mitarbeitern zugeordnet und als blockierte Zeitslots eingetragen werden. Vor dem Import wird eine Bestaetigungsansicht mit Anzahl der Termine und erkannten Daten angezeigt.
+### Was wird geaendert?
+Bei jeder neuen Account-Registrierung soll automatisch ein API-Key fuer den Business-Kunden erstellt werden. Aktuell wird zwar ein Eintrag in der `customers`-Tabelle angelegt (durch den `handle_new_user`-Trigger), aber kein API-Key generiert.
 
-### Aenderungen
+### Umsetzung
 
-**1. Edge Function `parse-calendar-image` verbessern**
-- Den AI-Prompt stark ueberarbeiten mit spezifischen Treatwell-Layout-Hinweisen:
-  - Spaltenkoepfe enthalten Mitarbeiternamen (oft mit Avataren/Icons)
-  - Farbige Bloecke = Termine, Position im Zeitraster = Start-/Endzeit
-  - Datum steht im Header (z.B. "Mi, Heute" + Kalender links)
-  - Kundennamen ignorieren, stattdessen immer "Blockiert" setzen
-  - Service/Behandlung aus dem Text im farbigen Block extrahieren
-- Zusaetzlich: Die `temperature` auf 0 setzen fuer konsistentere Ergebnisse
-- Das Datum vom Frontend mitsenden (aktuell ausgewaehltes Datum), damit die AI es als Fallback verwenden kann
+**1. Datenbank-Trigger erweitern**
+- Die bestehende Funktion `handle_new_user()` wird um einen zusaetzlichen INSERT in die `customer_api_keys`-Tabelle ergaenzt
+- Der API-Key wird automatisch per `gen_random_uuid()` generiert
+- Dies geschieht direkt nach dem Anlegen des `customers`-Eintrags
 
-**2. Frontend SmartTextImport anpassen**
-- Das aktuell im Kalender ausgewaehlte Datum an die Edge Function mitsenden
-- Die Bestaetigungsansicht verbessern:
-  - Klare Zusammenfassung: Anzahl Termine, erkannte Daten, Mitarbeiter-Zuordnungen
-  - Nicht-zugeordnete Mitarbeiter hervorheben (gelb markieren)
-  - Jeder Eintrag zeigt: Zeit, Mitarbeiter, Service
-- Staff-Matching verbessern: Auch Vornamen-Anfaenge matchen (z.B. "Lilly" im System matcht "Lill" aus dem Bild)
+Neuer Abschnitt in `handle_new_user()`:
+```text
+-- Nach dem INSERT in customers:
+INSERT INTO public.customer_api_keys (customer_id)
+VALUES (NEW.id)
+ON CONFLICT DO NOTHING;
+```
 
-### Technische Details
+Da die Spalte `api_key` bereits einen Default-Wert von `gen_random_uuid()` hat, wird automatisch ein eindeutiger Key erzeugt.
 
-**Edge Function Prompt-Optimierung:**
-- Explizite Anweisung: "Das Datum des Screenshots ist [mitgesendetes Datum]. Verwende dieses Datum fuer alle Termine."
-- Strukturierte Anweisung pro Spalte: "Gehe Spalte fuer Spalte von links nach rechts durch"
-- Anweisung zur Genauigkeit: "Zaehle die Gesamtzahl der farbigen Bloecke und stelle sicher, dass du genau so viele Eintraege zurueckgibst"
-- `temperature: 0` fuer deterministische Ergebnisse
+**2. RLS-Policy pruefen**
+- Die `customer_api_keys`-Tabelle hat bereits korrekte RLS-Policies:
+  - Nur der Besitzer kann seinen eigenen Key sehen (`SELECT`)
+  - Nur der Besitzer kann seinen Key aktualisieren (`UPDATE`)
+  - Admins haben vollen Zugriff (`ALL`)
+- Es fehlt jedoch eine `INSERT`-Policy fuer den Trigger. Da `handle_new_user()` als `SECURITY DEFINER` laeuft, umgeht es RLS -- daher ist keine zusaetzliche Policy noetig.
 
-**Frontend-Aenderungen:**
-- `selectedDate` (oder `defaultDate`) als Parameter `calendarDate` an die Edge Function senden
-- Staff-Name-Matching: Levenshtein-aehnliche Toleranz fuer Tippfehler/OCR-Fehler (z.B. "Lill" vs "Lilly")
-- Bestaetigungsschritt wird automatisch angezeigt nach der Analyse (schon vorhanden, wird optimiert)
+**3. Bestehende Nutzer nachruestens**
+- Ein einmaliges SQL-Statement erstellt API-Keys fuer alle bestehenden Kunden, die noch keinen haben:
 
+```text
+INSERT INTO customer_api_keys (customer_id)
+SELECT id FROM customers
+WHERE id NOT IN (SELECT customer_id FROM customer_api_keys);
+```
+
+### Was sich fuer den Nutzer aendert
+- Nach der Registrierung ist auf der API-Einstellungen-Seite sofort ein API-Key sichtbar
+- Der "Neuen Key generieren"-Button funktioniert weiterhin zum Erneuern
+- Kein manueller Schritt mehr noetig
+
+### Dateien die geaendert werden
+- **Datenbank-Migration**: `handle_new_user()`-Funktion erweitern + Backfill bestehender Nutzer
+- Keine Frontend-Aenderungen noetig (die API-Settings-Seite zeigt den Key bereits korrekt an)
