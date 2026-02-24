@@ -43,11 +43,11 @@ const Reservations = () => {
   
   const { data: reservations, isLoading, refetch } = useReservations({ status: statusFilter });
   const { staffMembers } = useStaffMembers();
-  const { data: products } = useProducts();
+  const { products } = useProducts();
   
   // Create lookup maps
   const staffMap = new Map(staffMembers?.map(s => [s.id, s.name]) || []);
-  const productMap = new Map(products?.map(p => [p.id, { name: p.name, price: p.price }]) || []);
+  const productMap = new Map(products?.map((p: { id: string; name: string; price: number }) => [p.id, { name: p.name, price: p.price }]) || []);
 
   const filteredReservations = reservations?.filter(res => {
     const matchesSearch = searchQuery === '' || 
