@@ -21,7 +21,7 @@ const HeroSection = () => {
       {/* Animated Gradient Orbs */}
       <motion.div 
         className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px]"
-        style={{ background: 'radial-gradient(circle, hsl(185 100% 50% / 0.15) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, hsl(252 80% 60% / 0.15) 0%, transparent 70%)' }}
         animate={{ 
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -32,7 +32,7 @@ const HeroSection = () => {
       />
       <motion.div 
         className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px]"
-        style={{ background: 'radial-gradient(circle, hsl(200 100% 60% / 0.12) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, hsl(330 85% 60% / 0.12) 0%, transparent 70%)' }}
         animate={{ 
           scale: [1.2, 1, 1.2],
           opacity: [0.2, 0.4, 0.2],
@@ -67,8 +67,7 @@ const HeroSection = () => {
         <div className="max-w-5xl mx-auto text-center">
           {/* Badge */}
           <motion.div 
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/40 mb-8"
-            style={{ background: 'linear-gradient(135deg, hsl(222 47% 10% / 0.8) 0%, hsl(222 47% 15% / 0.6) 100%)', backdropFilter: 'blur(20px)' }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/40 mb-8 bg-card/80 backdrop-blur-xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -82,7 +81,7 @@ const HeroSection = () => {
             <span className="text-sm text-foreground/80 font-medium">Intelligente Automatisierung für Ihr Business</span>
           </motion.div>
 
-          {/* Main Headline with Staggered Animation */}
+          {/* Main Headline */}
           <motion.h1 
             className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight"
             initial={{ opacity: 0, y: 30 }}
@@ -93,15 +92,11 @@ const HeroSection = () => {
             <motion.span 
               className="block mt-2"
               style={{ 
-                background: 'linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(200 100% 65%) 50%, hsl(220 100% 70%) 100%)',
+                background: 'linear-gradient(135deg, hsl(252 80% 60%) 0%, hsl(330 85% 60%) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}
-              animate={{ 
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-              }}
-              transition={{ duration: 5, repeat: Infinity }}
             >
               Automatisierungen
             </motion.span>
@@ -126,32 +121,20 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             <Link to="/kontakt">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-              >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   size="lg" 
                   className="relative overflow-hidden text-lg px-8 py-6 rounded-full font-semibold group"
-                  style={{ background: 'linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(200 100% 60%) 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, hsl(252 80% 60%) 0%, hsl(330 85% 60%) 100%)' }}
                 >
-                  <span className="relative z-10 text-background flex items-center gap-2">
+                  <span className="relative z-10 text-white flex items-center gap-2">
                     Jetzt unverbindlich anfragen
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <motion.div 
-                    className="absolute inset-0"
-                    style={{ background: 'linear-gradient(135deg, hsl(200 100% 60%) 0%, hsl(220 100% 70%) 100%)' }}
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  />
                 </Button>
               </motion.div>
             </Link>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-            >
+            <motion.div whileHover={{ scale: 1.02 }}>
               <Button 
                 variant="outline" 
                 size="lg" 
@@ -172,11 +155,10 @@ const HeroSection = () => {
           >
             <div className="group cursor-not-allowed opacity-60">
               <motion.div 
-                className="relative rounded-2xl p-8 border border-border/30 overflow-hidden"
-                style={{ background: 'linear-gradient(145deg, hsl(222 47% 10% / 0.9) 0%, hsl(222 47% 8% / 0.8) 100%)', backdropFilter: 'blur(20px)' }}
+                className="relative rounded-2xl p-8 border border-border/30 overflow-hidden bg-card/90 backdrop-blur-xl"
               >
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto" style={{ background: 'linear-gradient(135deg, hsl(185 100% 50% / 0.1) 0%, hsl(200 100% 60% / 0.05) 100%)' }}>
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto bg-primary/10">
                     <Bot className="w-7 h-7 text-muted-foreground" />
                   </div>
                   <h3 className="font-display font-semibold text-lg text-muted-foreground mb-2">Kundenportal</h3>
@@ -187,14 +169,13 @@ const HeroSection = () => {
             
             <Link to="/kontakt" className="group">
               <motion.div 
-                className="relative rounded-2xl p-8 border border-border/50 overflow-hidden"
-                style={{ background: 'linear-gradient(145deg, hsl(222 47% 10% / 0.9) 0%, hsl(222 47% 8% / 0.8) 100%)', backdropFilter: 'blur(20px)' }}
+                className="relative rounded-2xl p-8 border border-border/50 overflow-hidden bg-card/90 backdrop-blur-xl"
                 whileHover={{ y: -8, scale: 1.02 }}
                 transition={{ duration: 0.3 }}
               >
-                <motion.div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ boxShadow: '0 0 60px hsl(185 100% 50% / 0.3), inset 0 0 30px hsl(185 100% 50% / 0.1)' }} />
+                <motion.div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ boxShadow: '0 0 60px hsl(252 80% 60% / 0.3), inset 0 0 30px hsl(252 80% 60% / 0.1)' }} />
                 <div className="relative z-10">
-                  <motion.div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto" style={{ background: 'linear-gradient(135deg, hsl(185 100% 50% / 0.2) 0%, hsl(200 100% 60% / 0.1) 100%)' }} whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                  <motion.div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto bg-primary/10" whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
                     <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
@@ -207,14 +188,13 @@ const HeroSection = () => {
             
             <Link to="/kontakt" className="group">
               <motion.div 
-                className="relative rounded-2xl p-8 border border-border/50 overflow-hidden"
-                style={{ background: 'linear-gradient(145deg, hsl(222 47% 10% / 0.9) 0%, hsl(222 47% 8% / 0.8) 100%)', backdropFilter: 'blur(20px)' }}
+                className="relative rounded-2xl p-8 border border-border/50 overflow-hidden bg-card/90 backdrop-blur-xl"
                 whileHover={{ y: -8, scale: 1.02 }}
                 transition={{ duration: 0.3 }}
               >
-                <motion.div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ boxShadow: '0 0 60px hsl(185 100% 50% / 0.3), inset 0 0 30px hsl(185 100% 50% / 0.1)' }} />
+                <motion.div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ boxShadow: '0 0 60px hsl(252 80% 60% / 0.3), inset 0 0 30px hsl(252 80% 60% / 0.1)' }} />
                 <div className="relative z-10">
-                  <motion.div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto" style={{ background: 'linear-gradient(135deg, hsl(185 100% 50% / 0.2) 0%, hsl(200 100% 60% / 0.1) 100%)' }} whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                  <motion.div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto bg-primary/10" whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
                     <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>

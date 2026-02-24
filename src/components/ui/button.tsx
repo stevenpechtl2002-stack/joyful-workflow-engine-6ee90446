@@ -9,13 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(185_100%_50%/0.3)] hover:shadow-[0_0_30px_hsl(185_100%_50%/0.4)]",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(252_80%_60%/0.3)] hover:shadow-[0_0_30px_hsl(252_80%_60%/0.4)]",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-secondary hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-to-r from-[hsl(185,100%,50%)] to-[hsl(200,100%,60%)] text-[hsl(222,47%,6%)] font-bold shadow-lg shadow-[hsl(185,100%,50%)/0.3] hover:scale-105 hover:shadow-[0_0_40px_hsl(185,100%,50%/0.5)]",
+        hero: "bg-gradient-to-r from-[hsl(252,80%,60%)] to-[hsl(330,85%,60%)] text-white font-bold shadow-lg shadow-[hsl(252,80%,60%)/0.3] hover:scale-105 hover:shadow-[0_0_40px_hsl(252,80%,60%/0.5)]",
         glass: "bg-card/50 backdrop-blur-xl border border-border/50 text-foreground hover:bg-card/70",
       },
       size: {

@@ -12,7 +12,7 @@ const services = [
     description: "Intelligente Voice-Agents, die Anrufe 24/7 entgegennehmen, Reservierungen aufnehmen und Kundenanfragen bearbeiten.",
     features: ["Natürliche Sprachverarbeitung", "Mehrsprachig", "Nahtlose Integration"],
     image: phoneAssistant,
-    gradient: "from-cyan-500/20 to-blue-500/20"
+    gradient: "from-primary/20 to-accent/20"
   },
   {
     icon: Workflow,
@@ -20,7 +20,7 @@ const services = [
     description: "Leistungsstarke Workflow-Automatisierungen, die Ihre Geschäftsprozesse optimieren und Zeit sparen.",
     features: ["Lead-Automatisierung", "E-Mail Workflows", "Datenintegration"],
     image: automationFlow,
-    gradient: "from-blue-500/20 to-purple-500/20"
+    gradient: "from-accent/20 to-primary/20"
   },
   {
     icon: Bot,
@@ -28,7 +28,7 @@ const services = [
     description: "Chatbots und virtuelle Assistenten für Ihre Website, die Kunden beraten und Support bieten.",
     features: ["24/7 Verfügbarkeit", "Personalisiert", "Lernfähig"],
     image: webAssistant,
-    gradient: "from-purple-500/20 to-pink-500/20"
+    gradient: "from-primary/15 to-accent/15"
   },
   {
     icon: Code2,
@@ -36,7 +36,7 @@ const services = [
     description: "Individuelle Beratung und maßgeschneiderte KI-Lösungen, die genau auf Ihre Bedürfnisse zugeschnitten sind.",
     features: ["Strategieberatung", "Custom Solutions", "Implementierung"],
     image: backofficeVisual,
-    gradient: "from-pink-500/20 to-cyan-500/20"
+    gradient: "from-accent/15 to-primary/15"
   }
 ];
 
@@ -44,9 +44,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.15
-    }
+    transition: { staggerChildren: 0.15 }
   }
 };
 
@@ -66,7 +64,7 @@ const ServicesSection = () => {
       <div className="absolute inset-0 bg-gradient-dark" />
       <motion.div 
         className="absolute top-1/2 left-0 w-[800px] h-[800px] rounded-full blur-[150px] -translate-y-1/2"
-        style={{ background: 'radial-gradient(circle, hsl(185 100% 50% / 0.08) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, hsl(252 80% 60% / 0.08) 0%, transparent 70%)' }}
         animate={{ x: [-100, 100, -100] }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -89,15 +87,7 @@ const ServicesSection = () => {
           </motion.span>
           <h2 className="font-display text-4xl md:text-6xl font-bold mb-6">
             Unsere{" "}
-            <span 
-              style={{ 
-                background: 'linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(200 100% 65%) 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}
-            >
-              Services
-            </span>
+            <span className="text-gradient">Services</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Von KI-gesteuerten Telefonassistenten bis hin zu komplexen Automatisierungen – 
@@ -113,14 +103,9 @@ const ServicesSection = () => {
           viewport={{ once: true, margin: "-100px" }}
         >
           {services.map((service, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="group relative"
-            >
+            <motion.div key={index} variants={itemVariants} className="group relative">
               <motion.div 
-                className="relative rounded-3xl overflow-hidden border border-border/30"
-                style={{ background: 'linear-gradient(145deg, hsl(222 47% 11%) 0%, hsl(222 47% 8%) 100%)' }}
+                className="relative rounded-3xl overflow-hidden border border-border/30 bg-card"
                 whileHover={{ y: -10, scale: 1.02 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
               >
@@ -140,8 +125,7 @@ const ServicesSection = () => {
                 {/* Content */}
                 <div className="relative p-8 -mt-16">
                   <motion.div 
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border border-primary/30"
-                    style={{ background: 'linear-gradient(135deg, hsl(185 100% 50% / 0.2) 0%, hsl(200 100% 60% / 0.1) 100%)', backdropFilter: 'blur(10px)' }}
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border border-primary/30 bg-primary/10 backdrop-blur-sm"
                     whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
                     transition={{ duration: 0.5 }}
                   >
@@ -159,9 +143,8 @@ const ServicesSection = () => {
                     {service.features.map((feature, i) => (
                       <motion.span
                         key={i}
-                        className="px-4 py-1.5 text-xs font-medium rounded-full border border-primary/30"
-                        style={{ background: 'linear-gradient(135deg, hsl(185 100% 50% / 0.1) 0%, transparent 100%)' }}
-                        whileHover={{ scale: 1.05, borderColor: 'hsl(185 100% 50% / 0.6)' }}
+                        className="px-4 py-1.5 text-xs font-medium rounded-full border border-primary/30 bg-primary/5"
+                        whileHover={{ scale: 1.05, borderColor: 'hsl(252 80% 60% / 0.6)' }}
                       >
                         {feature}
                       </motion.span>
@@ -172,7 +155,7 @@ const ServicesSection = () => {
                 {/* Hover Glow Effect */}
                 <motion.div 
                   className="absolute inset-0 rounded-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ boxShadow: 'inset 0 0 60px hsl(185 100% 50% / 0.1), 0 0 80px hsl(185 100% 50% / 0.15)' }}
+                  style={{ boxShadow: 'inset 0 0 60px hsl(252 80% 60% / 0.1), 0 0 80px hsl(252 80% 60% / 0.15)' }}
                 />
               </motion.div>
             </motion.div>
