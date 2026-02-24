@@ -1,0 +1,12 @@
+export { default as Login } from './Login';
+export { default as LandingPage } from './LandingPage';
+export { default as CalendarView } from './CalendarView';
+export { default as ServiceManagement } from './ServiceManagement';
+export { default as StaffManagement } from './StaffManagement';
+export { default as CustomerManagement } from './CustomerManagement';
+export { default as Insights } from './Insights';
+export { default as Settings } from './Settings';
+export { default as CustomerPortal } from './CustomerPortal';
+export { default as SalonRegistration } from './SalonRegistration';
+export { default as Logo } from './Logo';
+export { default as ApiSettings } from './ApiSettings';
