@@ -1,48 +1,46 @@
 
 
-## Automatische API-Key-Erstellung bei Registrierung
+# Design-Transfer von "Website Zip Archive" (ZenBook)
 
-### Was wird geaendert?
-Bei jeder neuen Account-Registrierung soll automatisch ein API-Key fuer den Business-Kunden erstellt werden. Aktuell wird zwar ein Eintrag in der `customers`-Tabelle angelegt (durch den `handle_new_user`-Trigger), aber kein API-Key generiert.
+## Zusammenfassung
 
-### Umsetzung
+Das komplette visuelle Design (Farben, Schriftart, Glass-Effekte, Animationen, Buttons) wird aus dem ZenBook-Projekt uebertragen. Alle Funktionen (Kalender, n8n, API-Keys, Edge Functions, Datenbank) bleiben 1:1 erhalten.
 
-**1. Datenbank-Trigger erweitern**
-- Die bestehende Funktion `handle_new_user()` wird um einen zusaetzlichen INSERT in die `customer_api_keys`-Tabelle ergaenzt
-- Der API-Key wird automatisch per `gen_random_uuid()` generiert
-- Dies geschieht direkt nach dem Anlegen des `customers`-Eintrags
+## Was sich aendert
 
-Neuer Abschnitt in `handle_new_user()`:
-```text
--- Nach dem INSERT in customers:
-INSERT INTO public.customer_api_keys (customer_id)
-VALUES (NEW.id)
-ON CONFLICT DO NOTHING;
-```
+Nur **2 Dateien** werden angepasst:
 
-Da die Spalte `api_key` bereits einen Default-Wert von `gen_random_uuid()` hat, wird automatisch ein eindeutiger Key erzeugt.
+### 1. `src/index.css`
 
-**2. RLS-Policy pruefen**
-- Die `customer_api_keys`-Tabelle hat bereits korrekte RLS-Policies:
-  - Nur der Besitzer kann seinen eigenen Key sehen (`SELECT`)
-  - Nur der Besitzer kann seinen Key aktualisieren (`UPDATE`)
-  - Admins haben vollen Zugriff (`ALL`)
-- Es fehlt jedoch eine `INSERT`-Policy fuer den Trigger. Da `handle_new_user()` als `SECURITY DEFINER` laeuft, umgeht es RLS -- daher ist keine zusaetzliche Policy noetig.
+Komplett ersetzen mit dem ZenBook-Styling:
 
-**3. Bestehende Nutzer nachruestens**
-- Ein einmaliges SQL-Statement erstellt API-Keys fuer alle bestehenden Kunden, die noch keinen haben:
+- **Schriftart**: Plus Jakarta Sans (statt Inter/Space Grotesk)
+- **Helles Farbschema (Standard)**:
+  - Background: heller Grauton (`240 20% 98%`)
+  - Primary: Indigo (`252 80% 60%`)
+  - Accent: Pink (`330 85% 60%`)
+  - Helle Borders und Inputs
+- **Dunkles Farbschema**: Angepasste dunkle Varianten mit Indigo/Pink
+- **Neue Glass-Effekte**: `floating-3d`, `glass-card`, `card-3d`, `rim-light`, `gradient-border`
+- **Neue Utility-Klassen**: `zen-label`, `zen-input`, `zen-button-primary`, `zen-button-secondary`, `zen-card`
+- **Neue Animationen**: 3D-Hover, Glow-Pulse, Shimmer, Float
 
-```text
-INSERT INTO customer_api_keys (customer_id)
-SELECT id FROM customers
-WHERE id NOT IN (SELECT customer_id FROM customer_api_keys);
-```
+Die bestehenden Utility-Klassen (`text-gradient`, `glass`, `glow-primary`, `animate-float`, etc.) werden auf das neue Farbschema umgemappt, damit vorhandene Komponenten weiter funktionieren. Die Variable `--border-subtle` wird beibehalten, da sie in bestehenden Komponenten referenziert wird.
 
-### Was sich fuer den Nutzer aendert
-- Nach der Registrierung ist auf der API-Einstellungen-Seite sofort ein API-Key sichtbar
-- Der "Neuen Key generieren"-Button funktioniert weiterhin zum Erneuern
-- Kein manueller Schritt mehr noetig
+### 2. `tailwind.config.ts`
 
-### Dateien die geaendert werden
-- **Datenbank-Migration**: `handle_new_user()`-Funktion erweitern + Backfill bestehender Nutzer
-- Keine Frontend-Aenderungen noetig (die API-Settings-Seite zeigt den Key bereits korrekt an)
+- Schriftfamilie auf `Plus Jakarta Sans` aendern
+- `border-subtle` Farbvariable beibehalten
+- Rest bleibt identisch
+
+## Was NICHT angefasst wird
+
+- Keine Komponenten, Seiten, Hooks, Router oder Auth-System
+- Keine Edge Functions, Datenbank oder Migrationen
+- Keine Supabase-Konfiguration
+- Kalender, n8n-Integration, API-Key-Logik - alles bleibt 1:1
+
+## Technischer Hintergrund
+
+Alle bestehenden Komponenten verwenden CSS-Variablen (`bg-background`, `text-primary`, `bg-card`, etc.). Durch das Ersetzen der CSS-Variablenwerte uebernehmen sie automatisch das neue Farbschema - kein Komponenten-Code muss geaendert werden.
+
