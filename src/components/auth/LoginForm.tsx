@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuthContext } from './AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginFormProps {
   onSwitchToSignup?: () => void;
 }
 
 export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
-  const { signIn } = useAuthContext();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, Loader2, CheckCircle, Key, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuthContext } from './AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SignupFormProps {
   onSwitchToLogin?: () => void;
 }
 
 export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
-  const { signUp } = useAuthContext();
+  const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -55,19 +55,12 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       return;
     }
 
-    const { data, error: signUpError } = await signUp(email, password, fullName);
+    const { error: signUpError } = await signUp(email, password, fullName);
 
     if (signUpError) {
       setError(signUpError.message);
       setLoading(false);
       return;
-    }
-
-    if (data?.session?.access_token) {
-      const apiKey = await generateApiKey(data.session.access_token);
-      if (apiKey) {
-        setGeneratedApiKey(apiKey);
-      }
     }
 
     setSuccess(true);
