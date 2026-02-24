@@ -84,7 +84,7 @@ export const SmartTextImport = ({ isOpen, onClose, onSuccess, defaultDate, defau
   const { user } = useAuth();
   const { staffMembers } = useStaffMembers();
   const activeStaff = staffMembers.filter(s => s.is_active);
-  const { data: products = [] } = useProducts(true);
+  const { activeProducts: products } = useProducts();
 
   // Edit form state
   const [editName, setEditName] = useState('');

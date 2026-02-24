@@ -46,7 +46,7 @@ interface ReservationFormProps {
 const ReservationForm = ({ onSuccess, defaultValues, editData, mode = 'create' }: ReservationFormProps) => {
   const { user } = useAuth();
   const { staffMembers } = useStaffMembers();
-  const { data: products } = useProducts(true);
+  const { activeProducts: products } = useProducts();
   const activeStaffMembers = staffMembers.filter(s => s.is_active);
   const [submitting, setSubmitting] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
