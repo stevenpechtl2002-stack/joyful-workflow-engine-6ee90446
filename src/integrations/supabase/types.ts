@@ -139,6 +139,45 @@ export type Database = {
           },
         ]
       }
+      connect_products: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price_cents: number
+          stripe_price_id: string
+          stripe_product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price_cents: number
+          stripe_price_id: string
+          stripe_product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          stripe_price_id?: string
+          stripe_product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           birth_day: number | null
