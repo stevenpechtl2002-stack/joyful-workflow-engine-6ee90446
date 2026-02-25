@@ -228,7 +228,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -239,6 +238,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscriptionEnd: null,
       tier: null,
     });
+    await supabase.auth.signOut();
+    // Force redirect to home after signout
+    window.location.href = '/';
   };
 
   const isAdmin = roles.includes('admin');
