@@ -19,7 +19,8 @@ import {
   PanelLeftOpen,
   Wand2,
   Loader2,
-  Key
+  Key,
+  AlertTriangle
 } from 'lucide-react';
 import { 
   format, 
@@ -52,6 +53,7 @@ import ApiSettings from '@/components/zenbook/ApiSettings';
 import Shifts from '@/pages/portal/Shifts';
 import StaffCalendarView from '@/components/zenbook/StaffCalendarView';
 import Logo from '@/components/zenbook/Logo';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { useProducts } from '@/hooks/useProducts';
@@ -88,6 +90,21 @@ const ZenBookApp: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [apiActivity, setApiActivity] = useState(false);
+  const [isPublished, setIsPublished] = useState<boolean | null>(null);
+
+  // Check published status
+  useEffect(() => {
+    const checkPublished = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('customers')
+        .select('published')
+        .eq('id', user.id)
+        .single();
+      setIsPublished((data as any)?.published ?? false);
+    };
+    if (isAuthenticated) checkPublished();
+  }, [user, isAuthenticated]);
 
   // Convert Supabase data to app format
   const staffMembers: Staff[] = useMemo(() => 
@@ -384,6 +401,21 @@ const ZenBookApp: React.FC = () => {
         </header>
 
         <div className="flex-1 overflow-auto p-10 relative no-scrollbar bg-white">
+          {/* Unpublished Banner */}
+          {isPublished === false && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-4 animate-in slide-in-from-top-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                <p className="text-sm font-bold text-amber-800">Dein Profil ist noch nicht veröffentlicht – Onboarding abschließen</p>
+              </div>
+              <button
+                onClick={() => setUserRole('salon_registration')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-black text-xs shrink-0 hover:bg-primary/90 transition-all"
+              >
+                Onboarding
+              </button>
+            </div>
+          )}
           {currentView === 'calendar' && (
             <StaffCalendarView
               reservations={supabaseReservations}
