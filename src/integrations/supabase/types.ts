@@ -254,6 +254,7 @@ export type Database = {
           published: boolean
           sales_rep_id: string | null
           status: string
+          stripe_account_id: string | null
           updated_at: string
         }
         Insert: {
@@ -268,6 +269,7 @@ export type Database = {
           published?: boolean
           sales_rep_id?: string | null
           status?: string
+          stripe_account_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -282,6 +284,7 @@ export type Database = {
           published?: boolean
           sales_rep_id?: string | null
           status?: string
+          stripe_account_id?: string | null
           updated_at?: string
         }
         Relationships: []

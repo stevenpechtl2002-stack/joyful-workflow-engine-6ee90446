@@ -120,17 +120,17 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
     await nextStep();
   };
 
-  // Check Stripe subscription status
+  // Check Stripe Connect status
   const checkStripeStatus = async () => {
     if (!user) return;
     setCheckingStripe(true);
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      if (!error && data?.subscribed) {
+      const { data, error } = await supabase.functions.invoke('check-connect-status');
+      if (!error && data?.connected && data?.charges_enabled && data?.payouts_enabled) {
         setStripeConnected(true);
       }
     } catch (e) {
-      console.error('Error checking stripe:', e);
+      console.error('Error checking stripe connect:', e);
     }
     setCheckingStripe(false);
   };
@@ -143,11 +143,11 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
     if (!user) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
+      const origin = window.location.origin;
+      const { data, error } = await supabase.functions.invoke('create-connect-account', {
         body: {
-          setup_price_id: 'price_setup', // placeholder
-          subscription_price_id: 'price_monthly', // placeholder
-          tier_name: 'Voice Agent Pro'
+          return_url: `${origin}/portal/subscriptions?connect=complete`,
+          refresh_url: `${origin}/portal/subscriptions?connect=refresh`,
         }
       });
       if (error) throw error;
@@ -475,34 +475,42 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
               <div className="w-24 h-24 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
                 <CreditCard className="w-12 h-12 text-primary" />
               </div>
-              <h3 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">Zahlungen einrichten</h3>
+              <h3 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">Stripe-Konto verbinden</h3>
               <p className="text-muted-foreground font-medium max-w-lg mx-auto">
-                Verbinde dein Stripe-Konto, um Zahlungen und Abonnements zu verwalten.
+                Verbinde dein Stripe Express-Konto, um Zahlungen von deinen Kunden direkt zu empfangen.
               </p>
             </div>
 
             {stripeConnected ? (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 max-w-md mx-auto">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-                <h4 className="text-xl font-black text-emerald-700 mb-2">Stripe verbunden!</h4>
-                <p className="text-sm text-emerald-600">Dein Abo ist aktiv. Du kannst fortfahren.</p>
+                <h4 className="text-xl font-black text-emerald-700 mb-2">Stripe Connect aktiv!</h4>
+                <p className="text-sm text-emerald-600">Dein Konto ist verifiziert und bereit für Zahlungen.</p>
               </div>
             ) : (
               <div className="space-y-6 max-w-md mx-auto">
+                <div className="bg-muted rounded-2xl p-6 text-left space-y-3">
+                  <p className="text-sm font-bold text-foreground">So funktioniert's:</p>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex items-start gap-2"><span className="text-primary font-black">1.</span> Klicke auf "Stripe-Konto verbinden"</li>
+                    <li className="flex items-start gap-2"><span className="text-primary font-black">2.</span> Gib deine Geschäftsdaten bei Stripe ein</li>
+                    <li className="flex items-start gap-2"><span className="text-primary font-black">3.</span> Komm zurück und prüfe den Status</li>
+                  </ul>
+                </div>
                 <button
                   onClick={handleStripeConnect}
                   disabled={saving}
                   className="w-full px-8 py-6 bg-[#635bff] hover:bg-[#5851db] text-white rounded-2xl font-black text-lg flex items-center justify-center gap-4 shadow-2xl transition-all active:scale-95 disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <CreditCard className="w-6 h-6" />}
-                  {saving ? 'Wird verbunden...' : 'Mit Stripe verbinden'}
+                  {saving ? 'Wird verbunden...' : 'Stripe-Konto verbinden'}
                 </button>
                 <button
                   onClick={checkStripeStatus}
                   disabled={checkingStripe}
                   className="text-sm text-muted-foreground hover:text-primary font-bold transition-colors"
                 >
-                  {checkingStripe ? 'Prüfe Status...' : '🔄 Abo-Status prüfen'}
+                  {checkingStripe ? 'Prüfe Status...' : '🔄 Verbindungsstatus prüfen'}
                 </button>
               </div>
             )}
@@ -551,10 +559,10 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
               <div className={`p-6 rounded-2xl border ${stripeConnected ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
                 <div className="flex items-center gap-3 mb-3">
                   <CreditCard className={`w-5 h-5 ${stripeConnected ? 'text-emerald-500' : 'text-amber-500'}`} />
-                  <span className="font-black text-foreground text-sm">Zahlung</span>
+                  <span className="font-black text-foreground text-sm">Stripe Connect</span>
                 </div>
                 <p className={`font-bold ${stripeConnected ? 'text-emerald-700' : 'text-amber-700'}`}>
-                  {stripeConnected ? 'Stripe verbunden ✓' : 'Noch nicht verbunden'}
+                  {stripeConnected ? 'Konto verifiziert ✓' : 'Noch nicht verbunden'}
                 </p>
               </div>
             </div>
