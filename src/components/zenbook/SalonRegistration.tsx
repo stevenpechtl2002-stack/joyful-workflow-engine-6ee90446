@@ -54,6 +54,9 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
     name: '',
     category: 'Haare',
     location: '',
+    street: '',
+    postalCode: '',
+    city: '',
     description: '',
     imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=800'
   });
@@ -106,6 +109,18 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
 
   const nextStep = async () => {
     const next = Math.min(step + 1, 5);
+    // Save address data when leaving step 1
+    if (step === 1 && user) {
+      await supabase
+        .from('customers')
+        .update({
+          company_name: formData.name || undefined,
+          address: formData.street || undefined,
+          city: formData.city || undefined,
+          postal_code: formData.postalCode || undefined,
+        } as any)
+        .eq('id', user.id);
+    }
     setStep(next);
     await saveStep(next);
   };
@@ -221,10 +236,17 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
         if (staffError) throw staffError;
       }
 
-      // Set published = true
+      // Save company info + address + set published
       const { error: publishError } = await supabase
         .from('customers')
-        .update({ published: true, onboarding_step: 5 } as any)
+        .update({ 
+          published: true, 
+          onboarding_step: 5,
+          company_name: formData.name || undefined,
+          address: formData.street || undefined,
+          city: formData.city || undefined,
+          postal_code: formData.postalCode || undefined,
+        } as any)
         .eq('id', user.id);
       if (publishError) throw publishError;
 
@@ -326,11 +348,19 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
                 </select>
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Standort</label>
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Straße & Hausnummer</label>
                 <div className="relative">
                   <MapPin className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input type="text" className="w-full pl-14 md:pl-16 pr-6 md:pr-8 py-4 md:py-5 rounded-xl bg-muted border-2 border-transparent focus:border-primary outline-none font-bold text-foreground transition-all" placeholder="Straße, Hausnummer, Stadt" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                  <input type="text" className="w-full pl-14 md:pl-16 pr-6 md:pr-8 py-4 md:py-5 rounded-xl bg-muted border-2 border-transparent focus:border-primary outline-none font-bold text-foreground transition-all" placeholder="z.B. Hauptstraße 12" value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})} />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">PLZ</label>
+                <input type="text" className="w-full px-6 md:px-8 py-4 md:py-5 rounded-xl bg-muted border-2 border-transparent focus:border-primary outline-none font-bold text-foreground transition-all" placeholder="z.B. 10115" value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Stadt</label>
+                <input type="text" className="w-full px-6 md:px-8 py-4 md:py-5 rounded-xl bg-muted border-2 border-transparent focus:border-primary outline-none font-bold text-foreground transition-all" placeholder="z.B. Berlin" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
               </div>
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Beschreibung</label>

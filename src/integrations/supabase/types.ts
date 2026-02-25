@@ -280,8 +280,31 @@ export type Database = {
           },
         ]
       }
+      customer_favorites: {
+        Row: {
+          created_at: string | null
+          customer_user_id: string
+          id: string
+          salon_user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_user_id: string
+          id?: string
+          salon_user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_user_id?: string
+          id?: string
+          salon_user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
+          address: string | null
+          city: string | null
           company_name: string | null
           created_at: string
           dashboard_pin: string | null
@@ -290,6 +313,7 @@ export type Database = {
           notes: string | null
           onboarding_step: number
           plan: string
+          postal_code: string | null
           published: boolean
           sales_rep_id: string | null
           status: string
@@ -297,6 +321,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           company_name?: string | null
           created_at?: string
           dashboard_pin?: string | null
@@ -305,6 +331,7 @@ export type Database = {
           notes?: string | null
           onboarding_step?: number
           plan?: string
+          postal_code?: string | null
           published?: boolean
           sales_rep_id?: string | null
           status?: string
@@ -312,6 +339,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
           company_name?: string | null
           created_at?: string
           dashboard_pin?: string | null
@@ -320,6 +349,7 @@ export type Database = {
           notes?: string | null
           onboarding_step?: number
           plan?: string
+          postal_code?: string | null
           published?: boolean
           sales_rep_id?: string | null
           status?: string
@@ -721,6 +751,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      storefront_bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          customer_user_id: string | null
+          end_time: string | null
+          id: string
+          payment_method: string | null
+          payment_status: string | null
+          product_id: string | null
+          salon_user_id: string
+          staff_member_id: string | null
+          status: string | null
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          end_time?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          product_id?: string | null
+          salon_user_id: string
+          staff_member_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          end_time?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          product_id?: string | null
+          salon_user_id?: string
+          staff_member_id?: string | null
+          status?: string | null
+        }
+        Relationships: []
       }
       support_tickets: {
         Row: {
