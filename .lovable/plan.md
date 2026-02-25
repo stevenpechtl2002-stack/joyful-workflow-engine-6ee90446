@@ -1,64 +1,77 @@
 
 
-# Onboarding-Wizard mit 5 Schritten, Stripe und Veröffentlichung
+# Stripe Connect Express Integration -- Provision bei jeder Buchung
 
 ## Zusammenfassung
 
-Der bestehende `SalonRegistration`-Wizard wird komplett überarbeitet zu einem vollwertigen Onboarding mit 5 Schritten. Schritt 4 verbindet Stripe, Schritt 5 zeigt eine Zusammenfassung mit "Profil veröffentlichen"-Button, Konfetti-Animation und setzt `published: true`. Im Dashboard erscheint ein Banner solange das Profil nicht veröffentlicht ist.
+Statt dass Salon-Besitzer nur ein normales Stripe-Konto verbinden, wird **Stripe Connect** mit **Express Accounts** genutzt. Jeder Salon erstellt beim Onboarding (Schritt 4) ein Express-Konto. Du als Plattform-Betreiber kannst dann bei jeder Zahlung automatisch eine Provision (Application Fee) einbehalten.
+
+## Wie Stripe Connect funktioniert
+
+```text
+Endkunde zahlt 50€
+       │
+       ▼
+┌─────────────────────┐
+│  Deine Plattform    │ ◄── Behält z.B. 10% = 5€ (Application Fee)
+│  (Stripe Connect)   │
+└────────┬────────────┘
+         │
+         ▼
+┌─────────────────────┐
+│  Salon Express-Konto│ ◄── Erhält 45€
+└─────────────────────┘
+```
 
 ## Datenbankänderungen
 
-Zwei neue Spalten auf der `customers`-Tabelle:
-- `published` (boolean, default false) -- steuert Sichtbarkeit auf der Plattform
-- `onboarding_step` (integer, default 1) -- speichert den aktuellen Fortschritt
+Neue Spalte auf `customers`-Tabelle:
+- `stripe_account_id` (text, nullable) -- speichert die Stripe Express Account ID (z.B. `acct_xxx`)
 
-RLS: Nutzer kann eigenes `published` und `onboarding_step` updaten (bereits durch bestehende UPDATE-Policy abgedeckt).
+## Neue Edge Functions
 
-## Die 5 Schritte
+### 1. `create-connect-account` (NEU)
+- Erstellt ein Stripe Express Account für den Salon-Besitzer
+- Generiert einen Account Link (Onboarding-URL) wo der Salon seine Daten eingibt
+- Speichert die `stripe_account_id` in der `customers`-Tabelle
+- Redirect nach Abschluss zurück zur App
 
-```text
-[1. Basis-Infos] → [2. Galerie] → [3. Services & Team] → [4. Stripe] → [5. Veröffentlichen]
-```
+### 2. `check-connect-status` (NEU)
+- Prüft ob das Express-Konto vollständig verifiziert ist (`charges_enabled`, `payouts_enabled`)
+- Wird im Onboarding-Schritt 4 aufgerufen um den Status anzuzeigen
 
-**Schritt 1 -- Basis-Infos:** Name, Kategorie, Standort, Beschreibung (wie bisher). Überspringen-Button vorhanden.
+### 3. `create-connect-checkout` (NEU, optional für Kundenbuchungen)
+- Erstellt eine Checkout Session mit `application_fee_amount` für deine Provision
+- Nutzt `stripe_account_id` des Salons als Connected Account
+- Beispiel: Bei 50€ Buchung behältst du 5€ (10%) als Plattform-Gebühr
 
-**Schritt 2 -- Galerie:** Bild-Upload/URL (wie bisher). Überspringen-Button vorhanden.
+## Änderungen am Onboarding (Schritt 4)
 
-**Schritt 3 -- Services & Team:** Services und Mitarbeiter zusammengefasst (bisherige Schritte 3+4). Überspringen-Button vorhanden.
+Der bestehende Stripe-Schritt wird umgebaut:
+- **Statt** "checkout session für Abo erstellen" → **Jetzt** "Express Account erstellen und onboarden"
+- Button: "Stripe-Konto verbinden" → ruft `create-connect-account` auf → leitet zur Stripe-Onboarding-Seite weiter
+- Status-Check: Prüft ob `charges_enabled` und `payouts_enabled` aktiv sind
+- Grüner Haken wenn vollständig verbunden
 
-**Schritt 4 -- Stripe verbinden:** Button ruft `create-checkout` Edge Function auf. Kein Überspringen-Button. Zeigt Abo-Status an falls bereits verbunden.
+## Bestehende Checkout-Funktion
 
-**Schritt 5 -- Veröffentlichen:** Zusammenfassung aller Daten (Name, Services, Team, Stripe-Status). "Profil veröffentlichen"-Button setzt `published: true` in der `customers`-Tabelle. Konfetti-Animation bei Erfolg (via `canvas-confetti` oder CSS-basiert). Kein Überspringen.
-
-## Navigation
-
-- Jeder Schritt hat "Weiter" und "Zurück" Buttons
-- Schritte 1-3 haben zusätzlich "Überspringen"-Button
-- Schritt 4 (Stripe) und 5 (Veröffentlichen) haben keinen Überspringen-Button
-- Fortschritt wird bei jedem Schrittwechsel via `UPDATE customers SET onboarding_step = X` gespeichert
-- Beim Laden wird `onboarding_step` gelesen und der Wizard springt zum gespeicherten Schritt
-
-## Dashboard-Banner
-
-In `ZenBookApp.tsx` wird geprüft ob `published === false`. Falls ja, wird ein prominenter Banner angezeigt:
-
-> "Dein Profil ist noch nicht veröffentlicht -- Onboarding abschließen"
-
-Mit Button der zum Onboarding navigiert.
-
-## Konfetti-Animation
-
-CSS-basierte Konfetti-Animation (keine zusätzliche Dependency nötig). Wird bei erfolgreichem Veröffentlichen für 3 Sekunden angezeigt.
+Die bestehende `create-checkout` Edge Function für dein SaaS-Abo (Setup-Fee + Monatsabo) bleibt **separat** bestehen. Stripe Connect ist für die Salon-Zahlungen, das Abo ist für deine Plattform-Gebühr.
 
 ## Dateien
 
 | Datei | Aktion |
 |---|---|
-| `supabase/migrations/` | Migration: `published` + `onboarding_step` auf `customers` |
-| `src/components/zenbook/SalonRegistration.tsx` | Kompletter Umbau: 5 neue Schritte, Fortschritts-Persistenz, Konfetti |
-| `src/components/zenbook/ZenBookApp.tsx` | Unpublished-Banner im Dashboard |
+| `supabase/migrations/` | Migration: `stripe_account_id` auf `customers` |
+| `supabase/functions/create-connect-account/index.ts` | NEU: Express Account erstellen + Account Link |
+| `supabase/functions/check-connect-status/index.ts` | NEU: Verifizierungsstatus prüfen |
+| `src/components/zenbook/SalonRegistration.tsx` | Schritt 4 umbauen: Connect statt Checkout |
+| `supabase/config.toml` | JWT-Config für neue Functions |
 
-## Design
+## Provisions-Modell
 
-Bestehender ZenTime-Style: Lila/Pink Gradients, `floating-3d` Cards, `font-black` Headings, `rounded-2xl` Elemente. Mobil-optimiert mit responsive Grid.
+Die Application Fee (deine Provision) wird erst relevant wenn Endkunden buchen und bezahlen. Dafür brauchst du später eine weitere Edge Function (`create-connect-checkout`) die bei Buchungen die Zahlung mit `application_fee_amount` erstellt. Das ist ein separater Schritt nach dem Onboarding.
+
+## Voraussetzung
+
+Stripe Connect muss in deinem Stripe Dashboard aktiviert sein (Platform Settings). Express Accounts erfordern keine zusätzlichen API-Keys -- der bestehende `STRIPE_SECRET_KEY` reicht.
 
