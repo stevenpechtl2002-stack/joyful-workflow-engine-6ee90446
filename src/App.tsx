@@ -10,6 +10,9 @@ import NotFound from "./pages/NotFound";
 import Storefront from "./pages/Storefront";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 
+const SalonDetail = lazy(() => import("./pages/SalonDetail"));
+const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
+
 const PortalAuth = lazy(() => import("./pages/portal/Auth"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
@@ -52,6 +55,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/storefront" element={<Storefront />} />
+              <Route path="/storefront/profile" element={<CustomerProfile />} />
+              <Route path="/storefront/:salonId" element={<SalonDetail />} />
               <Route path="/success" element={<CheckoutSuccess />} />
               <Route path="/portal/auth" element={<PortalAuth />} />
               <Route path="/admin" element={<AdminDashboard />} />
