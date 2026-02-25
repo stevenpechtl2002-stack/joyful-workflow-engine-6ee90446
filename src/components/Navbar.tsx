@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Bot, LogIn } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,10 +20,10 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center glow-primary">
-              <Bot className="w-6 h-6 text-primary-foreground" />
+              <span className="text-primary-foreground font-black text-lg">Z</span>
             </div>
             <span className="font-display font-bold text-xl text-foreground">
-              NextGen<span className="text-gradient">AI</span>
+              Zen<span className="text-gradient">Time</span>
             </span>
           </Link>
 

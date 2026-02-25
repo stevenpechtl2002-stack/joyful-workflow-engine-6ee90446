@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Bot, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-ai.png";
 
@@ -88,7 +88,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
           >
-            <span className="block">AI Assistants &</span>
+            <span className="block">Dein Salon-</span>
             <motion.span 
               className="block mt-2"
               style={{ 
@@ -98,7 +98,7 @@ const HeroSection = () => {
                 backgroundClip: 'text'
               }}
             >
-              Automatisierungen
+              Marktplatz
             </motion.span>
           </motion.h1>
 
@@ -109,8 +109,8 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            Individuelle KI-Lösungen, Voice-Agents und Automatisierungs-Workflows – 
-            <span className="text-foreground font-medium"> maßgeschneidert für Ihr Unternehmen.</span>
+            Buche Termine bei den besten Salons in deiner Stadt – 
+            <span className="text-foreground font-medium"> einfach, schnell und direkt online.</span>
           </motion.p>
 
           {/* CTA Buttons */}
@@ -120,7 +120,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <Link to="/kontakt">
+            <Link to="/storefront">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                 <Button 
                   size="lg" 
@@ -128,22 +128,23 @@ const HeroSection = () => {
                   style={{ background: 'linear-gradient(135deg, hsl(252 80% 60%) 0%, hsl(330 85% 60%) 100%)' }}
                 >
                   <span className="relative z-10 text-white flex items-center gap-2">
-                    Jetzt unverbindlich anfragen
+                    Salons entdecken
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </Button>
               </motion.div>
             </Link>
-            <motion.div whileHover={{ scale: 1.02 }}>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-lg px-8 py-6 rounded-full border-muted/50 text-muted-foreground cursor-not-allowed opacity-60"
-                disabled
-              >
-                Kundenportal – Coming Soon
-              </Button>
-            </motion.div>
+            <Link to="/portal/auth">
+              <motion.div whileHover={{ scale: 1.02 }}>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-lg px-8 py-6 rounded-full border-muted/50"
+                >
+                  Login / Registrieren
+                </Button>
+              </motion.div>
+            </Link>
           </motion.div>
 
           {/* Feature Cards */}
@@ -153,19 +154,21 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            <div className="group cursor-not-allowed opacity-60">
+            <Link to="/storefront" className="group">
               <motion.div 
-                className="relative rounded-2xl p-8 border border-border/30 overflow-hidden bg-card/90 backdrop-blur-xl"
+                className="relative rounded-2xl p-8 border border-border/50 overflow-hidden bg-card/90 backdrop-blur-xl"
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
               >
                 <div className="relative z-10">
                   <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 mx-auto bg-primary/10">
-                    <Bot className="w-7 h-7 text-muted-foreground" />
+                    <Sparkles className="w-7 h-7 text-primary" />
                   </div>
-                  <h3 className="font-display font-semibold text-lg text-muted-foreground mb-2">Kundenportal</h3>
-                  <p className="text-sm text-muted-foreground/70">Coming Soon</p>
+                  <h3 className="font-display font-semibold text-lg text-foreground mb-2">Salons entdecken</h3>
+                  <p className="text-sm text-muted-foreground">Finde deinen Salon</p>
                 </div>
               </motion.div>
-            </div>
+            </Link>
             
             <Link to="/kontakt" className="group">
               <motion.div 

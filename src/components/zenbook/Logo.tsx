@@ -38,7 +38,7 @@ const Logo: React.FC<LogoProps> = ({
           ZenTime
           {variant === 'admin' && <span className="text-primary">Admin</span>}
           {variant === 'light' && (
-            <span className="text-accent">Beauty</span>
+            <span className="text-accent"></span>
           )}
         </span>
       )}
