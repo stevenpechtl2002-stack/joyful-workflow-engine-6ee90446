@@ -1,94 +1,32 @@
 
 
-# Plan: Stripe Connect V1 Fallback -- Stabile Produkterstellung und Provisionsflow
+# Analyse: Ist der Plan identisch mit dem Stand von vor 2-3 Wochen?
 
-## Problem
+## Was bereits GENAU SO funktioniert wie vorher
 
-Die V2 Accounts API (`stripeClient.v2.core.accounts.create`) funktioniert nicht zuverlässig in der Deno/Supabase Edge Functions Umgebung. Die wiederholten `Cannot read properties of undefined` Fehler zeigen, dass der V2 Namespace im npm-Paket nicht korrekt gebundelt wird.
+Das Hauptsystem ist bereits korrekt implementiert:
 
-## Lösung
+1. **Automatische Key-Generierung bei Registrierung** -- Der `handle_new_user()` Trigger erstellt automatisch einen UUID-Key in `customer_api_keys` (genau wie vorher)
 
-Umstellung von V2 auf die bewährte **V1 Express Accounts API**, die stabil und vollständig unterstützt wird. Der gesamte Flow bleibt identisch:
+2. **Admin Dashboard** (`src/pages/admin/AdminDashboard.tsx`, Zeile 152-168) -- Liest bereits korrekt aus `customer_api_keys`, zeigt die vollen UUID-Keys (z.B. `d4f07d7e-dba6-408b-9354-a5f8827325fd`) mit Auge-Button und Kopier-Button an
 
-1. Salon registriert sich und verbindet Stripe (Express Account)
-2. Salon erstellt Produkte im Dashboard
-3. Kunde kauft im Storefront
-4. Zahlung geht über Destination Charges mit 10% Provision an die Plattform
+3. **Edge Functions validieren korrekt** -- `check-availability`, `n8n-reservations` und `voice-agent-calendar` prüfen alle gegen `customer_api_keys` via `x-api-key` Header
 
-## Änderungen
+4. **Base URL wird korrekt angezeigt** -- `https://avfafxojrijfsgsyimwx.supabase.co/functions/v1/` ist im Admin Dashboard sichtbar und kopierbar
 
-### 1. `create-connect-account/index.ts` -- Rewrite zu V1
+## Was FEHLT (und der Plan hinzufügt)
 
-Ersetze den V2 Aufruf durch die stabile V1 API:
+Nur zwei Dinge sind nicht mehr da:
 
-```js
-// V1 Express Account (statt V2)
-const account = await stripeClient.accounts.create({
-  type: 'express',
-  country: 'de',
-  email: user.email,
-  capabilities: {
-    card_payments: { requested: true },
-    transfers: { requested: true },
-  },
-  business_profile: {
-    name: customer?.company_name || undefined,
-  },
-});
-
-// V1 Account Link (statt V2)
-const accountLink = await stripeClient.accountLinks.create({
-  account: accountId,
-  type: 'account_onboarding',
-  refresh_url: refreshUrl,
-  return_url: returnUrl,
-});
-```
-
-### 2. `check-connect-status/index.ts` -- Rewrite zu V1
-
-Ersetze den V2 Retrieve durch die stabile V1 API:
-
-```js
-const account = await stripeClient.accounts.retrieve(accountId);
-// Prüfe: account.charges_enabled, account.payouts_enabled, account.details_submitted
-```
-
-### 3. `create-connect-product/index.ts` -- Keine Änderung nötig
-
-Nutzt bereits V1 `stripeClient.products.create()` -- funktioniert korrekt.
-
-### 4. `create-connect-checkout/index.ts` -- Keine Änderung nötig
-
-Nutzt bereits V1 Checkout Sessions mit Destination Charges -- funktioniert korrekt.
-
-### 5. `stripe-connect-webhook/index.ts` -- Vereinfachen zu V1
-
-Ersetze `parseThinEvent` durch Standard-Webhook-Verifikation mit `stripeClient.webhooks.constructEvent()`.
-
-## Dateien
-
-| Datei | Aktion |
+| Was fehlt | Warum |
 |---|---|
-| `supabase/functions/create-connect-account/index.ts` | Rewrite: V1 Express API |
-| `supabase/functions/check-connect-status/index.ts` | Rewrite: V1 accounts.retrieve |
-| `supabase/functions/stripe-connect-webhook/index.ts` | Vereinfachen: V1 webhooks |
+| Edge Function `generate-api-key` | Wurde nie erstellt -- Button im Portal schlägt fehl |
+| Edge Function `generate-api-key-admin` | Wurde nie erstellt -- "Key erstellen" Button im Zenbook-AdminDashboard schlägt fehl |
+| Key für Thu Thuy Wu | Muss in der DB geprüft/gesetzt werden -- der spezifische Key `d4f07d7e-dba6-408b-9354-a5f8827325fd` |
 
-Die restlichen Dateien (`create-connect-product`, `create-connect-checkout`, `list-connect-products`, `ConnectProducts.tsx`, `Storefront.tsx`, `CheckoutSuccess.tsx`) bleiben unverändert -- sie funktionieren bereits korrekt.
+## Fazit
 
-## Flow nach Implementierung
+**Ja, der Plan stellt exakt den gleichen Zustand wieder her.** Die Kern-Architektur (UUID-Keys in `customer_api_keys`, Validierung in Edge Functions, Anzeige im Admin) ist unverändert und funktioniert bereits. Es werden nur die zwei fehlenden Edge Functions erstellt und der spezifische Key für Thu Thuy Wu in der Datenbank sichergestellt.
 
-```text
-Salon Dashboard                    Storefront (Kunde)
-     │                                    │
-     ├─ Stripe verbinden (V1 Express)     │
-     ├─ Produkt erstellen ───────────────►│ Produkt sichtbar
-     │                                    ├─ "Kaufen" klicken
-     │                                    ├─ Checkout Session
-     │                                    │   (Destination Charge)
-     │                                    │
-     │                              Stripe verarbeitet:
-     │                              ├─ 90% → Salon (Connected Account)
-     │                              └─ 10% → Plattform (Application Fee)
-```
+Es wird nichts am bestehenden Code geändert oder umgebaut -- nur die fehlenden Teile ergänzt.
 
