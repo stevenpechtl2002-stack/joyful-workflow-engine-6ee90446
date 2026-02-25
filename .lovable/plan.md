@@ -1,84 +1,64 @@
 
 
-# Kompletter Frontend-Transfer: ZenBook auf NextGenAI
+# Onboarding-Wizard mit 5 Schritten, Stripe und Veröffentlichung
 
 ## Zusammenfassung
 
-Alle Quelldateien aus dem ZenBook-Projekt wurden vollstaendig gelesen und sind bereit fuer den Transfer. Das gesamte Frontend wird 1:1 uebertragen, waehrend alle Backend-Funktionen (Supabase, Edge Functions, n8n) unveraendert bleiben.
+Der bestehende `SalonRegistration`-Wizard wird komplett überarbeitet zu einem vollwertigen Onboarding mit 5 Schritten. Schritt 4 verbindet Stripe, Schritt 5 zeigt eine Zusammenfassung mit "Profil veröffentlichen"-Button, Konfetti-Animation und setzt `published: true`. Im Dashboard erscheint ein Banner solange das Profil nicht veröffentlicht ist.
 
-## Was erstellt wird
+## Datenbankänderungen
 
-### Infrastruktur-Dateien (3 Dateien)
-- `src/types/index.ts` - ViewType, UserRole, Appointment, Service, Staff, etc.
-- `src/constants/index.ts` - SERVICES, SALONS, STAFF, CUSTOMERS, BUSINESS_HOURS
-- `src/services/storageService.ts` - LocalStorage-Datendienst
+Zwei neue Spalten auf der `customers`-Tabelle:
+- `published` (boolean, default false) -- steuert Sichtbarkeit auf der Plattform
+- `onboarding_step` (integer, default 1) -- speichert den aktuellen Fortschritt
 
-### Hooks (11 Dateien - neue + ersetzte)
-- `src/hooks/useAuth.ts` - Auth Hook (NEU)
-- `src/hooks/useReservations.ts` - Reservierungen mit Realtime (NEU)
-- `src/hooks/useContacts.ts` - Kontakte CRUD (NEU)
-- `src/hooks/useCustomerApiKey.ts` - Kunden-API-Key (NEU)
-- `src/hooks/useApiKeys.ts` - API-Key Management (NEU)
-- `src/hooks/useNotifications.ts` - Benachrichtigungen (NEU)
-- `src/hooks/useStaffMembers.ts` - ERSETZT (nutzt useAuth)
-- `src/hooks/useProducts.ts` - ERSETZT (nutzt useAuth)
-- `src/hooks/useStaffShifts.ts` - ERSETZT (nutzt useAuth)
-- `src/hooks/useShiftExceptions.ts` - ERSETZT (nutzt useAuth)
-- `src/hooks/useBusinessSettings.ts` - ERSETZT (nutzt useAuth)
+RLS: Nutzer kann eigenes `published` und `onboarding_step` updaten (bereits durch bestehende UPDATE-Policy abgedeckt).
 
-### Auth-Komponenten (5 Dateien)
-- `src/components/auth/AuthProvider.tsx`
-- `src/components/auth/AuthPage.tsx`
-- `src/components/auth/LoginForm.tsx`
-- `src/components/auth/SignupForm.tsx`
-- `src/components/auth/index.ts`
+## Die 5 Schritte
 
-### ZenBook-Komponenten (18 Dateien)
-- `src/components/zenbook/ZenBookApp.tsx` - Haupt-App (425 Zeilen)
-- `src/components/zenbook/LandingPage.tsx` - Landing Page (665 Zeilen)
-- `src/components/zenbook/Logo.tsx`
-- `src/components/zenbook/Login.tsx`
-- `src/components/zenbook/StaffCalendarView.tsx` - Staff-Kalender (632 Zeilen)
-- `src/components/zenbook/CalendarView.tsx`
-- `src/components/zenbook/ReservationForm.tsx`
-- `src/components/zenbook/ServiceManagement.tsx`
-- `src/components/zenbook/StaffManagement.tsx`
-- `src/components/zenbook/CustomerManagement.tsx`
-- `src/components/zenbook/Insights.tsx`
-- `src/components/zenbook/Settings.tsx`
-- `src/components/zenbook/CustomerPortal.tsx`
-- `src/components/zenbook/SalonRegistration.tsx` (500 Zeilen)
-- `src/components/zenbook/AdminDashboard.tsx`
-- `src/components/zenbook/ApiSettings.tsx`
-- `src/components/zenbook/ApiKeyManagement.tsx`
-- `src/components/zenbook/index.ts`
+```text
+[1. Basis-Infos] → [2. Galerie] → [3. Services & Team] → [4. Stripe] → [5. Veröffentlichen]
+```
 
-### Geaenderte Dateien (4 Dateien)
-- `src/App.tsx` - Vereinfacht auf 2 Routen, AuthProvider aus @/components/auth
-- `src/pages/Index.tsx` - Nur ZenBookApp rendern
-- `src/index.css` - ZenBook CSS (Plus Jakarta Sans, Indigo/Pink)
-- `tailwind.config.ts` - Standard Tailwind Config
+**Schritt 1 -- Basis-Infos:** Name, Kategorie, Standort, Beschreibung (wie bisher). Überspringen-Button vorhanden.
 
-## Datenbank-Migration
+**Schritt 2 -- Galerie:** Bild-Upload/URL (wie bisher). Überspringen-Button vorhanden.
 
-Eine `api_keys` Tabelle wird erstellt, da der AdminDashboard und useApiKeys Hook diese referenzieren. Spalten: id, user_id, key_prefix, name, is_active, last_used_at, created_at.
+**Schritt 3 -- Services & Team:** Services und Mitarbeiter zusammengefasst (bisherige Schritte 3+4). Überspringen-Button vorhanden.
 
-## Was NICHT angefasst wird
+**Schritt 4 -- Stripe verbinden:** Button ruft `create-checkout` Edge Function auf. Kein Überspringen-Button. Zeigt Abo-Status an falls bereits verbunden.
 
-- Alle Edge Functions (`supabase/functions/*`)
-- Supabase Client und Types
-- UI Components (`src/components/ui/*`)
-- `.env`, `supabase/config.toml`
-- Datenbank-Trigger und bestehende Tabellen
+**Schritt 5 -- Veröffentlichen:** Zusammenfassung aller Daten (Name, Services, Team, Stripe-Status). "Profil veröffentlichen"-Button setzt `published: true` in der `customers`-Tabelle. Konfetti-Animation bei Erfolg (via `canvas-confetti` oder CSS-basiert). Kein Überspringen.
 
-## Kalender-Funktionen die 1:1 erhalten bleiben
+## Navigation
 
-Der StaffCalendarView nutzt direkt die bestehenden Supabase-Tabellen:
-- Reservierungen mit Realtime-Updates
-- Staff-Spalten mit Farben/Avataren
-- Shift-basierte Arbeitszeitpruefung inkl. Exceptions
-- Drag-and-Drop zwischen Mitarbeitern
-- Tag/Woche-Ansicht mit konfigurierbarem Intervall
-- Termin erstellen/bearbeiten/loeschen mit Produktzuordnung
-- Dauer-Autoberechnung basierend auf Produktauswahl
+- Jeder Schritt hat "Weiter" und "Zurück" Buttons
+- Schritte 1-3 haben zusätzlich "Überspringen"-Button
+- Schritt 4 (Stripe) und 5 (Veröffentlichen) haben keinen Überspringen-Button
+- Fortschritt wird bei jedem Schrittwechsel via `UPDATE customers SET onboarding_step = X` gespeichert
+- Beim Laden wird `onboarding_step` gelesen und der Wizard springt zum gespeicherten Schritt
+
+## Dashboard-Banner
+
+In `ZenBookApp.tsx` wird geprüft ob `published === false`. Falls ja, wird ein prominenter Banner angezeigt:
+
+> "Dein Profil ist noch nicht veröffentlicht -- Onboarding abschließen"
+
+Mit Button der zum Onboarding navigiert.
+
+## Konfetti-Animation
+
+CSS-basierte Konfetti-Animation (keine zusätzliche Dependency nötig). Wird bei erfolgreichem Veröffentlichen für 3 Sekunden angezeigt.
+
+## Dateien
+
+| Datei | Aktion |
+|---|---|
+| `supabase/migrations/` | Migration: `published` + `onboarding_step` auf `customers` |
+| `src/components/zenbook/SalonRegistration.tsx` | Kompletter Umbau: 5 neue Schritte, Fortschritts-Persistenz, Konfetti |
+| `src/components/zenbook/ZenBookApp.tsx` | Unpublished-Banner im Dashboard |
+
+## Design
+
+Bestehender ZenTime-Style: Lila/Pink Gradients, `floating-3d` Cards, `font-black` Headings, `rounded-2xl` Elemente. Mobil-optimiert mit responsive Grid.
 
