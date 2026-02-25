@@ -249,7 +249,9 @@ export type Database = {
           email: string
           id: string
           notes: string | null
+          onboarding_step: number
           plan: string
+          published: boolean
           sales_rep_id: string | null
           status: string
           updated_at: string
@@ -261,7 +263,9 @@ export type Database = {
           email: string
           id: string
           notes?: string | null
+          onboarding_step?: number
           plan?: string
+          published?: boolean
           sales_rep_id?: string | null
           status?: string
           updated_at?: string
@@ -273,7 +277,9 @@ export type Database = {
           email?: string
           id?: string
           notes?: string | null
+          onboarding_step?: number
           plan?: string
+          published?: boolean
           sales_rep_id?: string | null
           status?: string
           updated_at?: string
