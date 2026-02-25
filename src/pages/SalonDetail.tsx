@@ -335,8 +335,14 @@ const SalonDetailPage: React.FC = () => {
             {/* Customer Info */}
             <div className="space-y-4">
               <label className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                <User className="w-3.5 h-3.5" /> Deine Daten
+                <User className="w-3.5 h-3.5" /> {user ? 'Deine Daten (eingeloggt)' : 'Als Gast buchen'}
               </label>
+              {!user && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10 mb-2">
+                  <span className="text-xs text-muted-foreground">Du hast ein Konto?</span>
+                  <a href="/portal/auth" className="text-xs font-bold text-primary hover:underline">Login</a>
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Dein Name *"
@@ -369,7 +375,7 @@ const SalonDetailPage: React.FC = () => {
               className="w-full py-5 bg-foreground text-background rounded-xl font-black text-base flex items-center justify-center gap-2 hover:bg-primary transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
             >
               {booking ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-              {booking ? 'Wird gebucht...' : 'Jetzt buchen'}
+              {booking ? 'Wird gebucht...' : user ? 'Jetzt buchen' : 'Als Gast buchen'}
             </button>
           </div>
         </div>

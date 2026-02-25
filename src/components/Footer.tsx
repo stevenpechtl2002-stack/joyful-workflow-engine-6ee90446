@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Bot, Mail, Phone, MapPin, Linkedin, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Twitter } from "lucide-react";
 const Footer = () => {
   return <footer className="bg-card border-t border-border/50">
       <div className="container mx-auto px-4 py-12">
@@ -8,10 +8,10 @@ const Footer = () => {
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <Bot className="w-6 h-6 text-primary-foreground" />
+                <span className="text-primary-foreground font-black text-lg">Z</span>
               </div>
               <span className="font-display font-bold text-xl text-foreground">
-                ​NextGen<span className="text-gradient">AI</span>
+                Zen<span className="text-gradient">Time</span>
               </span>
             </Link>
             <p className="text-muted-foreground max-w-md">
@@ -81,7 +81,7 @@ const Footer = () => {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © 2024 NextGenAI. Alle Rechte vorbehalten.
+            © 2026 ZenTime. Alle Rechte vorbehalten.
           </p>
         </div>
       </div>

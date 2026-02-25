@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Bot, Mail, Lock, ArrowRight, UserPlus } from "lucide-react";
+import { Mail, Lock, ArrowRight, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -132,7 +132,7 @@ const Login = () => {
             {/* Logo */}
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mx-auto mb-4 glow-primary">
-                <Bot className="w-8 h-8 text-primary-foreground" />
+                <span className="text-primary-foreground font-black text-2xl">Z</span>
               </div>
               <h1 className="font-display text-3xl font-bold mb-2">
                 {isSignUp ? (

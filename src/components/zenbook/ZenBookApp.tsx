@@ -209,13 +209,14 @@ const ZenBookApp: React.FC = () => {
         onLogin={(role) => {
           if (role === 'admin') {
             setUserRole('admin');
-          } else if (role === 'salon') {
+          } else if (role === 'customer') {
+            // Customer login → go to auth, then redirect to portal
             setUserRole('salon');
           } else {
             setUserRole(role);
           }
         }}
-        onStartRegistration={() => setUserRole('salon_registration')}
+        onStartRegistration={() => setUserRole('salon')}
       />
     );
   }

@@ -111,26 +111,17 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           <div className="h-16 flex items-center justify-between">
             <Logo variant="light" />
             <nav className="flex items-center gap-6">
-              <motion.button
-                onClick={onStartRegistration}
+              <motion.a
+                href="/storefront"
                 className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors hidden md:block"
                 whileHover={{ scale: 1.05 }}>
-
-                Für Geschäftspartner
-              </motion.button>
+                Salons entdecken
+              </motion.a>
               <motion.button
                 onClick={() => onLogin('customer')}
-                className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors hidden md:block"
-                whileHover={{ scale: 1.05 }}>
-
-                Kunden Portal
-              </motion.button>
-              <motion.button
-                onClick={() => onLogin('salon')}
                 className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-black shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}>
-
                 Login
               </motion.button>
             </nav>
@@ -248,14 +239,13 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
                 </div>
               </div>
-              <motion.button
-                onClick={() => onLogin('customer')}
-                className="w-full mt-3 px-6 py-3.5 bg-primary text-primary-foreground rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+              <motion.a
+                href="/storefront"
+                className="w-full mt-3 px-6 py-3.5 bg-primary text-primary-foreground rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all block text-center"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.97 }}>
-
                 Suchen
-              </motion.button>
+              </motion.a>
             </motion.div>
           </div>
         </div>
@@ -285,7 +275,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
                 boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)'
               }}
               style={{ perspective: 800 }}
-              onClick={() => onLogin('customer')}>
+              onClick={() => window.location.href = '/storefront'}>
 
                 <div className="text-primary mb-3">{cat.icon}</div>
                 <p className="font-black text-foreground text-sm mb-1">{cat.label}</p>
@@ -307,13 +297,14 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
                   Die besten Salons<br />in deiner Nähe
                 </h2>
               </div>
-              <motion.button
+              <motion.a
+                href="/storefront"
                 className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-accent transition-colors group whitespace-nowrap"
                 whileHover={{ x: 4 }}>
 
                 Alle entdecken
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+              </motion.a>
             </div>
           </AnimatedSection>
 
@@ -324,7 +315,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
                 className="group cursor-pointer"
                 whileHover={{ y: -10, rotateX: 2, rotateY: -2 }}
                 transition={{ duration: 0.3 }}
-                onClick={() => onLogin('customer')}
+                onClick={() => window.location.href = '/storefront'}
                 style={{ perspective: 1000 }}>
 
                   <div className="relative rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-shadow">
@@ -409,13 +400,13 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
                   Bereit für eine<br />Veränderung?
                 </h2>
               </div>
-              <motion.button
+              <motion.a
+                href="/storefront"
                 className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-accent transition-colors group whitespace-nowrap"
                 whileHover={{ x: 4 }}>
-
                 Alle Styles
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+              </motion.a>
             </div>
           </AnimatedSection>
 
@@ -455,111 +446,33 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         </div>
       </section>
 
-      {/* 10. Business Section */}
+      {/* 10. CTA Section */}
       <section className="py-24 px-6 lg:px-12 bg-muted/30 relative overflow-hidden">
-        <motion.div
-          className="absolute top-20 right-[10%] w-36 h-36 rounded-2xl bg-gradient-to-br from-primary/8 to-accent/8 backdrop-blur-xl border border-white/10 hidden lg:block"
-          animate={{ y: [0, -25, 0], rotate: [0, 8, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
-
-        <motion.div
-          className="absolute bottom-32 left-[5%] w-24 h-24 rounded-full bg-gradient-to-br from-accent/10 to-primary/5 backdrop-blur-xl border border-white/10 hidden lg:block"
-          animate={{ y: [0, 18, 0], rotate: [0, -12, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
-
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <AnimatedSection>
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-accent mb-6">Für Geschäftspartner</p>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[0.95] tracking-tight">
-                  <span className="text-primary">Wachstum</span>
-                  <br />als{' '}
-                  <span className="text-foreground">Standard.</span>
-                </h2>
-                <p className="mt-8 text-lg text-muted-foreground font-medium leading-relaxed max-w-lg">
-                  Die leistungsstärkste Suite für moderne Salons. Präsentiere deine Produkte und Services.
-                </p>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  {[
-                  { icon: <Sparkles className="w-5 h-5" />, title: 'KI-Terminplanung' },
-                  { icon: <Heart className="w-5 h-5" />, title: 'Kundenbindung' },
-                  { icon: <Star className="w-5 h-5" />, title: 'Bewertungen' }].
-                  map((feature, i) =>
-                  <motion.div
-                    key={feature.title}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-card rounded-xl border border-border shadow-sm"
-                    whileHover={{ scale: 1.05, y: -2 }}>
-
-                      <span className="text-primary">{feature.icon}</span>
-                      <span className="font-bold text-foreground text-sm">{feature.title}</span>
-                    </motion.div>
-                  )}
-                </div>
-
-                <div className="mt-10 flex flex-wrap gap-4">
-                  <motion.button
-                    onClick={onStartRegistration}
-                    className="px-8 py-4 bg-primary text-primary-foreground rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-primary/20"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}>
-
-                    Jetzt starten
-                  </motion.button>
-                  <motion.button
-                    onClick={() => onLogin('salon')}
-                    className="px-8 py-4 border-2 border-border text-foreground rounded-xl text-xs font-black uppercase tracking-wider hover:bg-muted transition-all"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}>
-
-                    Demo anfordern
-                  </motion.button>
-                </div>
-              </div>
-            </AnimatedSection>
-            
-            <AnimatedSection>
-              <div className="relative">
-                <motion.div
-                  className="rounded-2xl overflow-hidden shadow-2xl bg-card border border-border"
-                  whileHover={{ y: -8, rotateY: 2, rotateX: -2 }}
-                  transition={{ duration: 0.4 }}
-                  style={{ perspective: 1000 }}>
-
-                  <div className="aspect-[4/3] overflow-hidden relative">
-                    <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&h=600&fit=crop" alt="Salon" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <span className="text-white font-bold text-sm">4.9 (312 Bewertungen)</span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Signature Treatment</p>
-                        <h4 className="text-lg font-black text-foreground">Aromatherapie Massage</h4>
-                      </div>
-                      <p className="text-xl font-black text-foreground">89€</p>
-                    </div>
-                    <div className="flex items-center gap-4 text-muted-foreground text-sm">
-                      <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>60 min</span></div>
-                      <div className="flex items-center gap-1.5"><Check className="w-4 h-4 text-[hsl(var(--zen-emerald))]" /><span>Sofort buchbar</span></div>
-                    </div>
-                  </div>
-                </motion.div>
-                <motion.div
-                  className="absolute -bottom-5 -left-5 bg-card rounded-2xl p-5 shadow-xl border border-border z-10"
-                  whileHover={{ scale: 1.05 }}>
-
-                  <p className="text-3xl font-black text-primary">+127%</p>
-                  <p className="text-xs font-bold text-muted-foreground mt-1">Wachstum</p>
-                </motion.div>
-              </div>
-            </AnimatedSection>
-          </div>
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <AnimatedSection>
+            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-6">
+              Bereit für deinen <span className="text-primary">nächsten Termin?</span>
+            </h2>
+            <p className="text-lg text-muted-foreground font-medium mb-10 max-w-lg mx-auto">
+              Entdecke Salons in deiner Nähe und buche direkt online – mit oder ohne Account.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <motion.a
+                href="/storefront"
+                className="px-8 py-4 bg-primary text-primary-foreground rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-primary/20"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}>
+                Jetzt Salon finden
+              </motion.a>
+              <motion.a
+                href="/portal/auth"
+                className="px-8 py-4 border-2 border-border text-foreground rounded-xl text-xs font-black uppercase tracking-wider hover:bg-muted transition-all"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}>
+                Login / Registrieren
+              </motion.a>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -609,7 +522,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
               </ul>
             </div>
             <div>
-              <h4 className="font-black text-foreground text-sm mb-4">Geschäftspartner</h4>
+              <h4 className="font-black text-foreground text-sm mb-4">Für Salons</h4>
               <ul className="space-y-2.5">
                 {['Partner werden', 'Help Center', 'Preise', 'Features'].map((item) =>
                 <li key={item}><button className="text-sm text-muted-foreground hover:text-foreground transition-colors">{item}</button></li>
@@ -629,7 +542,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md">Z</div>
-              <span className="text-sm font-black text-foreground">ZenTime<span className="text-accent">Beauty</span></span>
+              <span className="text-sm font-black text-foreground">ZenTime</span>
             </div>
             
             <div className="flex items-center gap-3">
@@ -644,7 +557,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
               )}
             </div>
 
-            <p className="text-xs text-muted-foreground">© 2026 ZenTime Beauty. Alle Rechte vorbehalten.</p>
+            <p className="text-xs text-muted-foreground">© 2026 ZenTime. Alle Rechte vorbehalten.</p>
           </div>
           
           <div className="pt-4 flex justify-center">
