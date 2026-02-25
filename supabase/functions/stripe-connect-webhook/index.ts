@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "npm:stripe@20.4.0";
+import Stripe from "npm:stripe@20.3.1";
 
 // No CORS needed for webhooks — Stripe calls this endpoint server-to-server
 // No JWT verification — webhooks are authenticated via signature
