@@ -56,7 +56,7 @@ import StaffCalendarView from '@/components/zenbook/StaffCalendarView';
 import Logo from '@/components/zenbook/Logo';
 import ConnectProducts from '@/components/zenbook/ConnectProducts';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { useProducts } from '@/hooks/useProducts';
 import { useReservations } from '@/hooks/useReservations';
@@ -77,7 +77,8 @@ const navItems = [
 ];
 
 const ZenBookApp: React.FC = () => {
-  const { user, isAuthenticated, loading: authLoading, signOut } = useAuth();
+  const { user, isLoading: authLoading, signOut } = useAuth();
+  const isAuthenticated = !!user;
   
   // Supabase hooks for data
   const { staffMembers: supabaseStaff, isLoading: staffLoading, createStaffMember, deleteStaffMember } = useStaffMembers();
