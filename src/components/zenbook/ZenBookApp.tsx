@@ -187,8 +187,10 @@ const ZenBookApp: React.FC = () => {
 
 
   const handleLogout = async () => {
-    await signOut();
     setUserRole(null);
+    setCurrentView('calendar');
+    // signOut clears local session and redirects to /
+    await signOut();
   };
 
   // Show loading state
