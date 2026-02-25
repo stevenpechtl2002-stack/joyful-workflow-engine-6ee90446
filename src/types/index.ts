@@ -73,5 +73,18 @@ export interface Customer {
   notes?: string;
 }
 
-export type ViewType = 'calendar' | 'services' | 'staff' | 'insights' | 'settings' | 'customers' | 'api' | 'shifts';
+export type ViewType = 'calendar' | 'services' | 'staff' | 'insights' | 'settings' | 'customers' | 'api' | 'shifts' | 'connect-products';
 export type UserRole = 'salon' | 'customer' | 'salon_registration' | 'admin' | null;
+
+export interface ConnectProduct {
+  id: string;
+  user_id: string;
+  stripe_product_id: string;
+  stripe_price_id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+}

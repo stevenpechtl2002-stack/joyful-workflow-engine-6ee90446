@@ -32,3 +32,15 @@ verify_jwt = false
 
 [functions.check-connect-status]
 verify_jwt = false
+
+[functions.create-connect-product]
+verify_jwt = false
+
+[functions.create-connect-checkout]
+verify_jwt = false
+
+[functions.list-connect-products]
+verify_jwt = false
+
+[functions.stripe-connect-webhook]
+verify_jwt = false

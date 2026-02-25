@@ -20,7 +20,8 @@ import {
   Wand2,
   Loader2,
   Key,
-  AlertTriangle
+  AlertTriangle,
+  ShoppingBag
 } from 'lucide-react';
 import { 
   format, 
@@ -53,6 +54,7 @@ import ApiSettings from '@/components/zenbook/ApiSettings';
 import Shifts from '@/pages/portal/Shifts';
 import StaffCalendarView from '@/components/zenbook/StaffCalendarView';
 import Logo from '@/components/zenbook/Logo';
+import ConnectProducts from '@/components/zenbook/ConnectProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
@@ -67,6 +69,7 @@ const navItems = [
   { id: 'shifts', label: 'Dienstplan', icon: <CalendarClock className="w-5 h-5" /> },
   { id: 'customers', label: 'Kunden', icon: <Contact2 className="w-5 h-5" /> },
   { id: 'services', label: 'Services', icon: <Briefcase className="w-5 h-5" /> },
+  { id: 'connect-products', label: 'Stripe Produkte', icon: <ShoppingBag className="w-5 h-5" /> },
   { id: 'staff', label: 'Team', icon: <Users className="w-5 h-5" /> },
   { id: 'insights', label: 'KI Insights', icon: <PieChart className="w-5 h-5" /> },
   { id: 'api', label: 'API', icon: <Key className="w-5 h-5" /> },
@@ -442,6 +445,7 @@ const ZenBookApp: React.FC = () => {
           {currentView === 'insights' && <Insights appointments={appointments} services={services} staff={staffMembers} />}
           {currentView === 'api' && <ApiSettings />}
           {currentView === 'shifts' && <Shifts />}
+          {currentView === 'connect-products' && <ConnectProducts />}
           {currentView === 'settings' && <SettingsComponent onSimulateIncoming={handleIncomingWebhook} />}
         </div>
       </main>
