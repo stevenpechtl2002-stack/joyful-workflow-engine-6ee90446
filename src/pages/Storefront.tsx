@@ -101,8 +101,8 @@ const Storefront: React.FC = () => {
       </header>
 
       {/* Hero */}
-      <div className="bg-gradient-hero py-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-3">Finde deinen Salon</h1>
+      <div className="bg-gradient-to-br from-primary/20 via-background to-pink-500/10 py-16 text-center">
+        <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-3">Finde deinen <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-500">Salon</span></h1>
         <p className="text-lg text-muted-foreground font-medium mb-8">Entdecke die besten Salons in deiner Nähe und buche direkt online.</p>
 
         {/* Search & Filter */}
@@ -174,10 +174,10 @@ const Storefront: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-4">
-                  <span>{salon.product_count} Services</span>
-                  <span>{salon.staff_count} Mitarbeiter</span>
+                  <span className="px-2 py-1 rounded-lg bg-primary/10 text-primary">{salon.product_count} Services</span>
+                  <span className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-500">{salon.staff_count} Mitarbeiter</span>
                   {!salon.published && (
-                    <span className="ml-auto px-2 py-1 rounded-lg bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <span className="ml-auto px-2 py-1 rounded-lg bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 animate-pulse">
                       <Sparkles className="w-3 h-3" /> Neu
                     </span>
                   )}
