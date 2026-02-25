@@ -228,6 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Clear all auth state immediately
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -238,9 +239,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscriptionEnd: null,
       tier: null,
     });
-    // Use local scope to avoid server-side 403 errors when session is already expired
-    await supabase.auth.signOut({ scope: 'local' });
-    // Force full page reload to reset all state
+    // Clear Supabase session from localStorage directly to avoid 403 loops
+    const storageKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+    // Force full page reload to landing page
     window.location.href = '/';
   };
 
