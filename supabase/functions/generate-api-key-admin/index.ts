@@ -2,42 +2,47 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Missing authorization' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Decode JWT to get user ID
     const token = authHeader.replace('Bearer ', '')
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const adminUserId = payload.sub
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
 
-    if (!adminUserId) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+    // Verify token
+    const supabaseAuth = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token)
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
+    const adminUserId = claimsData.claims.sub
 
     // Verify admin role
-    const { data: isAdmin } = await supabase.rpc('has_role', {
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
       _user_id: adminUserId,
       _role: 'admin',
     })
@@ -62,7 +67,7 @@ Deno.serve(async (req) => {
     const newKey = crypto.randomUUID()
 
     // Upsert into customer_api_keys
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('customer_api_keys')
       .upsert(
         { customer_id, api_key: newKey, updated_at: new Date().toISOString() },
