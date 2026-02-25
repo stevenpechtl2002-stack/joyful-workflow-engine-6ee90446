@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     // Fetch all salons with company_name
     const { data: salons, error } = await supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, published, created_at")
+      .select("id, company_name, email, city, address, postal_code, published, created_at, category")
       .not("company_name", "is", null)
       .order("created_at", { ascending: false });
 
@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
         city: salon.city || null,
         address: salon.address || null,
         postal_code: salon.postal_code || null,
+        category: salon.category || 'Friseur',
         published: salon.published,
         product_count: productCount || 0,
         staff_count: staffCount || 0,
