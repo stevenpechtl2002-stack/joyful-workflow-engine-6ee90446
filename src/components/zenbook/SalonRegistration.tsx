@@ -118,6 +118,7 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
           address: formData.street || undefined,
           city: formData.city || undefined,
           postal_code: formData.postalCode || undefined,
+          category: formData.category || 'Friseur',
         } as any)
         .eq('id', user.id);
     }
@@ -246,6 +247,7 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
           address: formData.street || undefined,
           city: formData.city || undefined,
           postal_code: formData.postalCode || undefined,
+          category: formData.category || 'Friseur',
         } as any)
         .eq('id', user.id);
       if (publishError) throw publishError;
@@ -342,9 +344,9 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
                 <input type="text" className="w-full px-6 md:px-8 py-4 md:py-5 rounded-xl bg-muted border-2 border-transparent focus:border-primary outline-none font-bold text-foreground transition-all" placeholder="z.B. Hair & Soul Studio" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Kategorie</label>
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest">Rubrik / Kategorie</label>
                 <select className="w-full px-6 md:px-8 py-4 md:py-5 rounded-xl bg-muted border-2 border-transparent focus:border-primary outline-none font-bold text-foreground transition-all appearance-none" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                  <option>Haare</option><option>Nägel</option><option>Kosmetik</option><option>Wellness</option>
+                  <option>Friseur</option><option>Nagelstudio</option><option>Kosmetik</option><option>Wellness</option><option>Barbershop</option><option>Massage</option><option>Waxing</option>
                 </select>
               </div>
               <div className="md:col-span-2 space-y-2">

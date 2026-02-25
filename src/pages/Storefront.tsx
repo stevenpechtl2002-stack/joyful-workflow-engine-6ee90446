@@ -11,6 +11,7 @@ interface Salon {
   city: string | null;
   address: string | null;
   postal_code: string | null;
+  category: string;
   published: boolean;
   product_count: number;
   staff_count: number;
@@ -162,6 +163,7 @@ const Storefront: React.FC = () => {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-black text-foreground text-lg truncate group-hover:text-primary transition-colors">{salon.name}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-0.5">{salon.category}</p>
                     {salon.city && (
                       <p className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
                         <MapPin className="w-3.5 h-3.5" />
