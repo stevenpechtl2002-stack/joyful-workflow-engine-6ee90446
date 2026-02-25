@@ -1,6 +1,6 @@
 // Edge Function v2 - 2026-01-07
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "npm:stripe@20.4.0";
+import Stripe from "npm:stripe@20.3.1";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=deno";
 
 const corsHeaders = {

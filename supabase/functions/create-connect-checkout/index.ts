@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "npm:stripe@20.4.0";
+import Stripe from "npm:stripe@20.3.1";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 // CORS headers for browser-based calls
