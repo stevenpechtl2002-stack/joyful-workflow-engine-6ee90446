@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Fetch all salons with company_name
     const { data: salons, error } = await supabase
       .from("customers")
       .select("id, company_name, email, city, address, postal_code, published, created_at, category")
@@ -25,12 +24,18 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    // For each salon, get their products count and staff count
     const enriched = await Promise.all((salons || []).map(async (salon) => {
-      const [{ count: productCount }, { count: staffCount }] = await Promise.all([
+      const [{ count: productCount }, { count: staffCount }, { data: reviews }, { data: imgs }] = await Promise.all([
         supabase.from("products").select("*", { count: "exact", head: true }).eq("user_id", salon.id).eq("is_active", true),
         supabase.from("staff_members").select("*", { count: "exact", head: true }).eq("user_id", salon.id).eq("is_active", true),
+        supabase.from("salon_reviews").select("rating").eq("salon_user_id", salon.id),
+        supabase.from("salon_images").select("image_url").eq("salon_user_id", salon.id).order("sort_order").limit(1),
       ]);
+
+      const reviewList = reviews || [];
+      const avgRating = reviewList.length > 0
+        ? Math.round((reviewList.reduce((s, r) => s + r.rating, 0) / reviewList.length) * 10) / 10
+        : 0;
 
       return {
         id: salon.id,
@@ -42,6 +47,9 @@ Deno.serve(async (req) => {
         published: salon.published,
         product_count: productCount || 0,
         staff_count: staffCount || 0,
+        avg_rating: avgRating,
+        review_count: reviewList.length,
+        cover_image: imgs && imgs.length > 0 ? imgs[0].image_url : null,
       };
     }));
 

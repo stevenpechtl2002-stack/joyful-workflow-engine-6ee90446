@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { usePinProtection } from '@/components/portal/PinProtection';
+import SalonImageManager from '@/components/portal/SalonImageManager';
 import { 
   User, 
   Mail, 
@@ -822,6 +823,11 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Salon Profile (Images & Description) */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+          <SalonImageManager />
         </motion.div>
       </div>
     </div>

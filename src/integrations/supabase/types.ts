@@ -309,6 +309,7 @@ export type Database = {
           company_name: string | null
           created_at: string
           dashboard_pin: string | null
+          description: string | null
           email: string
           id: string
           notes: string | null
@@ -328,6 +329,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           dashboard_pin?: string | null
+          description?: string | null
           email: string
           id: string
           notes?: string | null
@@ -347,6 +349,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           dashboard_pin?: string | null
+          description?: string | null
           email?: string
           id?: string
           notes?: string | null
@@ -630,6 +633,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      salon_images: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_url: string
+          salon_user_id: string
+          sort_order: number
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          salon_user_id: string
+          sort_order?: number
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          salon_user_id?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      salon_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reviewer_name: string
+          reviewer_user_id: string | null
+          salon_user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reviewer_name: string
+          reviewer_user_id?: string | null
+          salon_user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reviewer_name?: string
+          reviewer_user_id?: string | null
+          salon_user_id?: string
+        }
+        Relationships: []
       }
       shift_exceptions: {
         Row: {
