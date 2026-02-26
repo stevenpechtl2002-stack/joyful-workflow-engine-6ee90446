@@ -16,7 +16,7 @@ const Logo: React.FC<LogoProps> = ({
   className = '' 
 }) => {
   const isClickable = !!onClick;
-  const heightClass = variant === 'light' ? 'h-32' : 'h-28';
+  const heightClass = variant === 'light' ? 'h-[160px]' : 'h-[140px]';
   
   const logoContent = (
     <img 

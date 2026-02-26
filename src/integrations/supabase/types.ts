@@ -364,6 +364,72 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_closings: {
+        Row: {
+          cash_deposits: number
+          cash_drawer_end: number
+          cash_drawer_start: number
+          cash_withdrawals: number
+          closed_at: string | null
+          closing_date: string
+          created_at: string
+          gross_revenue_products: number
+          gross_revenue_services: number
+          id: string
+          net_revenue: number
+          payment_card: number
+          payment_cash: number
+          payment_online: number
+          payment_other: number
+          status: string
+          user_id: string
+          vat_amount: number
+          vat_rate: number
+        }
+        Insert: {
+          cash_deposits?: number
+          cash_drawer_end?: number
+          cash_drawer_start?: number
+          cash_withdrawals?: number
+          closed_at?: string | null
+          closing_date: string
+          created_at?: string
+          gross_revenue_products?: number
+          gross_revenue_services?: number
+          id?: string
+          net_revenue?: number
+          payment_card?: number
+          payment_cash?: number
+          payment_online?: number
+          payment_other?: number
+          status?: string
+          user_id: string
+          vat_amount?: number
+          vat_rate?: number
+        }
+        Update: {
+          cash_deposits?: number
+          cash_drawer_end?: number
+          cash_drawer_start?: number
+          cash_withdrawals?: number
+          closed_at?: string | null
+          closing_date?: string
+          created_at?: string
+          gross_revenue_products?: number
+          gross_revenue_services?: number
+          id?: string
+          net_revenue?: number
+          payment_card?: number
+          payment_cash?: number
+          payment_online?: number
+          payment_other?: number
+          status?: string
+          user_id?: string
+          vat_amount?: number
+          vat_rate?: number
+        }
+        Relationships: []
+      }
       daily_stats: {
         Row: {
           answered_calls: number | null
@@ -910,6 +976,72 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_name: string
+          id: string
+          notes: string | null
+          payment_amount: number
+          payment_method: string
+          reservation_id: string | null
+          staff_member_id: string | null
+          transaction_date: string
+          transaction_number: string
+          transaction_time: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_name: string
+          id?: string
+          notes?: string | null
+          payment_amount?: number
+          payment_method?: string
+          reservation_id?: string | null
+          staff_member_id?: string | null
+          transaction_date?: string
+          transaction_number: string
+          transaction_time?: string
+          transaction_type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_name?: string
+          id?: string
+          notes?: string | null
+          payment_amount?: number
+          payment_method?: string
+          reservation_id?: string | null
+          staff_member_id?: string | null
+          transaction_date?: string
+          transaction_number?: string
+          transaction_time?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_staff_member_id_fkey"
+            columns: ["staff_member_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
