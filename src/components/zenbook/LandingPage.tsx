@@ -131,7 +131,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             {categories.map((cat, i) =>
             <motion.button
               key={cat.label}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted whitespace-nowrap transition-all"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${cat.label === 'Sale %' ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/30' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
               whileHover={{ y: -3, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' }}
               whileTap={{ scale: 0.95 }}>
 
@@ -156,7 +156,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             alt="Beauty Background"
             className="w-full h-full object-cover" />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/50 to-transparent"></div>
         </div>
 
         {/* Floating 3D Glass Elements */}
