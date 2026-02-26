@@ -144,7 +144,7 @@ const CustomerAuth = () => {
             animate={{ scale: 1 }}
             className="mb-4"
           >
-            <img src={zentimeLogo} alt="ZenTime" className="h-16 w-auto object-contain mx-auto" />
+            <img src={zentimeLogo} alt="ZenTime" className="h-24 w-auto object-contain mx-auto" />
           </motion.div>
           <h1 className="text-3xl font-display font-bold text-foreground mb-2">
             Willkommen bei ZenTime

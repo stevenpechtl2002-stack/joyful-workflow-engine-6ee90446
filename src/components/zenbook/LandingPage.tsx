@@ -615,7 +615,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
           <div className="pt-8 border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src={zentimeLogo} alt="ZenTime" className="h-8 w-auto object-contain brightness-0 invert" />
+              <img src={zentimeLogo} alt="ZenTime" className="h-16 w-auto object-contain brightness-0 invert" />
             </div>
             
             <div className="flex items-center gap-3">
