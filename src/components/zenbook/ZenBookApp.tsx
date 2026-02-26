@@ -21,7 +21,9 @@ import {
   Loader2,
   Key,
   AlertTriangle,
-  ShoppingBag
+  ShoppingBag,
+  Receipt,
+  Euro
 } from 'lucide-react';
 import { 
   format, 
@@ -55,6 +57,8 @@ import Shifts from '@/pages/portal/Shifts';
 import StaffCalendarView from '@/components/zenbook/StaffCalendarView';
 import Logo from '@/components/zenbook/Logo';
 import ConnectProducts from '@/components/zenbook/ConnectProducts';
+import KassenbuchView from '@/components/zenbook/KassenbuchView';
+import ZBonView from '@/components/zenbook/ZBonView';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
@@ -71,6 +75,8 @@ const navItems = [
   { id: 'services', label: 'Services', icon: <Briefcase className="w-5 h-5" /> },
   { id: 'connect-products', label: 'Stripe Produkte', icon: <ShoppingBag className="w-5 h-5" /> },
   { id: 'staff', label: 'Team', icon: <Users className="w-5 h-5" /> },
+  { id: 'kassenbuch', label: 'Kassenbuch', icon: <Receipt className="w-5 h-5" /> },
+  { id: 'zbon', label: 'Z-Bon', icon: <Euro className="w-5 h-5" /> },
   { id: 'insights', label: 'KI Insights', icon: <PieChart className="w-5 h-5" /> },
   { id: 'api', label: 'API', icon: <Key className="w-5 h-5" /> },
   { id: 'settings', label: 'Einstellungen', icon: <SettingsIcon className="w-5 h-5" /> },
@@ -310,71 +316,74 @@ const ZenBookApp: React.FC = () => {
            </div>
         </div>
 
-        {/* Scrollable Navigation Menu */}
-        <nav className="flex flex-col gap-2 flex-1 overflow-y-auto no-scrollbar">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setCurrentView(item.id as ViewType)}
-              className={`flex items-center gap-3 px-5 py-4 rounded-xl transition-all font-bold text-sm group relative shrink-0 ${
-                currentView === item.id 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                  : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50'
-              }`}
-            >
-              <span className="shrink-0">{React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-5 h-5' })}</span>
-              <span className={`transition-all duration-300 ${!isSidebarOpen && 'lg:opacity-0 lg:w-0 overflow-hidden'}`}>{item.label}</span>
-              {!isSidebarOpen && (
-                <div className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                  {item.label}
+        {/* Scrollable container for everything below calendar */}
+        <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+          {/* Navigation Menu */}
+          <nav className="flex flex-col gap-2 px-0 py-2">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id as ViewType)}
+                className={`flex items-center gap-3 px-5 py-4 rounded-xl transition-all font-bold text-sm group relative shrink-0 ${
+                  currentView === item.id 
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                    : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50'
+                }`}
+              >
+                <span className="shrink-0">{React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-5 h-5' })}</span>
+                <span className={`transition-all duration-300 ${!isSidebarOpen && 'lg:opacity-0 lg:w-0 overflow-hidden'}`}>{item.label}</span>
+                {!isSidebarOpen && (
+                  <div className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                    {item.label}
+                  </div>
+                )}
+              </button>
+            ))}
+          </nav>
+
+          <div className={`transition-all duration-300 ${!isSidebarOpen && 'lg:scale-0 lg:h-0 overflow-hidden'}`}>
+            <div className={`p-4 rounded-xl bg-muted border border-border text-muted-foreground mb-4 transition-all duration-700 ${apiActivity ? 'bg-emerald-50 border-emerald-100' : ''}`}>
+              <div className="flex items-center gap-3">
+                <Radio className={`w-4 h-4 ${apiActivity ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} />
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">API Gateway</p>
+                  <p className="text-xs font-bold text-slate-600 truncate">{apiActivity ? 'Requesting...' : 'Listening Mode'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative mb-4">
+               <button 
+                onClick={() => setShowAddDropdown(!showAddDropdown)}
+                className="w-full flex items-center justify-between px-6 py-5 bg-foreground text-background rounded-xl font-black shadow-xl hover:shadow-2xl transition-all active:scale-95"
+              >
+                <div className="flex items-center gap-3">
+                  <Plus className="w-5 h-5" />
+                  <span className="text-sm">Neu</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAddDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showAddDropdown && (
+                <div className="absolute bottom-full left-0 right-0 mb-3 bg-card rounded-2xl shadow-2xl border border-border z-[60] py-2 animate-in slide-in-from-bottom-2">
+                  <button onClick={() => { setCurrentView('calendar'); setShowAddDropdown(false); }} className="w-full flex items-center gap-3 px-5 py-4 text-xs font-bold text-foreground hover:bg-muted">
+                    <CalendarIcon className="w-4 h-4" /> Termin (im Kalender)
+                  </button>
+                  <button onClick={() => setShowAddDropdown(false)} className="w-full flex items-center gap-3 px-5 py-4 text-xs font-bold text-primary hover:bg-primary/5">
+                    <Sparkles className="w-4 h-4" /> KI-Buchung
+                  </button>
                 </div>
               )}
-            </button>
-          ))}
-        </nav>
-
-        <div className={`transition-all duration-300 shrink-0 ${!isSidebarOpen && 'lg:scale-0 lg:h-0 overflow-hidden'}`}>
-          <div className={`p-4 rounded-xl bg-muted border border-border text-muted-foreground mb-4 transition-all duration-700 ${apiActivity ? 'bg-emerald-50 border-emerald-100' : ''}`}>
-            <div className="flex items-center gap-3">
-              <Radio className={`w-4 h-4 ${apiActivity ? 'animate-pulse text-emerald-500' : 'text-slate-400'}`} />
-              <div className="flex-1 overflow-hidden">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">API Gateway</p>
-                <p className="text-xs font-bold text-slate-600 truncate">{apiActivity ? 'Requesting...' : 'Listening Mode'}</p>
-              </div>
             </div>
           </div>
 
-          <div className="relative mb-4">
-             <button 
-              onClick={() => setShowAddDropdown(!showAddDropdown)}
-              className="w-full flex items-center justify-between px-6 py-5 bg-foreground text-background rounded-xl font-black shadow-xl hover:shadow-2xl transition-all active:scale-95"
-            >
-              <div className="flex items-center gap-3">
-                <Plus className="w-5 h-5" />
-                <span className="text-sm">Neu</span>
-              </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${showAddDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            {showAddDropdown && (
-              <div className="absolute bottom-full left-0 right-0 mb-3 bg-card rounded-2xl shadow-2xl border border-border z-[60] py-2 animate-in slide-in-from-bottom-2">
-                <button onClick={() => { setCurrentView('calendar'); setShowAddDropdown(false); }} className="w-full flex items-center gap-3 px-5 py-4 text-xs font-bold text-foreground hover:bg-muted">
-                  <CalendarIcon className="w-4 h-4" /> Termin (im Kalender)
-                </button>
-                <button onClick={() => setShowAddDropdown(false)} className="w-full flex items-center gap-3 px-5 py-4 text-xs font-bold text-primary hover:bg-primary/5">
-                  <Sparkles className="w-4 h-4" /> KI-Buchung
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={handleLogout}
+            className={`flex items-center gap-3 p-4 text-muted-foreground hover:text-destructive transition-colors text-left w-full border-t border-border pt-6 ${!isSidebarOpen && 'lg:justify-center lg:px-0'}`}
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            <span className={`text-xs font-black uppercase tracking-widest transition-all ${!isSidebarOpen && 'hidden'}`}>Logout</span>
+          </button>
         </div>
-
-        <button
-          onClick={handleLogout}
-          className={`flex items-center gap-3 p-4 text-muted-foreground hover:text-destructive transition-colors text-left w-full border-t border-border pt-6 shrink-0 ${!isSidebarOpen && 'lg:justify-center lg:px-0'}`}
-        >
-          <LogOut className="w-5 h-5 shrink-0" />
-          <span className={`text-xs font-black uppercase tracking-widest transition-all ${!isSidebarOpen && 'hidden'}`}>Logout</span>
-        </button>
       </aside>
 
       {/* Main Container */}
@@ -450,6 +459,8 @@ const ZenBookApp: React.FC = () => {
           {currentView === 'api' && <ApiSettings />}
           {currentView === 'shifts' && <Shifts />}
           {currentView === 'connect-products' && <ConnectProducts />}
+          {currentView === 'kassenbuch' && <KassenbuchView />}
+          {currentView === 'zbon' && <ZBonView />}
           {currentView === 'settings' && <SettingsComponent onSimulateIncoming={handleIncomingWebhook} />}
         </div>
       </main>
