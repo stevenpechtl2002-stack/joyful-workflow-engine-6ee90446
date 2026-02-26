@@ -11,6 +11,7 @@ import Storefront from "./pages/Storefront";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 
 const SalonDetail = lazy(() => import("./pages/SalonDetail"));
+const CustomerAuth = lazy(() => import("./pages/CustomerAuth"));
 const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
 
 const PortalAuth = lazy(() => import("./pages/portal/Auth"));
@@ -55,6 +56,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/storefront" element={<Storefront />} />
+              <Route path="/login" element={<CustomerAuth />} />
               <Route path="/storefront/profile" element={<CustomerProfile />} />
               <Route path="/storefront/:salonId" element={<SalonDetail />} />
               <Route path="/success" element={<CheckoutSuccess />} />
