@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn } from "lucide-react";
+import zentimeLogo from "@/assets/zentime-logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,13 +19,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center glow-primary">
-              <span className="text-primary-foreground font-black text-lg">Z</span>
-            </div>
-            <span className="font-display font-bold text-xl text-foreground">
-              Zen<span className="text-gradient">Time</span>
-            </span>
+          <Link to="/" className="flex items-center">
+            <img src={zentimeLogo} alt="ZenTime" className="h-10 w-auto object-contain" />
           </Link>
 
           {/* Desktop Navigation */}
