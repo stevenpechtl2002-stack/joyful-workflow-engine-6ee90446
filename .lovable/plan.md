@@ -1,25 +1,75 @@
 
 
-## Plan: Uploaded Logo-Bild überall einsetzen
+## Plan: Kassenbuch & Z-Bon System + Logo vergrößern
 
-Das hochgeladene Bild (Uhr-Icon + "ZENTIME" Text) wird als Logo-Bild in der gesamten App verwendet.
+### 1. Logo nochmal 5x vergrößern
+- `Logo.tsx`: `h-28` → `h-[140px]`, `h-32` → `h-[160px]`  
+- `Navbar.tsx`: `h-12` → `h-[60px]`, navbar height `h-16` → `h-24`
+- `Footer.tsx`: Logo height vergrößern
+- `CustomerAuth.tsx`: Logo height vergrößern
 
-### 1. Bild kopieren nach `src/assets/zentime-logo.png`
+### 2. Neue DB-Tabelle: `transactions`
+Speichert jeden Verkauf/Transaktion mit Zahlungsmethode:
 
-### 2. `src/components/zenbook/Logo.tsx` aktualisieren
-- Statt dem "Z"-Badge + Text wird das Logo-Bild als `<img>` gerendert
-- Höhe anpassbar je nach Variant (default: `h-10`, light: `h-12`)
-- `showText` wird ignoriert — das Bild enthält bereits den Text
+| Column | Type |
+|--------|------|
+| id | uuid PK |
+| user_id | uuid |
+| reservation_id | uuid (nullable) |
+| transaction_number | text |
+| transaction_type | text (default: 'sale') |
+| customer_name | text |
+| amount | numeric |
+| payment_method | text (bar/karte_ec/karte_kredit/online/tap_to_pay) |
+| payment_amount | numeric |
+| staff_member_id | uuid (nullable) |
+| notes | text (nullable) |
+| transaction_date | date |
+| transaction_time | time |
+| created_at | timestamptz |
 
-### 3. `src/components/Navbar.tsx` aktualisieren
-- Den hardcoded "Z"-Badge + "ZenTime" Text durch `<img src={zenTimeLogo}>` ersetzen
+RLS: Users can CRUD their own transactions.
 
-### 4. `src/components/Footer.tsx` aktualisieren
-- Logo im Footer durch das Bild ersetzen
+### 3. Neue DB-Tabelle: `daily_closings` (Z-Bon)
+Speichert Tagesabschlüsse:
 
-### 5. `src/components/zenbook/LandingPage.tsx` Footer
-- Logo im LandingPage-Footer durch das Bild ersetzen
+| Column | Type |
+|--------|------|
+| id | uuid PK |
+| user_id | uuid |
+| closing_date | date (unique per user) |
+| gross_revenue_services | numeric |
+| gross_revenue_products | numeric |
+| net_revenue | numeric |
+| vat_amount | numeric |
+| vat_rate | numeric (default: 19) |
+| payment_cash | numeric |
+| payment_card | numeric |
+| payment_online | numeric |
+| payment_other | numeric |
+| cash_drawer_start | numeric |
+| cash_drawer_end | numeric |
+| cash_deposits | numeric |
+| cash_withdrawals | numeric |
+| status | text (open/closed) |
+| closed_at | timestamptz |
+| created_at | timestamptz |
 
-### 6. `src/pages/CustomerAuth.tsx` & `src/pages/Login.tsx`
-- Logo-Icon durch das Bild ersetzen
+RLS: Users can CRUD their own closings.
+
+### 4. Neue Seite: `src/pages/portal/Sales.tsx`
+Treatwell-ähnliches "Verkauf"-Dropdown mit 3 Tabs/Views:
+- **Kassenbuch**: Tabelle mit Zeit, Transaktions-Nr, Typ (VERKAUF Badge), Kunde, Gesamtsumme, Zahlungstyp, Betrag. Rechte Sidebar mit Brutto-Umsätze Zusammenfassung und Zahlungen-Breakdown.
+- **Z-Bon**: Tagesabschluss generieren und als PDF-artige Ansicht anzeigen (wie im Screenshot): Salon-Name, Adresse, Brutto-Umsätze, Netto, MwSt, Zahlungen-Breakdown, Kassenschublade.
+- **Neuer Verkauf**: Dialog zum manuellen Erfassen einer Transaktion.
+
+### 5. Sidebar & Routing aktualisieren
+- `PortalSidebar.tsx`: Neuen "Verkauf" Menüpunkt hinzufügen (mit Euro/Receipt icon)
+- `App.tsx`: Route `/portal/sales` → `Sales` Seite registrieren
+
+### Technische Details
+- Datumsnavigation mit Pfeilen (< 26.02.2026 >) wie im Screenshot
+- Z-Bon automatisch aus Transaktionen des Tages berechnen
+- Kassenbuch zeigt rechts eine sticky Zusammenfassung (Brutto-Umsätze, Zahlungen)
+- Status "abgeschlossen" nach Tagesabschluss
 
