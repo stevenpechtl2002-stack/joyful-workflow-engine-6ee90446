@@ -1,26 +1,16 @@
 
 
-## Plan: Kalender vereinfachen + Kassenfunktionen vervollständigen
+## Plan: Portal-Kalender durch ZenBookApp-Kalender ersetzen
 
-### 1. Kalender auf Staff-Kalender reduzieren (`src/pages/portal/Calendar.tsx`)
-- Entferne `calendarType` State und die 3-Tab-Leiste (Standard/Mitarbeiter/Verfügbar)
-- Entferne den kompletten Standard-Kalender (Monats-, Wochen-, Tagesansicht mit Filtern, Suche, Status-Select)
-- `StaffCalendarView` wird direkt als einzige Ansicht gerendert (wie im Screenshot)
-- "Freie Slots" und "Dienstplan" bleiben über die Buttons in der StaffCalendarView erreichbar
-- "Neue Reservierung" Button bleibt im Header
+Der aktuelle `/portal/calendar` zeigt eine vereinfachte Version mit dem Portal-Sidebar. Der User will stattdessen den ZenBookApp-Kalender (auf `/`) mit dem ZenTime-Sidebar, Mini-Kalender, Staff-Spalten, API Gateway Status, etc.
 
-### 2. Kassenabrechnung erweitern (`src/pages/portal/Sales.tsx`)
-- **Kassenbuch**: Bereits vorhanden mit Transaktions-Tabelle und Zusammenfassung -- bleibt
-- **Z-Bon**: Bereits vorhanden -- bleibt
-- **Neuer Tab "Kassenabrechnung"**: Hinzufuegen mit:
-  - Kassenschublade Start-/Endbestand editierbar
-  - Einzahlungen und Entnahmen erfassen (z.B. Trinkgeld-Entnahme, Wechselgeld-Einlage)
-  - Kassenbestand-Differenz anzeigen (Soll vs. Ist)
-  - Übersicht: Anfangsbestand + Bareinnahmen + Einzahlungen - Entnahmen = Soll-Endbestand
-- **Transaktionen loeschen**: Button zum Stornieren/Loeschen einzelner Transaktionen im Kassenbuch
-- **Tagesabschluss verbessern**: Kassenschublade Start-/Endbestand beim Z-Bon-Generieren eingeben koennen
+### Änderung 1: Portal Sidebar Link anpassen
+- `src/components/portal/PortalSidebar.tsx`: "Kalender" Link von `/portal/calendar` auf `/` ändern, damit direkt die ZenBookApp geöffnet wird
 
-### Technische Details
-- Keine DB-Aenderungen noetig -- `daily_closings` hat bereits `cash_drawer_start`, `cash_drawer_end`, `cash_deposits`, `cash_withdrawals`
-- Calendar.tsx wird von ~430 auf ~50 Zeilen reduziert
+### Änderung 2: Portal Calendar Route entfernen (optional)
+- `src/App.tsx`: Route `/portal/calendar` entfernen oder als Redirect auf `/` einrichten
+- `src/pages/portal/Calendar.tsx`: Kann gelöscht oder als Redirect implementiert werden
+
+### Ergebnis
+Klick auf "Kalender" im Portal → öffnet die ZenBookApp (`/`) mit dem gewohnten ZenTime-Layout (linkes Menü, Mini-Kalender, Staff-Spalten, Live-Badge, API Gateway)
 
