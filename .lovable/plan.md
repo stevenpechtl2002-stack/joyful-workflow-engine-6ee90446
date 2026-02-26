@@ -1,41 +1,44 @@
 
 
-## Plan: Einheitliche Login-Seite mit Business/Kunden-Auswahl
+## Plan: Kundenprofil als Dashboard + Kalender-Menü mit Kassenbuch/Z-Bon + Scrollbar
 
-### Aktueller Zustand
-- `/login` → CustomerAuth (Kunden-Login)
-- `/portal/auth` → PortalAuth (Business/Salon-Login)
-- Navbar, Landing Page, Footer verlinken teilweise auf `/portal/auth`, teilweise auf `/login`
+### 1. Kundenprofil als Dashboard (`src/pages/CustomerProfile.tsx`) - Komplett umbauen
 
-### Änderung 1: Neue einheitliche Auth-Seite (`src/pages/UnifiedAuth.tsx`)
-- Eine Seite unter `/login` mit zwei Modi: **Business** und **Kunde**
-- Oben zwei große Buttons/Cards zur Auswahl: "Ich bin Salon-Betreiber" vs "Ich bin Kunde"
-- Beide Modi haben Login + Registrieren Tabs + Passwort-vergessen
-- **Business-Registrierung**: Name, E-Mail, Passwort, Passwort bestätigen
-- **Kunden-Registrierung**: Name, E-Mail, Telefon (optional), Passwort, Passwort bestätigen
-- Nach Login/Registrierung:
-  - Business → `/portal` (bzw. `/admin` oder `/sales` je nach Rolle)
-  - Kunde → `/storefront/profile`
+- **Header**: Logo, "Mein Dashboard" Titel, Logout-Button (rechts oben)
+- **Statistik-Cards** (4er Grid): Termine gesamt, anstehende Termine, Favoriten, Mitglied seit
+- **"Dein nächster Termin"** Hero-Card mit Datum, Uhrzeit, Salon-Name
+- **Editierbares Profil**: Name, E-Mail (readonly), Telefon - Speichern schreibt in `profiles` Tabelle (UPDATE RLS existiert bereits)
+- **Favoriten**: Horizontale scrollbare Karten mit Salon-Info + Entfernen-Button
+- **Salon-Vorschläge**: "Entdecke Salons" Sektion - lädt aus `customers` wo `published = true`, zeigt Name, Kategorie, Stadt
+- **Buchungshistorie**: Anstehende + vergangene Termine mit Status-Badges
+- **Design**: Grid-Layout, framer-motion Animationen, responsive 1-2 Spalten
 
-### Änderung 2: Alle Links vereinheitlichen
-- `src/components/Navbar.tsx`: `/portal/auth` → `/login`, Button-Text: "Login"
-- `src/components/PortalCTASection.tsx`: `/portal/auth` → `/login`
-- `src/components/zenbook/LandingPage.tsx`: alle `/portal/auth` und `/login` → `/login`
-- `src/components/portal/PortalLayout.tsx`: Redirect auf `/login`
-- `src/pages/CustomerProfile.tsx`: Redirect auf `/login`
-- `src/pages/sales/SalesDashboard.tsx`: Redirect auf `/login`
-- `src/pages/portal/Sales.tsx`: Redirect auf `/login`
+### 2. ZenBookApp Sidebar erweitern (`src/components/zenbook/ZenBookApp.tsx`)
 
-### Änderung 3: Routes (`src/App.tsx`)
-- `/login` → neue `UnifiedAuth` Komponente
-- `/portal/auth` → Redirect auf `/login`
-- CustomerAuth entfernen
+**Neue Nav-Items in `navItems` Array:**
+- `{ id: 'kassenbuch', label: 'Kassenbuch', icon: <Receipt /> }`
+- `{ id: 'zbon', label: 'Z-Bon', icon: <Euro /> }`
 
-### Änderung 4: CustomerProfile verbessern
-- Bereits vorhanden mit Favoriten, anstehenden und vergangenen Terminen
-- Profilinformationen (Name, E-Mail, Telefon) editierbar machen
-- Logout-Button hinzufügen
+**ViewType erweitern** (`src/types/index.ts`):
+- `'kassenbuch' | 'zbon'` zu `ViewType` hinzufügen
 
-### Ergebnis
-Ein einziger Login-Punkt für alle Nutzer. Business-User landen im Dashboard, Kunden sehen ihr Profil mit Daten, Reservierungen und Favoriten.
+**Views rendern**: Kassenbuch und Z-Bon Content inline im `renderView` Switch-Case einbauen (Sales-Logik direkt in ZenBookApp oder als extrahierte Komponenten)
+
+### 3. Sidebar unterhalb Kalender scrollbar machen (`src/components/zenbook/ZenBookApp.tsx`)
+
+- Nach dem Mini-Kalender (Zeile 311): Einen neuen `<div className="flex-1 overflow-y-auto">` Wrapper öffnen
+- Navigation, API Gateway, "Neu"-Button und Logout alle in diesen Container verschieben
+- `shrink-0` von den unteren Elementen (API Gateway, Neu-Button, Logout) entfernen
+- `flex-1` von der `<nav>` entfernen (der neue Wrapper übernimmt das)
+
+### 4. Sales-Komponenten extrahieren (`src/pages/portal/Sales.tsx`)
+
+- Kassenbuch-Tab-Content und Z-Bon-Tab-Content als eigenständige exportierte Komponenten extrahieren
+- Diese in ZenBookApp importieren und bei `currentView === 'kassenbuch'` bzw. `'zbon'` rendern
+
+### Dateien die geändert werden:
+- `src/pages/CustomerProfile.tsx` - Komplett umbauen zu Dashboard
+- `src/components/zenbook/ZenBookApp.tsx` - Nav-Items + Scrollbar + neue Views
+- `src/types/index.ts` - ViewType erweitern
+- `src/pages/portal/Sales.tsx` - Kassenbuch/Z-Bon Komponenten exportieren (oder neue Dateien)
 
