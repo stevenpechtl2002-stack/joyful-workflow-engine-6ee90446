@@ -1,16 +1,41 @@
 
 
-## Plan: Portal-Kalender durch ZenBookApp-Kalender ersetzen
+## Plan: Einheitliche Login-Seite mit Business/Kunden-Auswahl
 
-Der aktuelle `/portal/calendar` zeigt eine vereinfachte Version mit dem Portal-Sidebar. Der User will stattdessen den ZenBookApp-Kalender (auf `/`) mit dem ZenTime-Sidebar, Mini-Kalender, Staff-Spalten, API Gateway Status, etc.
+### Aktueller Zustand
+- `/login` → CustomerAuth (Kunden-Login)
+- `/portal/auth` → PortalAuth (Business/Salon-Login)
+- Navbar, Landing Page, Footer verlinken teilweise auf `/portal/auth`, teilweise auf `/login`
 
-### Änderung 1: Portal Sidebar Link anpassen
-- `src/components/portal/PortalSidebar.tsx`: "Kalender" Link von `/portal/calendar` auf `/` ändern, damit direkt die ZenBookApp geöffnet wird
+### Änderung 1: Neue einheitliche Auth-Seite (`src/pages/UnifiedAuth.tsx`)
+- Eine Seite unter `/login` mit zwei Modi: **Business** und **Kunde**
+- Oben zwei große Buttons/Cards zur Auswahl: "Ich bin Salon-Betreiber" vs "Ich bin Kunde"
+- Beide Modi haben Login + Registrieren Tabs + Passwort-vergessen
+- **Business-Registrierung**: Name, E-Mail, Passwort, Passwort bestätigen
+- **Kunden-Registrierung**: Name, E-Mail, Telefon (optional), Passwort, Passwort bestätigen
+- Nach Login/Registrierung:
+  - Business → `/portal` (bzw. `/admin` oder `/sales` je nach Rolle)
+  - Kunde → `/storefront/profile`
 
-### Änderung 2: Portal Calendar Route entfernen (optional)
-- `src/App.tsx`: Route `/portal/calendar` entfernen oder als Redirect auf `/` einrichten
-- `src/pages/portal/Calendar.tsx`: Kann gelöscht oder als Redirect implementiert werden
+### Änderung 2: Alle Links vereinheitlichen
+- `src/components/Navbar.tsx`: `/portal/auth` → `/login`, Button-Text: "Login"
+- `src/components/PortalCTASection.tsx`: `/portal/auth` → `/login`
+- `src/components/zenbook/LandingPage.tsx`: alle `/portal/auth` und `/login` → `/login`
+- `src/components/portal/PortalLayout.tsx`: Redirect auf `/login`
+- `src/pages/CustomerProfile.tsx`: Redirect auf `/login`
+- `src/pages/sales/SalesDashboard.tsx`: Redirect auf `/login`
+- `src/pages/portal/Sales.tsx`: Redirect auf `/login`
+
+### Änderung 3: Routes (`src/App.tsx`)
+- `/login` → neue `UnifiedAuth` Komponente
+- `/portal/auth` → Redirect auf `/login`
+- CustomerAuth entfernen
+
+### Änderung 4: CustomerProfile verbessern
+- Bereits vorhanden mit Favoriten, anstehenden und vergangenen Terminen
+- Profilinformationen (Name, E-Mail, Telefon) editierbar machen
+- Logout-Button hinzufügen
 
 ### Ergebnis
-Klick auf "Kalender" im Portal → öffnet die ZenBookApp (`/`) mit dem gewohnten ZenTime-Layout (linkes Menü, Mini-Kalender, Staff-Spalten, Live-Badge, API Gateway)
+Ein einziger Login-Punkt für alle Nutzer. Business-User landen im Dashboard, Kunden sehen ihr Profil mit Daten, Reservierungen und Favoriten.
 
