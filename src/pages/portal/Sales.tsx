@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { ChevronLeft, ChevronRight, Plus, Receipt, Euro, CreditCard, Banknote, Smartphone, Globe } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ChevronLeft, ChevronRight, Plus, Receipt, Euro, CreditCard, Banknote, Smartphone, Globe, Trash2, Calculator, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -84,6 +85,16 @@ const Sales = () => {
     notes: '',
   });
 
+  // Kassenabrechnung state
+  const [cashDrawerStart, setCashDrawerStart] = useState('');
+  const [cashDrawerEnd, setCashDrawerEnd] = useState('');
+  const [deposits, setDeposits] = useState('');
+  const [withdrawals, setWithdrawals] = useState('');
+
+  // Z-Bon cash drawer inputs
+  const [zbonDrawerStart, setZbonDrawerStart] = useState('');
+  const [zbonDrawerEnd, setZbonDrawerEnd] = useState('');
+
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   const fetchData = async () => {
@@ -106,8 +117,24 @@ const Sales = () => {
     ]);
 
     if (txRes.data) setTransactions(txRes.data as Transaction[]);
-    if (closingRes.data) setDailyClosing(closingRes.data as DailyClosing);
-    else setDailyClosing(null);
+    if (closingRes.data) {
+      const c = closingRes.data as DailyClosing;
+      setDailyClosing(c);
+      setCashDrawerStart(c.cash_drawer_start?.toString() || '0');
+      setCashDrawerEnd(c.cash_drawer_end?.toString() || '0');
+      setDeposits(c.cash_deposits?.toString() || '0');
+      setWithdrawals(c.cash_withdrawals?.toString() || '0');
+      setZbonDrawerStart(c.cash_drawer_start?.toString() || '0');
+      setZbonDrawerEnd(c.cash_drawer_end?.toString() || '0');
+    } else {
+      setDailyClosing(null);
+      setCashDrawerStart('0');
+      setCashDrawerEnd('0');
+      setDeposits('0');
+      setWithdrawals('0');
+      setZbonDrawerStart('0');
+      setZbonDrawerEnd('0');
+    }
     setLoading(false);
   };
 
@@ -115,14 +142,22 @@ const Sales = () => {
     fetchData();
   }, [user, dateStr]);
 
-  const totalAmount = transactions.reduce((s, t) => s + Number(t.amount), 0);
-  const cashTotal = transactions.filter(t => t.payment_method === 'bar').reduce((s, t) => s + Number(t.payment_amount), 0);
-  const cardTotal = transactions.filter(t => ['karte_ec', 'karte_kredit'].includes(t.payment_method)).reduce((s, t) => s + Number(t.payment_amount), 0);
-  const onlineTotal = transactions.filter(t => t.payment_method === 'online').reduce((s, t) => s + Number(t.payment_amount), 0);
-  const otherTotal = transactions.filter(t => t.payment_method === 'tap_to_pay').reduce((s, t) => s + Number(t.payment_amount), 0);
+  const totalAmount = transactions.filter(t => t.transaction_type === 'sale').reduce((s, t) => s + Number(t.amount), 0);
+  const cashTotal = transactions.filter(t => t.payment_method === 'bar' && t.transaction_type === 'sale').reduce((s, t) => s + Number(t.payment_amount), 0);
+  const cardTotal = transactions.filter(t => ['karte_ec', 'karte_kredit'].includes(t.payment_method) && t.transaction_type === 'sale').reduce((s, t) => s + Number(t.payment_amount), 0);
+  const onlineTotal = transactions.filter(t => t.payment_method === 'online' && t.transaction_type === 'sale').reduce((s, t) => s + Number(t.payment_amount), 0);
+  const otherTotal = transactions.filter(t => t.payment_method === 'tap_to_pay' && t.transaction_type === 'sale').reduce((s, t) => s + Number(t.payment_amount), 0);
   const vatRate = 19;
   const netRevenue = totalAmount / (1 + vatRate / 100);
   const vatAmount = totalAmount - netRevenue;
+
+  // Kassenabrechnung calculations
+  const drawerStart = parseFloat(cashDrawerStart) || 0;
+  const drawerEnd = parseFloat(cashDrawerEnd) || 0;
+  const depositsNum = parseFloat(deposits) || 0;
+  const withdrawalsNum = parseFloat(withdrawals) || 0;
+  const expectedEnd = drawerStart + cashTotal + depositsNum - withdrawalsNum;
+  const difference = drawerEnd - expectedEnd;
 
   const generateTransactionNumber = () => {
     const datePrefix = format(selectedDate, 'yyyyMMdd');
@@ -161,7 +196,18 @@ const Sales = () => {
     }
   };
 
-  const handleCloseDay = async () => {
+  const handleDeleteTransaction = async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from('transactions').delete().eq('id', id).eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Transaktion storniert' });
+      fetchData();
+    }
+  };
+
+  const handleSaveAbrechnung = async () => {
     if (!user) return;
     const { error } = await supabase.from('daily_closings').upsert({
       user_id: user.id,
@@ -175,10 +221,42 @@ const Sales = () => {
       payment_card: cardTotal,
       payment_online: onlineTotal,
       payment_other: otherTotal,
-      cash_drawer_start: 0,
-      cash_drawer_end: cashTotal,
-      cash_deposits: 0,
-      cash_withdrawals: 0,
+      cash_drawer_start: drawerStart,
+      cash_drawer_end: drawerEnd,
+      cash_deposits: depositsNum,
+      cash_withdrawals: withdrawalsNum,
+      status: dailyClosing?.status || 'open',
+    }, { onConflict: 'user_id,closing_date' });
+
+    if (error) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Kassenabrechnung gespeichert' });
+      fetchData();
+    }
+  };
+
+  const handleCloseDay = async () => {
+    if (!user) return;
+    const startVal = parseFloat(zbonDrawerStart) || 0;
+    const endVal = parseFloat(zbonDrawerEnd) || 0;
+
+    const { error } = await supabase.from('daily_closings').upsert({
+      user_id: user.id,
+      closing_date: dateStr,
+      gross_revenue_services: totalAmount,
+      gross_revenue_products: 0,
+      net_revenue: Math.round(netRevenue * 100) / 100,
+      vat_amount: Math.round(vatAmount * 100) / 100,
+      vat_rate: vatRate,
+      payment_cash: cashTotal,
+      payment_card: cardTotal,
+      payment_online: onlineTotal,
+      payment_other: otherTotal,
+      cash_drawer_start: startVal,
+      cash_drawer_end: endVal,
+      cash_deposits: depositsNum,
+      cash_withdrawals: withdrawalsNum,
       status: 'closed',
       closed_at: new Date().toISOString(),
     }, { onConflict: 'user_id,closing_date' });
@@ -219,7 +297,7 @@ const Sales = () => {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Verkauf</h1>
-            <p className="text-muted-foreground">Kassenbuch, Tagesabschluss & Z-Bon</p>
+            <p className="text-muted-foreground">Kassenbuch, Kassenabrechnung & Z-Bon</p>
           </div>
           <div className="flex items-center gap-3">
             <DateNav />
@@ -271,15 +349,19 @@ const Sales = () => {
               <Receipt className="w-4 h-4 mr-2" />
               Kassenbuch
             </TabsTrigger>
+            <TabsTrigger value="abrechnung">
+              <Calculator className="w-4 h-4 mr-2" />
+              Kassenabrechnung
+            </TabsTrigger>
             <TabsTrigger value="zbon">
               <Euro className="w-4 h-4 mr-2" />
               Z-Bon
             </TabsTrigger>
           </TabsList>
 
+          {/* ===== KASSENBUCH ===== */}
           <TabsContent value="kassenbuch" className="mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Transactions Table */}
               <div className="lg:col-span-2">
                 <Card>
                   <CardContent className="p-0">
@@ -293,12 +375,13 @@ const Sales = () => {
                           <TableHead className="text-right">Gesamt</TableHead>
                           <TableHead>Zahlung</TableHead>
                           <TableHead className="text-right">Betrag</TableHead>
+                          <TableHead className="w-10"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {transactions.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                            <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                               Keine Transaktionen für diesen Tag
                             </TableCell>
                           </TableRow>
@@ -321,6 +404,29 @@ const Sales = () => {
                                 </div>
                               </TableCell>
                               <TableCell className="text-right">{Number(tx.payment_amount).toFixed(2)} €</TableCell>
+                              <TableCell>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Transaktion stornieren?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Transaktion {tx.transaction_number} ({Number(tx.amount).toFixed(2)} €) wird unwiderruflich gelöscht.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteTransaction(tx.id)} className="bg-destructive text-destructive-foreground">
+                                        Stornieren
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
@@ -401,11 +507,140 @@ const Sales = () => {
             </div>
           </TabsContent>
 
+          {/* ===== KASSENABRECHNUNG ===== */}
+          <TabsContent value="abrechnung" className="mt-4">
+            <div className="max-w-2xl mx-auto space-y-6">
+              {/* Kassenschublade */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="w-5 h-5" />
+                    Kassenschublade
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Anfangsbestand (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cashDrawerStart}
+                        onChange={e => setCashDrawerStart(e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Ist-Endbestand (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cashDrawerEnd}
+                        onChange={e => setCashDrawerEnd(e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Einzahlungen & Entnahmen */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Einzahlungen & Entnahmen</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <ArrowDownCircle className="w-4 h-4 text-emerald-600" />
+                        Einzahlungen (€)
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={deposits}
+                        onChange={e => setDeposits(e.target.value)}
+                        placeholder="z.B. Wechselgeld-Einlage"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">z.B. Wechselgeld-Einlage</p>
+                    </div>
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <ArrowUpCircle className="w-4 h-4 text-red-600" />
+                        Entnahmen (€)
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={withdrawals}
+                        onChange={e => setWithdrawals(e.target.value)}
+                        placeholder="z.B. Trinkgeld-Entnahme"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">z.B. Trinkgeld-Entnahme</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Übersicht */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Kassenbestand-Übersicht</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Anfangsbestand</span>
+                    <span className="font-mono">{drawerStart.toFixed(2)} €</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">+ Bareinnahmen</span>
+                    <span className="font-mono text-emerald-600">+{cashTotal.toFixed(2)} €</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">+ Einzahlungen</span>
+                    <span className="font-mono text-emerald-600">+{depositsNum.toFixed(2)} €</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">− Entnahmen</span>
+                    <span className="font-mono text-red-600">−{withdrawalsNum.toFixed(2)} €</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-bold">
+                    <span>Soll-Endbestand</span>
+                    <span className="font-mono">{expectedEnd.toFixed(2)} €</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Ist-Endbestand</span>
+                    <span className="font-mono">{drawerEnd.toFixed(2)} €</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Differenz</span>
+                    <span className={`font-mono ${difference === 0 ? 'text-emerald-600' : difference > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {difference >= 0 ? '+' : ''}{difference.toFixed(2)} €
+                    </span>
+                  </div>
+                  {difference !== 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {difference > 0 ? 'Kassenüberschuss' : 'Kassenfehlbetrag'} von {Math.abs(difference).toFixed(2)} €
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Button onClick={handleSaveAbrechnung} className="w-full">
+                <Calculator className="w-4 h-4 mr-2" />
+                Kassenabrechnung speichern
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* ===== Z-BON ===== */}
           <TabsContent value="zbon" className="mt-4">
             <div className="max-w-lg mx-auto">
               <Card className="border-2 border-dashed">
                 <CardContent className="p-8 space-y-6">
-                  {/* Header */}
                   <div className="text-center space-y-1">
                     <h2 className="text-xl font-bold">{profile?.company_name || profile?.full_name || 'Salon'}</h2>
                     <p className="text-sm text-muted-foreground">Z-Bon / Tagesabschluss</p>
@@ -475,21 +710,66 @@ const Sales = () => {
 
                   <Separator />
 
-                  {/* Cash Drawer */}
-                  <div className="space-y-2">
+                  {/* Cash Drawer with editable inputs */}
+                  <div className="space-y-3">
                     <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Kassenschublade</h3>
-                    <div className="flex justify-between">
-                      <span>Anfangsbestand</span>
-                      <span className="font-mono">{(dailyClosing?.cash_drawer_start ?? 0).toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Einnahmen Bar</span>
-                      <span className="font-mono">{cashTotal.toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between font-bold">
-                      <span>Endbestand</span>
-                      <span className="font-mono">{((dailyClosing?.cash_drawer_start ?? 0) + cashTotal).toFixed(2)} €</span>
-                    </div>
+                    {(!dailyClosing || dailyClosing.status !== 'closed') ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Anfangsbestand (€)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={zbonDrawerStart}
+                              onChange={e => setZbonDrawerStart(e.target.value)}
+                              className="h-9"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Ist-Endbestand (€)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={zbonDrawerEnd}
+                              onChange={e => setZbonDrawerEnd(e.target.value)}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Bareinnahmen</span>
+                          <span className="font-mono">{cashTotal.toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Soll-Endbestand</span>
+                          <span className="font-mono">{((parseFloat(zbonDrawerStart) || 0) + cashTotal).toFixed(2)} €</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Anfangsbestand</span>
+                          <span className="font-mono">{(dailyClosing.cash_drawer_start ?? 0).toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Einnahmen Bar</span>
+                          <span className="font-mono">{cashTotal.toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Einzahlungen</span>
+                          <span className="font-mono">{(dailyClosing.cash_deposits ?? 0).toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Entnahmen</span>
+                          <span className="font-mono">−{(dailyClosing.cash_withdrawals ?? 0).toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Endbestand</span>
+                          <span className="font-mono">{(dailyClosing.cash_drawer_end ?? 0).toFixed(2)} €</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
