@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, ArrowRight, ArrowLeft, Phone, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ArrowLeft, Phone } from 'lucide-react';
+import zentimeLogo from '@/assets/zentime-logo.png';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -141,10 +142,9 @@ const CustomerAuth = () => {
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4"
+            className="mb-4"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Mein Konto</span>
+            <img src={zentimeLogo} alt="ZenTime" className="h-14 w-auto object-contain mx-auto" />
           </motion.div>
           <h1 className="text-3xl font-display font-bold text-foreground mb-2">
             Willkommen bei ZenTime

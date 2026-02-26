@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import zentimeLogo from '@/assets/zentime-logo.png';
 
 interface LogoProps {
   onClick?: () => void;
@@ -15,41 +16,21 @@ const Logo: React.FC<LogoProps> = ({
   className = '' 
 }) => {
   const isClickable = !!onClick;
+  const heightClass = variant === 'light' ? 'h-12' : 'h-10';
   
   const logoContent = (
-    <>
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg shadow-sm ${
-        variant === 'admin' 
-          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/20'
-          : variant === 'light'
-          ? 'bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground shadow-lg shadow-primary/30'
-          : 'bg-primary/10 border border-border text-primary'
-      }`}>
-        Z
-      </div>
-      {showText && (
-        <span className={`text-xl font-black tracking-tighter ${
-          variant === 'admin' 
-            ? 'text-foreground'
-            : variant === 'light'
-            ? 'text-2xl tracking-tight text-foreground'
-            : 'text-foreground'
-        }`}>
-          ZenTime
-          {variant === 'admin' && <span className="text-primary">Admin</span>}
-          {variant === 'light' && (
-            <span className="text-accent"></span>
-          )}
-        </span>
-      )}
-    </>
+    <img 
+      src={zentimeLogo} 
+      alt="ZenTime" 
+      className={`${heightClass} w-auto object-contain`}
+    />
   );
 
   if (isClickable) {
     return (
       <motion.button
         onClick={onClick}
-        className={`flex items-center gap-3 cursor-pointer ${className}`}
+        className={`flex items-center cursor-pointer ${className}`}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -59,7 +40,7 @@ const Logo: React.FC<LogoProps> = ({
   }
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center ${className}`}>
       {logoContent}
     </div>
   );

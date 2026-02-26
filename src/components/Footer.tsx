@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Linkedin, Twitter } from "lucide-react";
+import zentimeLogo from "@/assets/zentime-logo.png";
 
 const Footer = () => {
   return (
@@ -33,13 +34,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo & Description */}
           <div className="md:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <span className="text-white font-black text-lg">Z</span>
-              </div>
-              <span className="font-display font-bold text-xl text-white">
-                Zen<span className="text-white/80">Time</span>
-              </span>
+            <Link to="/" className="flex items-center mb-4">
+              <img src={zentimeLogo} alt="ZenTime" className="h-10 w-auto object-contain brightness-0 invert" />
             </Link>
             <p className="text-white/70 max-w-md">
               Individuelle KI-Lösungen, Voice-Agents und Automatisierungen für

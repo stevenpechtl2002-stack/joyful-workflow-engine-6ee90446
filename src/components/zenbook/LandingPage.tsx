@@ -8,6 +8,7 @@ import {
   Building2, Users, Shield, Zap } from
 'lucide-react';
 import Logo from './Logo';
+import zentimeLogo from '@/assets/zentime-logo.png';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -614,8 +615,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
           <div className="pt-8 border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md">Z</div>
-              <span className="text-sm font-black text-white">ZenTime</span>
+              <img src={zentimeLogo} alt="ZenTime" className="h-8 w-auto object-contain brightness-0 invert" />
             </div>
             
             <div className="flex items-center gap-3">
