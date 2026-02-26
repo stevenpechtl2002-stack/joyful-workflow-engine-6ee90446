@@ -42,7 +42,7 @@ const PortalLayout = () => {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate('/portal/auth');
+      navigate('/login');
     }
   }, [user, isLoading, navigate]);
 

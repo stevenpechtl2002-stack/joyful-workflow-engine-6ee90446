@@ -597,7 +597,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             <div>
               <h4 className="font-black text-white text-sm mb-4">Für Salons</h4>
               <ul className="space-y-2.5">
-                <li><a href="/portal/auth" className="text-sm text-white/70 hover:text-white transition-colors">Salon registrieren</a></li>
+                <li><a href="/login" className="text-sm text-white/70 hover:text-white transition-colors">Salon registrieren</a></li>
                 <li><button className="text-sm text-white/70 hover:text-white transition-colors">Help Center</button></li>
                 <li><button className="text-sm text-white/70 hover:text-white transition-colors">Preise</button></li>
                 <li><button className="text-sm text-white/70 hover:text-white transition-colors">Features</button></li>
