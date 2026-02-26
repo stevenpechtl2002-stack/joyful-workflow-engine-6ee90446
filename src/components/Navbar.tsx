@@ -17,10 +17,10 @@ const Navbar = () => {
   const isActive = (path: string) => location.pathname === path;
   return <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-border/30">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img src={zentimeLogo} alt="ZenTime" className="h-12 w-auto object-contain" />
+            <img src={zentimeLogo} alt="ZenTime" className="h-[60px] w-auto object-contain" />
           </Link>
 
           {/* Desktop Navigation */}

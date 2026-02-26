@@ -32,6 +32,7 @@ const Support = lazy(() => import("./pages/portal/Support"));
 const Subscriptions = lazy(() => import("./pages/portal/Subscriptions"));
 const ApiSettings = lazy(() => import("./pages/portal/ApiSettings"));
 const VoiceAgent = lazy(() => import("./pages/portal/VoiceAgent"));
+const Sales = lazy(() => import("./pages/portal/Sales"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Impressum = lazy(() => import("./pages/Impressum"));
 const Datenschutz = lazy(() => import("./pages/Datenschutz"));
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/portal/subscriptions" element={<Subscriptions />} />
               <Route path="/portal/api-settings" element={<ApiSettings />} />
               <Route path="/portal/voice-agent" element={<VoiceAgent />} />
+              <Route path="/portal/sales" element={<Sales />} />
               <Route path="/kontakt" element={<Contact />} />
               <Route path="/impressum" element={<Impressum />} />
               <Route path="/datenschutz" element={<Datenschutz />} />

@@ -17,6 +17,7 @@ import {
   Workflow,
   Package,
   UserPlus,
+  Receipt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -36,6 +37,7 @@ const PortalSidebar = () => {
     { icon: Users, label: 'Mitarbeiter', path: '/portal/staff' },
     { icon: Workflow, label: 'Dienstplan', path: '/portal/shifts' },
     { icon: FileText, label: 'Reservierungen', path: '/portal/reservations' },
+    { icon: Receipt, label: 'Verkauf', path: '/portal/sales' },
     { icon: CreditCard, label: 'Abonnement', path: '/portal/subscriptions' },
     { icon: Bell, label: 'Benachrichtigungen', path: '/portal/notifications' },
     { icon: User, label: 'Profil', path: '/portal/profile' },
