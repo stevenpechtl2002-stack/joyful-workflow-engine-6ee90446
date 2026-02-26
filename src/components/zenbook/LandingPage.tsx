@@ -38,27 +38,27 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
 
   const treatmentCategories = [
-  { icon: <Scissors className="w-8 h-8" />, label: 'Friseur', count: '2.400+', color: 'from-primary/20 to-primary/5' },
-  { icon: <Palette className="w-8 h-8" />, label: 'Nagelstudio', count: '1.800+', color: 'from-accent/20 to-accent/5' },
-  { icon: <Flower2 className="w-8 h-8" />, label: 'Kosmetik', count: '1.200+', color: 'from-[hsl(var(--zen-emerald))]/20 to-[hsl(var(--zen-emerald))]/5' },
-  { icon: <HandMetal className="w-8 h-8" />, label: 'Massage', count: '900+', color: 'from-primary/15 to-accent/10' },
-  { icon: <Sparkles className="w-8 h-8" />, label: 'Waxing', count: '600+', color: 'from-accent/15 to-primary/10' },
-  { icon: <Heart className="w-8 h-8" />, label: 'Wellness', count: '450+', color: 'from-[hsl(var(--zen-emerald))]/15 to-primary/10' },
-  { icon: <Star className="w-8 h-8" />, label: 'Microblading', count: '320+', color: 'from-primary/20 to-accent/15' },
-  { icon: <UserCircle className="w-8 h-8" />, label: 'Barbershop', count: '780+', color: 'from-foreground/10 to-foreground/5' }];
+  { icon: <Scissors className="w-8 h-8" />, label: 'Friseur', count: 'Neu', color: 'from-primary/20 to-primary/5' },
+  { icon: <Palette className="w-8 h-8" />, label: 'Nagelstudio', count: 'Neu', color: 'from-accent/20 to-accent/5' },
+  { icon: <Flower2 className="w-8 h-8" />, label: 'Kosmetik', count: 'Neu', color: 'from-[hsl(var(--zen-emerald))]/20 to-[hsl(var(--zen-emerald))]/5' },
+  { icon: <HandMetal className="w-8 h-8" />, label: 'Massage', count: 'Bald', color: 'from-primary/15 to-accent/10' },
+  { icon: <Sparkles className="w-8 h-8" />, label: 'Waxing', count: 'Bald', color: 'from-accent/15 to-primary/10' },
+  { icon: <Heart className="w-8 h-8" />, label: 'Wellness', count: 'Bald', color: 'from-[hsl(var(--zen-emerald))]/15 to-primary/10' },
+  { icon: <Star className="w-8 h-8" />, label: 'Microblading', count: 'Bald', color: 'from-primary/20 to-accent/15' },
+  { icon: <UserCircle className="w-8 h-8" />, label: 'Barbershop', count: 'Neu', color: 'from-foreground/10 to-foreground/5' }];
 
 
   const featuredSalons = [
-  { name: 'STUDIO NOIR', category: 'Friseur', rating: 4.9, reviews: 234, image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop', price: 'Ab 45€', location: 'Berlin Mitte' },
-  { name: 'Glow Aesthetics', category: 'Kosmetik', rating: 4.8, reviews: 189, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&h=400&fit=crop', price: 'Ab 65€', location: 'München' },
-  { name: 'Zen Massage', category: 'Wellness', rating: 5.0, reviews: 312, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=400&fit=crop', price: 'Ab 80€', location: 'Hamburg' },
-  { name: 'Nail Art Berlin', category: 'Nails', rating: 4.7, reviews: 156, image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=400&fit=crop', price: 'Ab 35€', location: 'Berlin Kreuzberg' }];
+  { name: 'STUDIO NOIR', category: 'Friseur', rating: 4.9, reviews: 12, image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop', price: 'Ab 45€', location: 'Berlin Mitte' },
+  { name: 'Glow Aesthetics', category: 'Kosmetik', rating: 4.8, reviews: 8, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&h=400&fit=crop', price: 'Ab 65€', location: 'München' },
+  { name: 'Zen Massage', category: 'Wellness', rating: 5.0, reviews: 15, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=400&fit=crop', price: 'Ab 80€', location: 'Hamburg' },
+  { name: 'Nail Art Berlin', category: 'Nails', rating: 4.7, reviews: 6, image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=400&fit=crop', price: 'Ab 35€', location: 'Berlin Kreuzberg' }];
 
 
   const uspFeatures = [
   { icon: <Zap className="w-8 h-8" />, title: 'Smarte Angebote', desc: 'Buche Last Minute oder zu Nebenzeiten und spare bis zu 30%.' },
   { icon: <Clock className="w-8 h-8" />, title: 'Buche 24/7', desc: 'Einfach vom Bett, aus dem Bus oder wo auch immer du gerade bist.' },
-  { icon: <Shield className="w-8 h-8" />, title: 'Top-bewertete Salons', desc: 'Tausende verifizierte Salons mit echten Bewertungen.' }];
+  { icon: <Shield className="w-8 h-8" />, title: 'Top-bewertete Salons', desc: 'Nur geprüfte Salons mit echten Bewertungen.' }];
 
 
   const AnimatedSection = ({ children, className = '' }: {children: React.ReactNode;className?: string;}) => {
@@ -156,7 +156,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             alt="Beauty Background"
             className="w-full h-full object-cover" />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/50 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-background/20 to-transparent"></div>
         </div>
 
         {/* Floating 3D Glass Elements */}
@@ -206,7 +206,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="text-lg text-muted-foreground font-medium mb-10 max-w-lg">
 
-              Über 5.000 verifizierte Salons. Einfach buchen, entspannt genießen.
+              Finde deinen perfekten Salon und buche in Sekunden.
             </motion.p>
 
             {/* Search Card */}
@@ -476,15 +476,67 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         </div>
       </section>
 
+      {/* Salon-Partner Sektion */}
+      <section className="py-24 px-6 lg:px-12 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection>
+            <div className="text-center mb-14">
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-accent mb-3">Für Salons</p>
+              <h2 className="text-3xl md:text-5xl font-black text-foreground leading-tight mb-4">
+                Du bist <span className="text-primary">Salon-Betreiber?</span>
+              </h2>
+              <p className="text-lg text-muted-foreground font-medium max-w-lg mx-auto">
+                Werde Teil von ZenTime und erreiche neue Kunden – komplett kostenlos.
+              </p>
+            </div>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {[
+              { icon: <Users className="w-8 h-8" />, title: 'Neue Kunden gewinnen', desc: 'Werde online sichtbar und von neuen Kunden gefunden.' },
+              { icon: <Calendar className="w-8 h-8" />, title: 'Online-Buchungen 24/7', desc: 'Dein Kalender füllt sich automatisch – auch nachts.' },
+              { icon: <Zap className="w-8 h-8" />, title: 'Einfache Verwaltung', desc: 'Staff, Services & Termine in einem einzigen Tool.' },
+              { icon: <Shield className="w-8 h-8" />, title: 'Kostenlos starten', desc: 'Keine Grundgebühr, keine Vertragsbindung.' },
+            ].map((item, i) => (
+              <AnimatedSection key={item.title}>
+                <motion.div
+                  className="glass-card rounded-2xl p-8 text-center h-full"
+                  whileHover={{ y: -8, rotateX: 2, rotateY: -1 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ perspective: 1000 }}>
+                  <motion.div
+                    className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 text-primary"
+                    whileHover={{ scale: 1.1, rotate: 5 }}>
+                    {item.icon}
+                  </motion.div>
+                  <h3 className="text-lg font-black text-foreground mb-3">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </motion.div>
+              </AnimatedSection>
+            ))}
+          </div>
+
+          <AnimatedSection className="text-center">
+            <motion.a
+              href="/portal/auth"
+              className="inline-block px-10 py-4 bg-primary text-primary-foreground rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}>
+              Jetzt kostenlos registrieren
+            </motion.a>
+          </AnimatedSection>
+        </div>
+      </section>
+
       {/* 11. Stats Section */}
       <section className="py-20 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-            { value: '5.000+', label: 'Verifizierte Salons' },
-            { value: '2M+', label: 'Zufriedene Kunden' },
-            { value: '98%', label: 'Buchungsrate' },
-            { value: '4.9', label: 'Durchschnittsbewertung' }].
+            { value: 'Wachsend', label: 'Partner-Salons' },
+            { value: '24/7', label: 'Online buchbar' },
+            { value: 'Einfach', label: 'In Sekunden buchen' },
+            { value: '5.0', label: 'Unser Qualitätsziel' }].
             map((stat) =>
             <AnimatedSection key={stat.label}>
                 <motion.div
