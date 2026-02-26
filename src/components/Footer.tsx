@@ -35,7 +35,7 @@ const Footer = () => {
           {/* Logo & Description */}
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center mb-4">
-              <img src={zentimeLogo} alt="ZenTime" className="h-10 w-auto object-contain brightness-0 invert" />
+              <img src={zentimeLogo} alt="ZenTime" className="h-14 w-auto object-contain brightness-0 invert" />
             </Link>
             <p className="text-white/70 max-w-md">
               Individuelle KI-Lösungen, Voice-Agents und Automatisierungen für
