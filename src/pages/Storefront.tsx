@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Store, Heart, User, Loader2, Sparkles } from 'lucide-react';
+import { Search, MapPin, Store, Heart, User, Loader2, Sparkles, Star, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Logo from '@/components/zenbook/Logo';
@@ -15,6 +15,9 @@ interface Salon {
   published: boolean;
   product_count: number;
   staff_count: number;
+  avg_rating: number;
+  review_count: number;
+  cover_image: string | null;
 }
 
 const Storefront: React.FC = () => {
@@ -146,34 +149,51 @@ const Storefront: React.FC = () => {
               <div
                 key={salon.id}
                 onClick={() => navigate(`/storefront/${salon.id}`)}
-                className="zen-card card-3d cursor-pointer group relative"
+                className="zen-card card-3d cursor-pointer group relative overflow-hidden"
               >
+                {/* Cover image */}
+                {salon.cover_image ? (
+                  <div className="h-40 -mx-6 -mt-6 mb-4 overflow-hidden">
+                    <img src={salon.cover_image} alt={salon.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  </div>
+                ) : (
+                  <div className="h-28 -mx-6 -mt-6 mb-4 bg-gradient-to-br from-primary/10 via-accent/5 to-muted flex items-center justify-center">
+                    <Camera className="w-8 h-8 text-muted-foreground/20" />
+                  </div>
+                )}
+
                 {/* Favorite button */}
                 <button
                   onClick={(e) => toggleFavorite(e, salon.id)}
-                  className="absolute top-4 right-4 z-10 p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all"
+                  className="absolute top-3 right-3 z-10 p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all"
                 >
                   <Heart className={`w-4 h-4 transition-colors ${favorites.has(salon.id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
                 </button>
 
                 {/* Salon card content */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Store className="w-7 h-7 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-black text-foreground text-lg truncate group-hover:text-primary transition-colors">{salon.name}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-0.5">{salon.category}</p>
-                    {salon.city && (
-                      <p className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {salon.postal_code && `${salon.postal_code} `}{salon.city}
-                      </p>
-                    )}
-                  </div>
+                <div className="min-w-0 mb-3">
+                  <h3 className="font-black text-foreground text-lg truncate group-hover:text-primary transition-colors">{salon.name}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-0.5">{salon.category}</p>
+                  {salon.city && (
+                    <p className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {salon.postal_code && `${salon.postal_code} `}{salon.city}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-4">
+                {/* Rating */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-0.5">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className={`w-3.5 h-3.5 ${i <= Math.round(salon.avg_rating) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/20'}`} />
+                    ))}
+                  </div>
+                  <span className="text-xs font-bold text-foreground">{salon.avg_rating > 0 ? salon.avg_rating.toFixed(1) : '–'}</span>
+                  <span className="text-xs text-muted-foreground">({salon.review_count})</span>
+                </div>
+
+                <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-3">
                   <span className="px-2 py-1 rounded-lg bg-primary/10 text-primary">{salon.product_count} Services</span>
                   <span className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-500">{salon.staff_count} Mitarbeiter</span>
                   {!salon.published && (

@@ -24,10 +24,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Fetch salon info
+    // Fetch salon info (including description and category)
     const { data: salon } = await supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code")
+      .select("id, company_name, email, city, address, postal_code, category, description")
       .eq("id", salon_id)
       .single();
 
@@ -37,18 +37,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch products, staff members
-    const [{ data: products }, { data: staff }] = await Promise.all([
+    // Fetch products, staff, reviews, images, and all shifts (for opening hours) in parallel
+    const [
+      { data: products },
+      { data: staff },
+      { data: reviews },
+      { data: images },
+      { data: allShifts },
+    ] = await Promise.all([
       supabase.from("products").select("*").eq("user_id", salon_id).eq("is_active", true).order("sort_order"),
       supabase.from("staff_members").select("*").eq("user_id", salon_id).eq("is_active", true).order("sort_order"),
+      supabase.from("salon_reviews").select("*").eq("salon_user_id", salon_id).order("created_at", { ascending: false }),
+      supabase.from("salon_images").select("*").eq("salon_user_id", salon_id).order("sort_order"),
+      supabase.from("staff_shifts").select("day_of_week, start_time, end_time, is_working").eq("user_id", salon_id),
     ]);
+
+    // Derive opening hours from staff shifts (earliest start, latest end per day)
+    const openingHours: Record<number, { open: string; close: string } | null> = {};
+    for (let d = 0; d < 7; d++) {
+      const dayShifts = (allShifts || []).filter(s => s.day_of_week === d && s.is_working);
+      if (dayShifts.length === 0) {
+        openingHours[d] = null; // closed
+      } else {
+        const earliest = dayShifts.reduce((min, s) => s.start_time < min ? s.start_time : min, dayShifts[0].start_time);
+        const latest = dayShifts.reduce((max, s) => s.end_time > max ? s.end_time : max, dayShifts[0].end_time);
+        openingHours[d] = { open: earliest.substring(0, 5), close: latest.substring(0, 5) };
+      }
+    }
+
+    // Calculate average rating
+    const reviewList = reviews || [];
+    const avgRating = reviewList.length > 0
+      ? reviewList.reduce((sum, r) => sum + r.rating, 0) / reviewList.length
+      : 0;
 
     // If date provided, fetch available slots
     let available_slots: string[] | null = null;
     if (date) {
       const durationMinutes = duration || 30;
       
-      // Get reservations for this date
       let resQuery = supabase
         .from("reservations")
         .select("reservation_time, end_time, staff_member_id")
@@ -62,7 +89,6 @@ Deno.serve(async (req) => {
 
       const { data: reservations } = await resQuery;
 
-      // Get shift exceptions
       let excQuery = supabase
         .from("shift_exceptions")
         .select("staff_member_id, start_time, end_time")
@@ -75,7 +101,6 @@ Deno.serve(async (req) => {
 
       const { data: exceptions } = await excQuery;
 
-      // Get shifts for the day of week
       const dayOfWeek = new Date(date).getDay();
       let shiftQuery = supabase
         .from("staff_shifts")
@@ -89,7 +114,6 @@ Deno.serve(async (req) => {
 
       const { data: shifts } = await shiftQuery;
 
-      // Calculate available slots (09:00 - 20:00 in 30-min intervals)
       available_slots = [];
       for (let hour = 9; hour < 20; hour++) {
         for (const minute of [0, 30]) {
@@ -97,7 +121,6 @@ Deno.serve(async (req) => {
           const slotStart = new Date(`${date}T${slotTime}:00`);
           const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60000);
 
-          // Check reservation conflicts
           const hasConflict = (reservations || []).some(res => {
             const resStart = new Date(`${date}T${res.reservation_time}`);
             const resEnd = res.end_time 
@@ -106,7 +129,6 @@ Deno.serve(async (req) => {
             return slotStart < resEnd && slotEnd > resStart;
           });
 
-          // Check exception conflicts
           const hasException = (exceptions || []).some(exc => {
             const excStart = new Date(`${date}T${exc.start_time}`);
             const excEnd = new Date(`${date}T${exc.end_time}`);
@@ -127,9 +149,26 @@ Deno.serve(async (req) => {
         city: salon.city,
         address: salon.address,
         postal_code: salon.postal_code,
+        category: salon.category,
+        description: salon.description,
       },
       products: products || [],
       staff: (staff || []).map(s => ({ id: s.id, name: s.name, color: s.color })),
+      reviews: reviewList.map(r => ({
+        id: r.id,
+        reviewer_name: r.reviewer_name,
+        rating: r.rating,
+        comment: r.comment,
+        created_at: r.created_at,
+      })),
+      images: (images || []).map(i => ({
+        id: i.id,
+        image_url: i.image_url,
+        caption: i.caption,
+      })),
+      opening_hours: openingHours,
+      avg_rating: Math.round(avgRating * 10) / 10,
+      review_count: reviewList.length,
       available_slots,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
