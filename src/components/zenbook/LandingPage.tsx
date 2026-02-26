@@ -502,70 +502,88 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       </section>
 
       {/* 12. Extended Footer */}
-      <footer className="py-16 px-6 lg:px-12 border-t border-border bg-card/50">
-        <div className="max-w-7xl mx-auto">
+      <footer className="relative overflow-hidden py-16 px-6 lg:px-12 bg-gradient-to-br from-rose-400 via-pink-400 to-rose-500">
+        {/* Decorative geometric shapes */}
+        <div className="absolute inset-0 pointer-events-none">
+          <svg className="absolute -bottom-16 -right-16 w-80 h-80 opacity-30" viewBox="0 0 300 300">
+            <path d="M50 280 L150 30 L280 260 Q280 290 250 290 L80 290 Q50 290 50 260Z" fill="#8B7355" />
+          </svg>
+          <svg className="absolute -top-20 -left-20 w-64 h-64 opacity-20" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" fill="#C4A35A" />
+          </svg>
+          <svg className="absolute top-1/3 right-1/4 w-32 h-32 opacity-15" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="#BE185D" />
+          </svg>
+          <svg className="absolute bottom-0 left-1/4 w-96 h-48 opacity-10" viewBox="0 0 400 200">
+            <rect x="0" y="60" width="400" height="30" rx="15" fill="#8B7355" transform="rotate(-12 200 100)" />
+            <rect x="0" y="120" width="300" height="20" rx="10" fill="#C4A35A" transform="rotate(-12 150 130)" />
+          </svg>
+          <svg className="absolute top-8 right-12 w-24 h-24 opacity-20" viewBox="0 0 100 100">
+            <polygon points="50,10 90,85 10,85" fill="#9F7AEA" />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             <div>
-              <h4 className="font-black text-foreground text-sm mb-4">Kunden-Hilfe</h4>
+              <h4 className="font-black text-white text-sm mb-4">Kunden-Hilfe</h4>
               <ul className="space-y-2.5">
                 {['Chat', 'Kontakt', 'FAQ', 'Stornierung'].map((item) =>
-                <li key={item}><button className="text-sm text-muted-foreground hover:text-foreground transition-colors">{item}</button></li>
+                <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
                 )}
               </ul>
             </div>
             <div>
-              <h4 className="font-black text-foreground text-sm mb-4">Entdecke</h4>
+              <h4 className="font-black text-white text-sm mb-4">Entdecke</h4>
               <ul className="space-y-2.5">
                 {['Treatment Guide', 'Blog', 'Gutscheine', 'Newsletter', 'Rewards'].map((item) =>
-                <li key={item}><button className="text-sm text-muted-foreground hover:text-foreground transition-colors">{item}</button></li>
+                <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
                 )}
               </ul>
             </div>
             <div>
-              <h4 className="font-black text-foreground text-sm mb-4">Für Salons</h4>
+              <h4 className="font-black text-white text-sm mb-4">Für Salons</h4>
               <ul className="space-y-2.5">
                 {['Partner werden', 'Help Center', 'Preise', 'Features'].map((item) =>
-                <li key={item}><button className="text-sm text-muted-foreground hover:text-foreground transition-colors">{item}</button></li>
+                <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
                 )}
               </ul>
             </div>
             <div>
-              <h4 className="font-black text-foreground text-sm mb-4">Unternehmen</h4>
+              <h4 className="font-black text-white text-sm mb-4">Unternehmen</h4>
               <ul className="space-y-2.5">
                 {['Über uns', 'Jobs', 'Presse', 'Impressum', 'Datenschutz'].map((item) =>
-                <li key={item}><button className="text-sm text-muted-foreground hover:text-foreground transition-colors">{item}</button></li>
+                <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
                 )}
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="pt-8 border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md">Z</div>
-              <span className="text-sm font-black text-foreground">ZenTime</span>
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md">Z</div>
+              <span className="text-sm font-black text-white">ZenTime</span>
             </div>
             
             <div className="flex items-center gap-3">
               {[Instagram, Facebook, Twitter].map((Icon, i) =>
               <motion.button
                 key={i}
-                className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/25 transition-colors"
                 whileHover={{ y: -3, scale: 1.1 }}>
-
                   <Icon className="w-4 h-4" />
                 </motion.button>
               )}
             </div>
 
-            <p className="text-xs text-muted-foreground">© 2026 ZenTime. Alle Rechte vorbehalten.</p>
+            <p className="text-xs text-white/70">© 2026 ZenTime. Alle Rechte vorbehalten.</p>
           </div>
           
           <div className="pt-4 flex justify-center">
             <motion.button
               onClick={() => onLogin('admin')}
-              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              className="text-xs text-white/30 hover:text-white/60 transition-colors"
               whileHover={{ scale: 1.02 }}>
-
               Admin Login
             </motion.button>
           </div>
