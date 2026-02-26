@@ -117,13 +117,13 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
                 whileHover={{ scale: 1.05 }}>
                 Salons entdecken
               </motion.a>
-              <motion.button
-                onClick={() => onLogin('customer')}
+              <motion.a
+                href="/login"
                 className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-black shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}>
                 Login
-              </motion.button>
+              </motion.a>
             </nav>
           </div>
           {/* Category Navigation */}
@@ -465,7 +465,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
                 Jetzt Salon finden
               </motion.a>
               <motion.a
-                href="/portal/auth"
+                href="/login"
                 className="px-8 py-4 border-2 border-border text-foreground rounded-xl text-xs font-black uppercase tracking-wider hover:bg-muted transition-all"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}>
@@ -596,9 +596,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             <div>
               <h4 className="font-black text-white text-sm mb-4">Für Salons</h4>
               <ul className="space-y-2.5">
-                {['Partner werden', 'Help Center', 'Preise', 'Features'].map((item) =>
-                <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
-                )}
+                <li><a href="/portal/auth" className="text-sm text-white/70 hover:text-white transition-colors">Salon registrieren</a></li>
+                <li><button className="text-sm text-white/70 hover:text-white transition-colors">Help Center</button></li>
+                <li><button className="text-sm text-white/70 hover:text-white transition-colors">Preise</button></li>
+                <li><button className="text-sm text-white/70 hover:text-white transition-colors">Features</button></li>
               </ul>
             </div>
             <div>
