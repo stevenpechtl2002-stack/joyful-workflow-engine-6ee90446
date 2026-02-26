@@ -30,10 +30,10 @@ const Navbar = () => {
                   {link.name}
                 </Button>
               </Link>)}
-            <Link to="/portal/auth">
+            <Link to="/login">
               <Button size="sm" className="ml-2 bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/30">
                 <LogIn className="w-4 h-4 mr-2" />
-                Portal Login
+                Login
               </Button>
             </Link>
           </div>
@@ -52,10 +52,10 @@ const Navbar = () => {
                     {link.name}
                   </Button>
                 </Link>)}
-              <Link to="/portal/auth" onClick={() => setIsOpen(false)}>
+              <Link to="/login" onClick={() => setIsOpen(false)}>
                 <Button className="w-full justify-start bg-red-600 hover:bg-red-700 text-white font-black">
                   <LogIn className="w-4 h-4 mr-2" />
-                  Portal Login
+                  Login
                 </Button>
               </Link>
             </div>

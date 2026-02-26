@@ -111,13 +111,13 @@ const PortalCTASection = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/portal/auth">
+                <Link to="/login">
                   <Button variant="hero" size="lg" className="w-full sm:w-auto">
                     Jetzt registrieren
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <Link to="/portal/auth">
+                <Link to="/login">
                   <Button variant="outline" size="lg" className="w-full sm:w-auto">
                     Anmelden
                   </Button>

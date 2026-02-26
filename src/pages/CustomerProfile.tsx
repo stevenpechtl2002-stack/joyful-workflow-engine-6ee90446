@@ -34,7 +34,7 @@ const CustomerProfile: React.FC = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/portal/auth');
+      navigate('/login');
       return;
     }
     const loadData = async () => {
