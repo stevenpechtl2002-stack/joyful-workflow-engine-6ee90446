@@ -1,16 +1,20 @@
 
 
-## Plan: Hero-Bild natürlicher + Sale-Button knallrot
+## Plan: Footer mit farbigem Muster (Treatwell-Stil)
 
-### Änderungen
+Der Footer bekommt einen korallroten/pink Hintergrund mit dekorativen geometrischen Formen (Dreiecke, Kreise) — ähnlich dem Treatwell-Screenshot aber mit eigenem Muster passend zum ZenTime-Design.
 
-1. **`src/components/zenbook/LandingPage.tsx`** (Hero Background, Zeile 153-160):
-   - Overlay von `from-background via-background/90 to-background/40` zu `from-background/70 via-background/50 to-transparent` ändern — weniger milchig, Bild kommt natürlicher durch
-   - Bild-Opacity nicht einschränken (bleibt `object-cover` ohne extra Opacity)
+### Änderungen in `src/components/Footer.tsx`
 
-2. **`src/components/zenbook/LandingPage.tsx`** (Sale % Button, Zeile 131-141):
-   - Den "Sale %" Kategorie-Button knallrot stylen: `bg-red-600 text-white` mit hover-Effekt
-
-3. **`src/components/HeroSection.tsx`** (Zeile 15-18):
-   - Auch hier die Overlays reduzieren: `from-background/60 via-background/40 to-background` und `from-background/50 via-transparent to-background/60` — damit das hero-ai.png Bild satter und farbiger durchscheint
+1. **Hintergrundfarbe**: Von `bg-card` zu einem Coral/Pink-Gradient (`bg-gradient-to-br from-rose-400 via-pink-400 to-rose-500`)
+2. **Dekorative SVG-Shapes**: Absolute positionierte geometrische Elemente im Hintergrund:
+   - Ein großes abgerundetes Dreieck (halbtransparent, leicht versetzt) unten rechts
+   - Ein Kreis/Ellipse oben links
+   - Diagonale Streifen oder Wellen als Akzent
+   - Farben: gedämpftes Gold/Olive + dunkleres Pink (ähnlich dem Screenshot)
+3. **Textfarben anpassen**: Alle Texte auf `text-white` bzw. `text-white/70` umstellen, da der Hintergrund jetzt dunkel/farbig ist
+4. **Links**: Hover-Effekt auf `hover:text-white` statt `hover:text-primary`
+5. **Logo**: Der "Z"-Badge bleibt, aber Text wird weiß
+6. **Trennlinie**: `border-white/20` statt `border-border/50`
+7. **Social Icons**: Weiß mit hover-Effekt
 
