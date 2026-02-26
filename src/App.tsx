@@ -18,7 +18,7 @@ const PortalAuth = lazy(() => import("./pages/portal/Auth"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
 const Dashboard = lazy(() => import("./pages/portal/Dashboard"));
-const Calendar = lazy(() => import("./pages/portal/Calendar"));
+
 const Reservations = lazy(() => import("./pages/portal/Reservations"));
 const Customers = lazy(() => import("./pages/portal/Customers"));
 const Staff = lazy(() => import("./pages/portal/Staff"));
@@ -65,7 +65,7 @@ const App = () => (
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/sales" element={<SalesDashboard />} />
               <Route path="/portal" element={<Dashboard />} />
-              <Route path="/portal/calendar" element={<Calendar />} />
+              {/* Calendar is now at / via ZenBookApp */}
               <Route path="/portal/reservations" element={<Reservations />} />
               <Route path="/portal/customers" element={<Customers />} />
               <Route path="/portal/staff" element={<Staff />} />

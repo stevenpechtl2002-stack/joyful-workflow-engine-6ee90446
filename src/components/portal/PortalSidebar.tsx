@@ -31,7 +31,7 @@ const PortalSidebar = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/portal' },
-    { icon: Calendar, label: 'Kalender', path: '/portal/calendar' },
+    { icon: Calendar, label: 'Kalender', path: '/' },
     { icon: Package, label: 'Produkte', path: '/portal/products' },
     { icon: UserPlus, label: 'Kunden', path: '/portal/customers' },
     { icon: Users, label: 'Mitarbeiter', path: '/portal/staff' },
