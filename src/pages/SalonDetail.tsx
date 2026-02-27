@@ -151,13 +151,46 @@ const SalonDetailPage: React.FC = () => {
       const [h, m] = selectedSlot.split(':').map(Number);
       const endDate = new Date(2000, 0, 1, h, m + endMinutes);
       const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
-      const { data, error } = await supabase.functions.invoke('storefront-book', {
-        body: { salon_user_id: salonId, staff_member_id: selectedStaff || null, product_id: selectedProduct || null, booking_date: selectedDate, booking_time: selectedSlot, end_time: endTime, customer_name: customerName.trim(), customer_phone: customerPhone.trim() || null, customer_email: customerEmail.trim() || null, payment_method: paymentMethod, customer_user_id: user?.id || null },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setBookingSuccess(true);
-      toast.success('🎉 Buchung erfolgreich!');
+
+      const bookingBody = {
+        salon_user_id: salonId,
+        staff_member_id: selectedStaff || null,
+        product_id: selectedProduct || null,
+        booking_date: selectedDate,
+        booking_time: selectedSlot,
+        end_time: endTime,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.trim() || null,
+        customer_email: customerEmail.trim() || null,
+        customer_user_id: user?.id || null,
+      };
+
+      if (paymentMethod === 'online') {
+        // Online payment → redirect to Stripe Checkout
+        if (!selectedProduct) {
+          toast.error('Bitte wähle einen Service für die Online-Zahlung');
+          setBooking(false);
+          return;
+        }
+        const { data, error } = await supabase.functions.invoke('create-storefront-checkout', {
+          body: bookingBody,
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } else {
+        // On-site payment → book directly
+        const { data, error } = await supabase.functions.invoke('storefront-book', {
+          body: { ...bookingBody, payment_method: paymentMethod },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setBookingSuccess(true);
+        toast.success('🎉 Buchung erfolgreich!');
+      }
     } catch (e: any) {
       toast.error(e.message || 'Buchung fehlgeschlagen');
     }
