@@ -62,6 +62,7 @@ const App = () => (
               <Route path="/storefront/profile" element={<CustomerProfile />} />
               <Route path="/storefront/:salonId" element={<SalonDetail />} />
               <Route path="/success" element={<CheckoutSuccess />} />
+              <Route path="/checkout-success" element={<CheckoutSuccess />} />
               <Route path="/portal/auth" element={<Navigate to="/login" replace />} />
               
               <Route path="/admin" element={<AdminDashboard />} />
