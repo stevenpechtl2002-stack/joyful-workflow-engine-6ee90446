@@ -172,13 +172,25 @@ const SalonDetailPage: React.FC = () => {
           setBooking(false);
           return;
         }
-        const { data, error } = await supabase.functions.invoke('create-storefront-checkout', {
+        const response = await supabase.functions.invoke('create-storefront-checkout', {
           body: bookingBody,
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        if (data?.url) {
-          window.location.href = data.url;
+        if (response.error) {
+          // Extract actual error from the response context
+          let errorMsg = 'Online-Zahlung fehlgeschlagen';
+          try {
+            const ctx = response.error as any;
+            if (ctx.context) {
+              const body = await ctx.context.json();
+              errorMsg = body?.error || errorMsg;
+            }
+          } catch {}
+          if (response.data?.error) errorMsg = response.data.error;
+          throw new Error(errorMsg);
+        }
+        if (response.data?.error) throw new Error(response.data.error);
+        if (response.data?.url) {
+          window.location.href = response.data.url;
           return;
         }
       } else {
