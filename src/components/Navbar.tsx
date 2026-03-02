@@ -20,7 +20,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img src={zentimeLogo} alt="ZenTime" className="h-[60px] w-auto object-contain" />
+            <img src={zentimeLogo} alt="ZenTime" className="h-[40px] w-auto object-contain" />
           </Link>
 
           {/* Desktop Navigation */}
