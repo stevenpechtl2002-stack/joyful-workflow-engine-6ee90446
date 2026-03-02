@@ -82,8 +82,8 @@ serve(async (req) => {
       logStep("Existing Connected Account found", { accountId });
     }
 
-    let returnUrl = `${req.headers.get("origin")}/portal/subscriptions?connect=complete`;
-    let refreshUrl = `${req.headers.get("origin")}/portal/subscriptions?connect=refresh`;
+    let returnUrl = `${req.headers.get("origin")}/portal/dashboard?connect=complete`;
+    let refreshUrl = `${req.headers.get("origin")}/portal/dashboard?connect=refresh`;
 
     try {
       const body = await req.json();

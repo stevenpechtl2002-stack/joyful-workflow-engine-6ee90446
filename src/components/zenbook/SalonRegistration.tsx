@@ -142,11 +142,19 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
     setCheckingStripe(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-connect-status');
-      if (!error && data?.connected && data?.charges_enabled && data?.payouts_enabled) {
+      if (error) {
+        toast.error('Fehler beim Prüfen des Stripe-Status');
+      } else if (data?.connected && data?.charges_enabled && data?.payouts_enabled) {
         setStripeConnected(true);
+        toast.success('Stripe-Konto erfolgreich verbunden!');
+      } else if (data?.connected && !data?.charges_enabled) {
+        toast.warning('Stripe-Verbindung noch nicht abgeschlossen. Bitte schließe das Onboarding bei Stripe ab.');
+      } else {
+        toast.info('Noch kein Stripe-Konto verbunden. Klicke auf "Mit Stripe verbinden" um zu starten.');
       }
     } catch (e) {
       console.error('Error checking stripe connect:', e);
+      toast.error('Verbindungsprüfung fehlgeschlagen');
     }
     setCheckingStripe(false);
   };
@@ -162,8 +170,8 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
       const origin = window.location.origin;
       const { data, error } = await supabase.functions.invoke('create-connect-account', {
         body: {
-          return_url: `${origin}/portal/subscriptions?connect=complete`,
-          refresh_url: `${origin}/portal/subscriptions?connect=refresh`,
+          return_url: `${origin}/portal/dashboard?connect=complete`,
+          refresh_url: `${origin}/portal/dashboard?connect=refresh`,
         }
       });
       if (error) throw error;
