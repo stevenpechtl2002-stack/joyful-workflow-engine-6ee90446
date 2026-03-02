@@ -43,8 +43,9 @@ const Storefront: React.FC = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const saleFilter = searchParams.get('filter') === 'sale';
+  const categoryFilter = searchParams.get('category') || '';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,6 +102,7 @@ const Storefront: React.FC = () => {
   const salonIdsWithDiscounts = new Set(discounts.map(d => d.user_id));
   const filtered = salons.filter(s => {
     if (saleFilter && !salonIdsWithDiscounts.has(s.id)) return false;
+    if (categoryFilter && s.category !== categoryFilter) return false;
     if (cityFilter && s.city !== cityFilter) return false;
     if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
@@ -130,13 +132,41 @@ const Storefront: React.FC = () => {
         <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-3">
           {saleFilter ? (
             <>Aktuelle <span className="text-transparent bg-clip-text bg-gradient-to-r from-destructive to-primary">Angebote</span></>
+          ) : categoryFilter ? (
+            <>Die besten <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-500">{categoryFilter === 'Nagelstudio' ? 'Nagelstudios' : categoryFilter === 'Barbershop' ? 'Barbershops' : `${categoryFilter}-Salons`}</span></>
           ) : (
             <>Finde deinen <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-500">Salon</span></>
           )}
         </h1>
         <p className="text-lg text-muted-foreground font-medium mb-8">
-          {saleFilter ? 'Entdecke die besten Rabatte und Aktionen der Salons.' : 'Entdecke die besten Salons in deiner Nähe und buche direkt online.'}
+          {saleFilter ? 'Entdecke die besten Rabatte und Aktionen der Salons.' : categoryFilter ? `Alle ${categoryFilter}-Salons in deiner Nähe.` : 'Entdecke die besten Salons in deiner Nähe und buche direkt online.'}
         </p>
+
+        {/* Category chips */}
+        <div className="flex items-center justify-center gap-2 flex-wrap mb-6 px-6">
+          {[
+            { label: 'Alle', value: '' },
+            { label: 'Friseur', value: 'Friseur' },
+            { label: 'Nägel', value: 'Nagelstudio' },
+            { label: 'Kosmetik', value: 'Kosmetik' },
+            { label: 'Massage', value: 'Massage' },
+            { label: 'Männer', value: 'Barbershop' },
+          ].map(c => (
+            <button
+              key={c.value}
+              onClick={() => { const p = new URLSearchParams(searchParams); if (c.value) p.set('category', c.value); else p.delete('category'); p.delete('filter'); setSearchParams(p); }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${categoryFilter === c.value || (!categoryFilter && !c.value && !saleFilter) ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}
+            >
+              {c.label}
+            </button>
+          ))}
+          <button
+            onClick={() => { const p = new URLSearchParams(); p.set('filter', 'sale'); setSearchParams(p); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${saleFilter ? 'bg-destructive text-white shadow-lg' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}
+          >
+            Sale %
+          </button>
+        </div>
 
         {/* Search & Filter */}
         <div className="max-w-2xl mx-auto px-6 flex flex-col sm:flex-row gap-3">
