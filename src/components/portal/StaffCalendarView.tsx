@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2, Maximize2 } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useStaffMembers, useUpdateReservationStaff, StaffMember } from '@/hooks/useStaffMembers';
@@ -59,6 +59,73 @@ export const StaffCalendarView = () => {
   const [isSmartImportOpen, setIsSmartImportOpen] = useState(false);
   const [smartImportStaffId, setSmartImportStaffId] = useState<string | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Resize states
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState<number>(600);
+  const [columnWidth, setColumnWidth] = useState(160);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isResizingContainer = useRef(false);
+  const isResizingColumn = useRef(false);
+
+  // Container resize handler
+  const handleContainerResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingContainer.current = true;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = containerRef.current?.offsetWidth || 800;
+    const startHeight = containerHeight;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isResizingContainer.current) return;
+      const newWidth = Math.max(400, startWidth + (ev.clientX - startX));
+      const newHeight = Math.max(300, startHeight + (ev.clientY - startY));
+      setContainerWidth(Math.min(newWidth, window.innerWidth - 40));
+      setContainerHeight(Math.min(newHeight, window.innerHeight - 40));
+    };
+
+    const handleMouseUp = () => {
+      isResizingContainer.current = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'nwse-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [containerHeight]);
+
+  // Column resize handler
+  const handleColumnResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizingColumn.current = true;
+    const startX = e.clientX;
+    const startWidth = columnWidth;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isResizingColumn.current) return;
+      const newWidth = Math.max(80, Math.min(400, startWidth + (ev.clientX - startX)));
+      setColumnWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizingColumn.current = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [columnWidth]);
 
   const { staffMembers } = useStaffMembers();
   const { toast } = useToast();
@@ -327,10 +394,10 @@ export const StaffCalendarView = () => {
 
   // Render single day columns
   const renderDayView = () => (
-    <div className="flex overflow-x-auto">
+    <div className="flex">
       {/* Time column */}
-      <div className="flex-shrink-0 w-16 border-r border-border-subtle">
-        <div className="h-12 border-b border-border-subtle" /> {/* Header spacer */}
+      <div className="flex-shrink-0 w-16 border-r border-border-subtle sticky left-0 z-20 bg-card">
+        <div className="h-12 border-b border-border-subtle sticky top-0 z-30 bg-card" /> {/* Header spacer */}
         <div className="relative" style={{ height: TIME_SLOTS.length * SLOT_HEIGHT }}>
           {TIME_SLOTS.map((slot, idx) => (
             <div
@@ -346,7 +413,7 @@ export const StaffCalendarView = () => {
 
       {/* Unassigned column */}
       <div className="flex-shrink-0 w-32 border-r border-border-subtle bg-muted/30">
-        <div className="h-12 border-b border-border-subtle flex items-center justify-center">
+        <div className="h-12 border-b border-border-subtle flex items-center justify-center sticky top-0 z-10 bg-muted/30">
           <span className="text-xs font-medium text-muted-foreground">Nicht zugewiesen</span>
         </div>
         <div
@@ -385,16 +452,21 @@ export const StaffCalendarView = () => {
       </div>
 
       {/* Staff columns */}
-      {activeStaffMembers.map((staff: StaffMember) => (
-        <div key={staff.id} className="flex-shrink-0 w-40 border-r border-border-subtle/50">
+      {activeStaffMembers.map((staff: StaffMember, staffIdx: number) => (
+        <div key={staff.id} className="flex-shrink-0 border-r border-border-subtle/50" style={{ width: columnWidth }}>
           {/* Staff header */}
-          <div className="h-12 border-b border-border-subtle flex items-center justify-center gap-2 px-2">
+          <div className="h-12 border-b border-border-subtle flex items-center justify-center gap-2 px-2 sticky top-0 z-10 bg-card relative">
             <Avatar className="h-7 w-7">
               <AvatarFallback style={{ backgroundColor: staff.color, color: 'white', fontSize: '10px' }}>
                 {getInitials(staff.name)}
               </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium truncate">{staff.name}</span>
+            {/* Column resize handle */}
+            <div
+              className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary/20 transition-colors z-20"
+              onMouseDown={handleColumnResizeStart}
+            />
           </div>
 
           {/* Time slots */}
@@ -597,8 +669,26 @@ export const StaffCalendarView = () => {
       )}
 
       {/* Calendar grid */}
-      <Card className="overflow-hidden">
+      <Card 
+        ref={containerRef}
+        className="overflow-auto relative"
+        style={{ 
+          width: containerWidth || '100%', 
+          height: containerHeight,
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+        }}
+      >
         {viewMode === 'day' ? renderDayView() : renderWeekView()}
+        
+        {/* Resize handle bottom-right corner */}
+        <div
+          className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize z-30 flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+          onMouseDown={handleContainerResizeStart}
+          title="Größe ändern"
+        >
+          <Maximize2 className="w-3 h-3 text-muted-foreground rotate-90" />
+        </div>
       </Card>
 
       {/* New reservation dialog */}
