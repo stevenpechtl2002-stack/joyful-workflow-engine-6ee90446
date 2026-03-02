@@ -1,11 +1,12 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   format, isSameDay, addDays, startOfWeek, endOfWeek, eachDayOfInterval, getDay
 } from 'date-fns';
 import { de } from 'date-fns/locale';
 import {
   Plus, ChevronLeft, ChevronRight, LayoutGrid, CalendarDays, Clock,
-  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck
+  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck,
+  Maximize2, Minimize2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
@@ -77,6 +78,68 @@ const StaffCalendarView: React.FC<Props> = ({
   const [detailReservation, setDetailReservation] = useState<Reservation | null>(null);
   const [dragOverStaff, setDragOverStaff] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState<number>(640);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const savedSize = useRef<{ width: number | null; height: number }>({ width: null, height: 640 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isResizingContainer = useRef(false);
+
+  const getFullscreenHeight = useCallback(() => Math.max(420, window.innerHeight - 220), []);
+
+  const handleContainerResizeStart = useCallback((e: React.MouseEvent) => {
+    if (isFullscreen) return;
+    e.preventDefault();
+    isResizingContainer.current = true;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = containerRef.current?.offsetWidth || 980;
+    const startHeight = containerHeight;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isResizingContainer.current) return;
+      const newWidth = Math.max(760, Math.min(window.innerWidth - 100, startWidth + (ev.clientX - startX)));
+      const newHeight = Math.max(420, Math.min(window.innerHeight - 120, startHeight + (ev.clientY - startY)));
+      setContainerWidth(newWidth);
+      setContainerHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      isResizingContainer.current = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'nwse-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [containerHeight, isFullscreen]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      setContainerWidth(savedSize.current.width);
+      setContainerHeight(savedSize.current.height);
+      setIsFullscreen(false);
+      return;
+    }
+
+    savedSize.current = { width: containerWidth, height: containerHeight };
+    setContainerWidth(null);
+    setContainerHeight(getFullscreenHeight());
+    setIsFullscreen(true);
+  }, [containerHeight, containerWidth, getFullscreenHeight, isFullscreen]);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const onResize = () => setContainerHeight(getFullscreenHeight());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [getFullscreenHeight, isFullscreen]);
 
   const activeStaff = useMemo(() =>
     staffMembers.filter(s => s.is_active).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
@@ -481,78 +544,112 @@ const StaffCalendarView: React.FC<Props> = ({
       {calendarMode === 'availability' ? (
         <AvailabilityView />
       ) : (
-      <div className="flex-1 bg-card border border-border rounded-2xl overflow-hidden flex flex-col shadow-sm">
-        {/* Header Row */}
-        <div className="flex border-b border-border bg-card sticky top-0 z-20" style={{ minHeight: '56px' }}>
-          <div className="w-16 border-r border-border shrink-0 flex items-center justify-center">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-          </div>
+      <div
+        className="relative flex-1"
+        style={{ width: isFullscreen ? '100%' : (containerWidth || '100%'), maxWidth: '100%' }}
+      >
+        <button
+          type="button"
+          aria-label="Kalendergröße ändern"
+          disabled={isFullscreen}
+          className="absolute top-2 left-2 z-[60] w-8 h-8 cursor-nwse-resize flex items-center justify-center bg-background border border-border rounded-lg shadow-md hover:bg-muted transition-colors pointer-events-auto disabled:opacity-40 disabled:cursor-not-allowed"
+          onMouseDown={handleContainerResizeStart}
+          title="Größe ändern"
+        >
+          <Plus className="w-4 h-4 text-primary" />
+        </button>
 
-          {viewMode === 'day' ? (
-            <>
-              {/* Unassigned column */}
-              <div className="min-w-[140px] flex-1 px-3 flex items-center gap-2 border-r border-border bg-muted/30">
-                <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <span className="text-xs font-bold text-muted-foreground truncate">Offen</span>
-              </div>
-              {activeStaff.map(staff => (
-                <div key={staff.id} className="min-w-[140px] flex-1 px-3 flex items-center gap-2 border-r border-border last:border-r-0">
-                  <div className="w-7 h-7 rounded-lg overflow-hidden border border-border shrink-0"
-                    style={{ backgroundColor: `${staff.color}20` }}>
-                    {staff.avatar_url ? (
-                      <img src={staff.avatar_url} className="w-full h-full object-cover" alt={staff.name} />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[10px] font-black" style={{ color: staff.color }}>
-                        {staff.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-foreground truncate">{staff.name}</span>
-                </div>
-              ))}
-            </>
-          ) : (
-            weekDays.map(day => (
-              <div key={day.toString()}
-                className={`flex-1 flex flex-col justify-center text-center border-r border-border last:border-r-0 min-w-[100px] py-2 ${
-                  isSameDay(day, new Date()) ? 'bg-primary/5' : ''
-                }`}>
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                  {format(day, 'EEE', { locale: de })}
-                </p>
-                <p className={`text-lg font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-foreground'}`}>
-                  {format(day, 'd')}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
+        <button
+          type="button"
+          aria-label={isFullscreen ? 'Kalender verkleinern' : 'Kalender Vollbild'}
+          className="absolute top-2 right-2 z-[60] w-8 h-8 flex items-center justify-center bg-background border border-border rounded-lg shadow-md hover:bg-muted transition-colors pointer-events-auto"
+          onClick={toggleFullscreen}
+          title={isFullscreen ? 'Verkleinern' : 'Vollbild'}
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4 text-primary" /> : <Maximize2 className="w-4 h-4 text-primary" />}
+        </button>
 
-        {/* Scrollable Grid */}
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="flex" style={{ minHeight: `${totalHeight}px` }}>
-            {/* Time column */}
-            <div className="w-16 border-r border-border bg-card/50 shrink-0">
-              {timeSlots.map(slot => (
-                <div key={`${slot.hour}-${slot.minute}`}
-                  className="px-2 text-[9px] font-bold text-muted-foreground text-right pr-3 flex items-start pt-1"
-                  style={{ height: `${slotHeight}px` }}>
-                  {slot.minute === 0 || timeInterval < 60 ? slot.label : ''}
-                </div>
-              ))}
+        <div
+          ref={containerRef}
+          className="bg-card border border-border rounded-2xl overflow-auto flex flex-col shadow-sm"
+          style={{
+            height: containerHeight,
+            minHeight: 420,
+            maxHeight: isFullscreen ? 'calc(100vh - 12rem)' : 'none',
+          }}
+        >
+          {/* Header Row */}
+          <div className="flex border-b border-border bg-card sticky top-0 z-20" style={{ minHeight: '56px' }}>
+            <div className="w-16 border-r border-border shrink-0 flex items-center justify-center sticky left-0 z-30 bg-card">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
 
-            {/* Columns */}
             {viewMode === 'day' ? (
               <>
-                {renderColumn(null, selectedDate)}
-                {activeStaff.map(staff => renderColumn(staff.id, selectedDate))}
+                {/* Unassigned column */}
+                <div className="min-w-[140px] flex-1 px-3 flex items-center gap-2 border-r border-border bg-muted/30">
+                  <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <span className="text-xs font-bold text-muted-foreground truncate">Offen</span>
+                </div>
+                {activeStaff.map(staff => (
+                  <div key={staff.id} className="min-w-[140px] flex-1 px-3 flex items-center gap-2 border-r border-border last:border-r-0 bg-card">
+                    <div className="w-7 h-7 rounded-lg overflow-hidden border border-border shrink-0"
+                      style={{ backgroundColor: `${staff.color}20` }}>
+                      {staff.avatar_url ? (
+                        <img src={staff.avatar_url} className="w-full h-full object-cover" alt={staff.name} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] font-black" style={{ color: staff.color }}>
+                          {staff.name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs font-bold text-foreground truncate">{staff.name}</span>
+                  </div>
+                ))}
               </>
             ) : (
-              weekDays.map(day => renderColumn(null, day))
+              weekDays.map(day => (
+                <div key={day.toString()}
+                  className={`flex-1 flex flex-col justify-center text-center border-r border-border last:border-r-0 min-w-[100px] py-2 bg-card ${
+                    isSameDay(day, new Date()) ? 'bg-primary/5' : ''
+                  }`}>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    {format(day, 'EEE', { locale: de })}
+                  </p>
+                  <p className={`text-lg font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-foreground'}`}>
+                    {format(day, 'd')}
+                  </p>
+                </div>
+              ))
             )}
+          </div>
+
+          {/* Scrollable Grid */}
+          <div className="flex-1 overflow-auto no-scrollbar">
+            <div className="flex min-w-max" style={{ minHeight: `${totalHeight}px` }}>
+              {/* Time column */}
+              <div className="w-16 border-r border-border bg-card shrink-0 sticky left-0 z-20">
+                {timeSlots.map(slot => (
+                  <div key={`${slot.hour}-${slot.minute}`}
+                    className="px-2 text-[9px] font-bold text-muted-foreground text-right pr-3 flex items-start pt-1"
+                    style={{ height: `${slotHeight}px` }}>
+                    {slot.minute === 0 || timeInterval < 60 ? slot.label : ''}
+                  </div>
+                ))}
+              </div>
+
+              {/* Columns */}
+              {viewMode === 'day' ? (
+                <>
+                  {renderColumn(null, selectedDate)}
+                  {activeStaff.map(staff => renderColumn(staff.id, selectedDate))}
+                </>
+              ) : (
+                weekDays.map(day => renderColumn(null, day))
+              )}
+            </div>
           </div>
         </div>
       </div>
