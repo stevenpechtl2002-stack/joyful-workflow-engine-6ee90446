@@ -1,22 +1,20 @@
 
 
-## Plan: Google Login für Kunden aktivieren
+## Plan: Kalender-Tabelle per Ecke ziehbar/resizeable machen
 
-### Vorgehen
+Der Kalender (die `Card` mit dem Grid) soll an einer Ecke (oben rechts) einen Resize-Handle bekommen, mit dem man die Größe manuell per Drag anpassen kann – bis hin zum Vollbild.
 
-1. **Lovable Cloud Social Auth konfigurieren** - Das Projekt nutzt Lovable Cloud, das Google OAuth automatisch verwaltet. Ich werde die `lovable.auth.signInWithOAuth("google")` Methode einbinden.
+### Ansatz
 
-2. **`src/pages/UnifiedAuth.tsx` anpassen** - Im Kunden-Login-Bereich (wenn `mode === 'customer'`) einen "Mit Google anmelden" Button hinzufügen, sowohl im Login- als auch im Signup-Tab. Der Button ruft `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` auf.
+CSS `resize: both` mit `overflow: auto` auf dem Kalender-Container. Das ist die einfachste native Lösung – der Browser zeigt automatisch einen Drag-Handle in der unteren rechten Ecke. Zusätzlich setze ich `min-height`, `min-width` und entferne feste Höhenbeschränkungen, damit der Kalender frei skaliert werden kann.
 
-3. **Lovable Auth Module generieren** - Das `@lovable.dev/cloud-auth-js` Paket und das Modul in `src/integrations/lovable/` müssen erstellt werden, um die OAuth-Funktion bereitzustellen.
+### Änderungen
 
-4. **Redirect-Handling** - Nach Google-Login wird der User wie gewohnt über den bestehenden `useEffect` in `UnifiedAuth.tsx` basierend auf Rollen weitergeleitet (Kunde → `/storefront/profile`).
+1. **`src/components/portal/StaffCalendarView.tsx`** (Zeile ~600):  
+   Die `<Card>` um den Kalender bekommt die CSS-Klasse `resize overflow-auto` und ein `style` mit `minHeight: 400px, minWidth: 300px`. Dadurch erscheint der native Browser-Resize-Griff unten rechts, und der User kann den Kalender beliebig groß ziehen.
 
-### Betroffene Dateien
-- `src/pages/UnifiedAuth.tsx` - Google-Button im Kunden-Bereich
-- `src/integrations/lovable/` - Auto-generiertes Auth-Modul (wird vom Tool erstellt)
-
-### UI-Änderung
-- Trennlinie "oder" zwischen E-Mail-Login und Google-Button
-- Google-Button mit Google-Icon, nur sichtbar wenn `mode === 'customer'`
+### Ergebnis
+- Kleiner Drag-Handle in der Ecke des Kalenders
+- Frei ziehbar in Breite und Höhe
+- Keine zusätzliche Bibliothek nötig
 
