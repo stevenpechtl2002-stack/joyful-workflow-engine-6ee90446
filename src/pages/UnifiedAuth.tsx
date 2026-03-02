@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -51,17 +51,20 @@ const UnifiedAuth = () => {
   });
   const [resetEmail, setResetEmail] = useState('');
 
+  const hasRedirected = useRef(false);
+
   // Redirect after login based on role
   useEffect(() => {
-    if (!isLoading && user && roles.length > 0) {
+    if (!isLoading && user && roles.length > 0 && !hasRedirected.current) {
+      hasRedirected.current = true;
       if (roles.includes('admin')) {
-        navigate('/admin');
+        navigate('/admin', { replace: true });
       } else if (roles.includes('sales')) {
-        navigate('/sales');
+        navigate('/sales', { replace: true });
       } else if (roles.includes('manager') || mode === 'business') {
-        navigate('/');
+        navigate('/', { replace: true });
       } else {
-        navigate('/storefront/profile');
+        navigate('/storefront/profile', { replace: true });
       }
     }
   }, [user, isLoading, roles, navigate, mode]);
