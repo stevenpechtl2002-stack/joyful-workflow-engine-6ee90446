@@ -24,6 +24,8 @@ const SalonProfile = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [published, setPublished] = useState(false);
+  const [togglingPublish, setTogglingPublish] = useState(false);
 
   const [formData, setFormData] = useState({
     company_name: '',
@@ -45,7 +47,7 @@ const SalonProfile = () => {
     const load = async () => {
       const { data } = await supabase
         .from('customers')
-        .select('company_name, category, description, address, postal_code, city, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url')
+        .select('company_name, category, description, address, postal_code, city, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, published')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -63,6 +65,7 @@ const SalonProfile = () => {
           logo_url: (data as any).logo_url || '',
           cover_image_url: (data as any).cover_image_url || '',
         });
+        setPublished((data as any).published || false);
       }
       setLoading(false);
     };
@@ -95,6 +98,20 @@ const SalonProfile = () => {
     } else {
       toast.success('Salon-Profil gespeichert!');
     }
+  };
+
+  const handleTogglePublish = async () => {
+    if (!user?.id) return;
+    setTogglingPublish(true);
+    const newVal = !published;
+    const { error } = await supabase.from('customers').update({ published: newVal } as any).eq('id', user.id);
+    if (error) {
+      toast.error('Fehler beim Ändern des Status');
+    } else {
+      setPublished(newVal);
+      toast.success(newVal ? 'Salon ist jetzt online!' : 'Salon ist jetzt offline');
+    }
+    setTogglingPublish(false);
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,15 +165,27 @@ const SalonProfile = () => {
             </h1>
             <p className="text-muted-foreground">Gestalte dein öffentliches Marktplatz-Profil</p>
           </div>
-          <a
-            href={`/storefront/${user?.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary/20 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Live-Vorschau
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href={`/storefront/${user?.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-muted text-muted-foreground font-bold text-sm hover:bg-muted/80 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Vorschau
+            </a>
+            <Button
+              onClick={handleTogglePublish}
+              disabled={togglingPublish}
+              variant={published ? 'destructive' : 'default'}
+              size="sm"
+              className="font-bold"
+            >
+              {togglingPublish ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {published ? 'Offline schalten' : 'Online schalten'}
+            </Button>
+          </div>
         </div>
       </motion.div>
 
