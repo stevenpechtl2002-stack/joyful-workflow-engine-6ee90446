@@ -137,7 +137,11 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${cat.label === 'Sale %' ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/30' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
               whileHover={{ y: -3, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => { if (cat.label === 'Sale %') navigate('/storefront?filter=sale'); }}>
+              onClick={() => {
+                const categoryMap: Record<string, string> = { 'Nägel': 'Nagelstudio', 'Männer': 'Barbershop' };
+                if (cat.label === 'Sale %') navigate('/storefront?filter=sale');
+                else navigate(`/storefront?category=${encodeURIComponent(categoryMap[cat.label] || cat.label)}`);
+              }}>
 
                 {cat.icon}
                 {cat.label}
