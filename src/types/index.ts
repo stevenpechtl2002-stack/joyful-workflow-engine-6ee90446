@@ -73,7 +73,7 @@ export interface Customer {
   notes?: string;
 }
 
-export type ViewType = 'calendar' | 'services' | 'staff' | 'insights' | 'settings' | 'customers' | 'api' | 'shifts' | 'connect-products' | 'kassenbuch' | 'zbon' | 'salon-profile';
+export type ViewType = 'calendar' | 'services' | 'staff' | 'insights' | 'settings' | 'customers' | 'api' | 'shifts' | 'connect-products' | 'kassenbuch' | 'zbon' | 'salon-profile' | 'discounts';
 export type UserRole = 'salon' | 'customer' | 'salon_registration' | 'admin' | null;
 
 export interface ConnectProduct {

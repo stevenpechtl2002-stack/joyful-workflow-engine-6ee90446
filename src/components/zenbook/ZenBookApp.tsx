@@ -24,8 +24,9 @@ import {
   ShoppingBag,
   Receipt,
   Euro,
-  Store
+  Percent
 } from 'lucide-react';
+import profileIcon from '@/assets/profile-icon.png';
 import { 
   format, 
   isSameMonth, 
@@ -61,6 +62,7 @@ import ConnectProducts from '@/components/zenbook/ConnectProducts';
 import KassenbuchView from '@/components/zenbook/KassenbuchView';
 import ZBonView from '@/components/zenbook/ZBonView';
 import SalonProfilePage from '@/pages/portal/SalonProfile';
+import DiscountManagement from '@/components/zenbook/DiscountManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
@@ -81,7 +83,8 @@ const navItems = [
   { id: 'zbon', label: 'Z-Bon', icon: <Euro className="w-5 h-5" /> },
   { id: 'insights', label: 'KI Insights', icon: <PieChart className="w-5 h-5" /> },
   { id: 'api', label: 'API', icon: <Key className="w-5 h-5" /> },
-  { id: 'salon-profile', label: 'Profil', icon: <Store className="w-5 h-5" /> },
+  { id: 'discounts', label: 'Rabatte', icon: <Percent className="w-5 h-5" /> },
+  { id: 'salon-profile', label: 'Profil', icon: <img src={profileIcon} alt="Profil" className="w-5 h-5 rounded object-cover" /> },
   { id: 'settings', label: 'Einstellungen', icon: <SettingsIcon className="w-5 h-5" /> },
 ];
 
@@ -465,6 +468,7 @@ const ZenBookApp: React.FC = () => {
           {currentView === 'kassenbuch' && <KassenbuchView />}
           {currentView === 'zbon' && <ZBonView />}
           {currentView === 'salon-profile' && <SalonProfilePage />}
+          {currentView === 'discounts' && <DiscountManagement />}
           {currentView === 'settings' && <SettingsComponent onSimulateIncoming={handleIncomingWebhook} />}
         </div>
       </main>
