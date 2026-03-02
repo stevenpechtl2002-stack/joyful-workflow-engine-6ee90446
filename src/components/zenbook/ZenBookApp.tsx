@@ -461,7 +461,7 @@ const ZenBookApp: React.FC = () => {
               console.error('Error creating staff member:', error);
             }
           }} />}
-          {currentView === 'insights' && <Insights appointments={appointments} services={services} staff={staffMembers} />}
+          {currentView === 'insights' && <Insights />}
           {currentView === 'api' && <ApiSettings />}
           {currentView === 'shifts' && <Shifts />}
           {currentView === 'connect-products' && <ConnectProducts />}
