@@ -12,6 +12,8 @@ interface Salon {
   address: string | null;
   postal_code: string | null;
   category: string;
+  description: string | null;
+  logo_url: string | null;
   published: boolean;
   product_count: number;
   staff_count: number;
@@ -171,16 +173,24 @@ const Storefront: React.FC = () => {
                 </button>
 
                 {/* Salon card content */}
-                <div className="min-w-0 mb-3">
-                  <h3 className="font-black text-foreground text-lg truncate group-hover:text-primary transition-colors">{salon.name}</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-0.5">{salon.category}</p>
-                  {salon.city && (
-                    <p className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {salon.postal_code && `${salon.postal_code} `}{salon.city}
-                    </p>
+                <div className="min-w-0 mb-3 flex items-start gap-3">
+                  {salon.logo_url && (
+                    <img src={salon.logo_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border" />
                   )}
+                  <div className="min-w-0">
+                    <h3 className="font-black text-foreground text-lg truncate group-hover:text-primary transition-colors">{salon.name}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-0.5">{salon.category}</p>
+                    {salon.city && (
+                      <p className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        {salon.postal_code && `${salon.postal_code} `}{salon.city}
+                      </p>
+                    )}
+                  </div>
                 </div>
+                {salon.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{salon.description}</p>
+                )}
 
                 {/* Rating */}
                 <div className="flex items-center gap-2 mb-3">
