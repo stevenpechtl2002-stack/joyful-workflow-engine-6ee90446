@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Fetch salon info (including description and category)
     const { data: salon } = await supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, category, description")
+      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url")
       .eq("id", salon_id)
       .single();
 
@@ -151,6 +151,12 @@ Deno.serve(async (req) => {
         postal_code: salon.postal_code,
         category: salon.category,
         description: salon.description,
+        phone: salon.phone,
+        website_url: salon.website_url,
+        instagram_url: salon.instagram_url,
+        facebook_url: salon.facebook_url,
+        logo_url: salon.logo_url,
+        cover_image_url: salon.cover_image_url,
       },
       products: products || [],
       staff: (staff || []).map(s => ({ id: s.id, name: s.name, color: s.color })),

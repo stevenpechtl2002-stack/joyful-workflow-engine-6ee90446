@@ -18,6 +18,7 @@ import {
   Package,
   UserPlus,
   Receipt,
+  Store,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -40,6 +41,7 @@ const PortalSidebar = () => {
     { icon: Receipt, label: 'Verkauf', path: '/portal/sales' },
     { icon: Bell, label: 'Benachrichtigungen', path: '/portal/notifications' },
     { icon: User, label: 'Profil', path: '/portal/profile' },
+    { icon: Store, label: 'Salon-Profil', path: '/portal/salon-profile' },
   ];
 
   const adminItems = [

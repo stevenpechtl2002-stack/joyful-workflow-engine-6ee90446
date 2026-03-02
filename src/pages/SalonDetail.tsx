@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, User, Users, CreditCard, Banknote, Loader2, Calendar, CheckCircle2, Star, Store, ChevronDown, ChevronRight, Camera, MessageSquare, Send } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, User, Users, CreditCard, Banknote, Loader2, Calendar, CheckCircle2, Star, Store, ChevronDown, ChevronRight, Camera, MessageSquare, Send, Globe, Instagram, Facebook, Phone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Logo from '@/components/zenbook/Logo';
@@ -17,6 +17,12 @@ interface SalonInfo {
   postal_code: string | null;
   category?: string | null;
   description?: string | null;
+  phone?: string | null;
+  website_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  logo_url?: string | null;
+  cover_image_url?: string | null;
 }
 
 interface Product {
@@ -333,30 +339,44 @@ const SalonDetailPage: React.FC = () => {
         </div>
       )}
 
+      {/* Cover Image */}
+      {salon.cover_image_url && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+          <div className="rounded-2xl overflow-hidden max-h-64">
+            <img src={salon.cover_image_url} alt={salon.name} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
+
       {/* Salon Hero Info */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">{salon.name}</h1>
-            {salon.category && (
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">{salon.category}</span>
+          <div className="flex items-start gap-4">
+            {salon.logo_url && (
+              <img src={salon.logo_url} alt={salon.name} className="w-16 h-16 rounded-full object-cover border-2 border-primary/20 shrink-0" />
             )}
-            {(salon.address || salon.city) && (
-              <p className="text-sm text-muted-foreground font-medium flex items-center gap-2 mt-2">
-                <MapPin className="w-4 h-4 text-primary" />
-                {[salon.address, salon.postal_code, salon.city].filter(Boolean).join(', ')}
-              </p>
-            )}
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-2">
-                <StarRating rating={Math.round(avgRating)} />
-                <span className="text-sm font-bold text-foreground">{avgRating > 0 ? avgRating.toFixed(1) : '–'}</span>
-                <span className="text-xs text-muted-foreground">({reviewCount} {reviewCount === 1 ? 'Bewertung' : 'Bewertungen'})</span>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">{salon.name}</h1>
+              {salon.category && (
+                <span className="text-xs font-bold text-primary uppercase tracking-wider">{salon.category}</span>
+              )}
+              {(salon.address || salon.city) && (
+                <p className="text-sm text-muted-foreground font-medium flex items-center gap-2 mt-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  {[salon.address, salon.postal_code, salon.city].filter(Boolean).join(', ')}
+                </p>
+              )}
+              <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-2">
+                  <StarRating rating={Math.round(avgRating)} />
+                  <span className="text-sm font-bold text-foreground">{avgRating > 0 ? avgRating.toFixed(1) : '–'}</span>
+                  <span className="text-xs text-muted-foreground">({reviewCount} {reviewCount === 1 ? 'Bewertung' : 'Bewertungen'})</span>
+                </div>
               </div>
+              {salon.description && (
+                <p className="text-sm text-muted-foreground mt-3 max-w-xl leading-relaxed">{salon.description}</p>
+              )}
             </div>
-            {salon.description && (
-              <p className="text-sm text-muted-foreground mt-3 max-w-xl leading-relaxed">{salon.description}</p>
-            )}
           </div>
           <div className="hidden md:flex flex-col gap-2 min-w-[200px]">
             <a href="#buchen" className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-black text-sm text-center hover:bg-primary/90 transition-colors">
@@ -588,6 +608,38 @@ const SalonDetailPage: React.FC = () => {
                       {[salon.address, salon.postal_code, salon.city].filter(Boolean).join(', ') || 'Keine Adresse hinterlegt'}
                     </p>
                   </div>
+
+                  {/* Contact & Social */}
+                  {(salon.phone || salon.website_url || salon.instagram_url || salon.facebook_url) && (
+                    <div className="border border-border rounded-xl p-5">
+                      <h3 className="font-black text-foreground text-sm mb-4 flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-primary" />
+                        Kontakt & Social Media
+                      </h3>
+                      <div className="space-y-3">
+                        {salon.phone && (
+                          <a href={`tel:${salon.phone}`} className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            <Phone className="w-4 h-4 text-primary" /> {salon.phone}
+                          </a>
+                        )}
+                        {salon.website_url && (
+                          <a href={salon.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            <Globe className="w-4 h-4 text-primary" /> Website
+                          </a>
+                        )}
+                        {salon.instagram_url && (
+                          <a href={salon.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            <Instagram className="w-4 h-4 text-primary" /> Instagram
+                          </a>
+                        )}
+                        {salon.facebook_url && (
+                          <a href={salon.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            <Facebook className="w-4 h-4 text-primary" /> Facebook
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Description */}
                   {salon.description && (

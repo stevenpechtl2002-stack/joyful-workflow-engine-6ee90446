@@ -307,13 +307,18 @@ export type Database = {
           category: string | null
           city: string | null
           company_name: string | null
+          cover_image_url: string | null
           created_at: string
           dashboard_pin: string | null
           description: string | null
           email: string
+          facebook_url: string | null
           id: string
+          instagram_url: string | null
+          logo_url: string | null
           notes: string | null
           onboarding_step: number
+          phone: string | null
           plan: string
           postal_code: string | null
           published: boolean
@@ -321,19 +326,25 @@ export type Database = {
           status: string
           stripe_account_id: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           address?: string | null
           category?: string | null
           city?: string | null
           company_name?: string | null
+          cover_image_url?: string | null
           created_at?: string
           dashboard_pin?: string | null
           description?: string | null
           email: string
+          facebook_url?: string | null
           id: string
+          instagram_url?: string | null
+          logo_url?: string | null
           notes?: string | null
           onboarding_step?: number
+          phone?: string | null
           plan?: string
           postal_code?: string | null
           published?: boolean
@@ -341,19 +352,25 @@ export type Database = {
           status?: string
           stripe_account_id?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           address?: string | null
           category?: string | null
           city?: string | null
           company_name?: string | null
+          cover_image_url?: string | null
           created_at?: string
           dashboard_pin?: string | null
           description?: string | null
           email?: string
+          facebook_url?: string | null
           id?: string
+          instagram_url?: string | null
+          logo_url?: string | null
           notes?: string | null
           onboarding_step?: number
+          phone?: string | null
           plan?: string
           postal_code?: string | null
           published?: boolean
@@ -361,6 +378,7 @@ export type Database = {
           status?: string
           stripe_account_id?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
