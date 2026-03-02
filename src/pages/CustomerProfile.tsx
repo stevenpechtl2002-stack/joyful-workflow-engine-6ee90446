@@ -38,7 +38,7 @@ interface SuggestedSalon {
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08 } }) };
 
 const CustomerProfile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -50,7 +50,8 @@ const CustomerProfile: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
+    if (authLoading) return;
+    if (!user) { navigate('/login', { replace: true }); return; }
     const loadData = async () => {
       const [bookingsRes, favsRes, profileRes, suggestionsRes] = await Promise.all([
         supabase.from('storefront_bookings' as any).select('*').eq('customer_user_id', user.id).order('booking_date', { ascending: false }),
@@ -80,7 +81,7 @@ const CustomerProfile: React.FC = () => {
       setLoading(false);
     };
     loadData();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const removeFavorite = async (salonId: string) => {
     if (!user) return;
