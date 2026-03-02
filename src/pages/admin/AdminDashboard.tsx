@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,12 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Phone, Calendar, DollarSign, Activity, 
-  Search, Filter, LogOut, Shield, Ban, CheckCircle,
-  TrendingUp, Clock, FileText, Key, Copy, Eye, EyeOff, Link2,
-  CreditCard, Bot, Globe, Building2
+  Search, LogOut, Shield, Ban, CheckCircle,
+  TrendingUp, Clock, Key, Copy, Eye, EyeOff, Link2,
+  CreditCard, Bot, Globe, Building2, ChevronDown, ChevronUp,
+  Mail, MapPin, Tag, BarChart3, UserX, Euro, ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -27,10 +31,25 @@ interface Customer {
   created_at: string;
   notes: string | null;
   sales_rep_id: string | null;
+  category: string | null;
+  description: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  website_url: string | null;
+  slug: string | null;
 }
 
 interface CustomerWithApiKey extends Customer {
   api_key?: string;
+}
+
+interface CustomerEnriched extends CustomerWithApiKey {
+  totalRevenue: number;
+  reservationCount: number;
+  contactCount: number;
+  profileName: string | null;
 }
 
 interface CallLog {
@@ -43,7 +62,7 @@ interface CallLog {
   started_at: string;
 }
 
-interface Reservation {
+interface ReservationFull {
   id: string;
   user_id: string;
   customer_name: string;
@@ -51,6 +70,8 @@ interface Reservation {
   reservation_time: string;
   party_size: number;
   status: string;
+  price_paid: number | null;
+  source: string;
 }
 
 interface VoiceAgentConfig {
@@ -100,45 +121,47 @@ const AdminDashboard = () => {
   
   const [customers, setCustomers] = useState<CustomerWithApiKey[]>([]);
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<ReservationFull[]>([]);
   const [voiceAgentConfigs, setVoiceAgentConfigs] = useState<VoiceAgentConfig[]>([]);
   const [stripeSubscriptions, setStripeSubscriptions] = useState<StripeSubscription[]>([]);
+  const [transactions, setTransactions] = useState<{ user_id: string; amount: number }[]>([]);
+  const [contactCounts, setContactCounts] = useState<Record<string, number>>({});
+  const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [planFilter, setPlanFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [dataLoading, setDataLoading] = useState(true);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
   const [visibleApiKeys, setVisibleApiKeys] = useState<Set<string>>(new Set());
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerEnriched | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [editNotes, setEditNotes] = useState('');
+  const [editPlan, setEditPlan] = useState('');
+  const [confirmBlockDialog, setConfirmBlockDialog] = useState<CustomerEnriched | null>(null);
 
   const toggleApiKeyVisibility = (customerId: string) => {
     setVisibleApiKeys(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(customerId)) {
-        newSet.delete(customerId);
-      } else {
-        newSet.add(customerId);
-      }
+      if (newSet.has(customerId)) newSet.delete(customerId);
+      else newSet.add(customerId);
       return newSet;
     });
   };
 
   const copyToClipboard = (text: string, label?: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: 'Kopiert',
-      description: label ? `${label} in die Zwischenablage kopiert` : 'In die Zwischenablage kopiert',
-    });
+    toast({ title: 'Kopiert', description: label ? `${label} in die Zwischenablage kopiert` : 'In die Zwischenablage kopiert' });
   };
 
   const webhookBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/n8n-reservations`;
 
-  // Redirect if not admin
   useEffect(() => {
     if (!isLoading && (!user || !roles.includes('admin'))) {
       navigate('/portal/auth');
     }
   }, [user, roles, isLoading, navigate]);
 
-  // Fetch all data
   useEffect(() => {
     if (user && roles.includes('admin')) {
       fetchAllData();
@@ -149,35 +172,44 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setDataLoading(true);
     try {
-      const [customersRes, apiKeysRes, callLogsRes, reservationsRes, voiceAgentRes] = await Promise.all([
+      const [customersRes, apiKeysRes, callLogsRes, reservationsRes, voiceAgentRes, transactionsRes, contactsRes, profilesRes] = await Promise.all([
         supabase.from('customers').select('*').order('created_at', { ascending: false }),
         supabase.from('customer_api_keys').select('customer_id, api_key'),
         supabase.from('call_logs').select('*').order('started_at', { ascending: false }).limit(100),
-        supabase.from('reservations').select('*').order('reservation_date', { ascending: false }).limit(100),
+        supabase.from('reservations').select('id, user_id, customer_name, reservation_date, reservation_time, party_size, status, price_paid, source').order('reservation_date', { ascending: false }).limit(500),
         supabase.from('voice_agent_config').select('*').order('updated_at', { ascending: false }),
+        supabase.from('transactions').select('user_id, amount'),
+        supabase.from('contacts').select('user_id'),
+        supabase.from('profiles').select('id, full_name'),
       ]);
 
-      // Merge API keys with customers
       if (customersRes.data) {
-        const apiKeyMap = new Map(
-          (apiKeysRes.data || []).map(k => [k.customer_id, k.api_key])
-        );
-        const customersWithKeys: CustomerWithApiKey[] = customersRes.data.map(c => ({
-          ...c,
-          api_key: apiKeyMap.get(c.id)
-        }));
-        setCustomers(customersWithKeys);
+        const apiKeyMap = new Map((apiKeysRes.data || []).map(k => [k.customer_id, k.api_key]));
+        setCustomers(customersRes.data.map(c => ({ ...c, api_key: apiKeyMap.get(c.id) })));
       }
       if (callLogsRes.data) setCallLogs(callLogsRes.data);
-      if (reservationsRes.data) setReservations(reservationsRes.data);
+      if (reservationsRes.data) setReservations(reservationsRes.data as ReservationFull[]);
       if (voiceAgentRes.data) setVoiceAgentConfigs(voiceAgentRes.data);
+      
+      // Aggregate transactions per user
+      if (transactionsRes.data) setTransactions(transactionsRes.data);
+
+      // Count contacts per user
+      if (contactsRes.data) {
+        const counts: Record<string, number> = {};
+        contactsRes.data.forEach((c: any) => { counts[c.user_id] = (counts[c.user_id] || 0) + 1; });
+        setContactCounts(counts);
+      }
+
+      // Profile names
+      if (profilesRes.data) {
+        const map: Record<string, string> = {};
+        profilesRes.data.forEach((p: any) => { if (p.full_name) map[p.id] = p.full_name; });
+        setProfiles(map);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast({
-        title: 'Fehler',
-        description: 'Daten konnten nicht geladen werden',
-        variant: 'destructive',
-      });
+      toast({ title: 'Fehler', description: 'Daten konnten nicht geladen werden', variant: 'destructive' });
     } finally {
       setDataLoading(false);
     }
@@ -188,9 +220,7 @@ const AdminDashboard = () => {
     try {
       const { data, error } = await supabase.functions.invoke('admin-list-subscriptions');
       if (error) throw error;
-      if (data?.subscriptions) {
-        setStripeSubscriptions(data.subscriptions);
-      }
+      if (data?.subscriptions) setStripeSubscriptions(data.subscriptions);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
     } finally {
@@ -198,66 +228,84 @@ const AdminDashboard = () => {
     }
   };
 
+  // Revenue aggregation
+  const revenueByUser = useMemo(() => {
+    const map: Record<string, number> = {};
+    transactions.forEach(t => { map[t.user_id] = (map[t.user_id] || 0) + Number(t.amount); });
+    // Also add reservation price_paid
+    reservations.forEach(r => {
+      if (r.price_paid) map[r.user_id] = (map[r.user_id] || 0) + Number(r.price_paid) * r.party_size;
+    });
+    return map;
+  }, [transactions, reservations]);
+
+  const reservationCountByUser = useMemo(() => {
+    const map: Record<string, number> = {};
+    reservations.forEach(r => { map[r.user_id] = (map[r.user_id] || 0) + 1; });
+    return map;
+  }, [reservations]);
+
+  // Enriched customers
+  const enrichedCustomers: CustomerEnriched[] = useMemo(() => {
+    return customers.map(c => ({
+      ...c,
+      totalRevenue: revenueByUser[c.id] || 0,
+      reservationCount: reservationCountByUser[c.id] || 0,
+      contactCount: contactCounts[c.id] || 0,
+      profileName: profiles[c.id] || null,
+    }));
+  }, [customers, revenueByUser, reservationCountByUser, contactCounts, profiles]);
+
   const toggleCustomerStatus = async (customerId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    const { error } = await supabase
-      .from('customers')
-      .update({ status: newStatus })
-      .eq('id', customerId);
-
+    const { error } = await supabase.from('customers').update({ status: newStatus }).eq('id', customerId);
     if (error) {
-      toast({
-        title: 'Fehler',
-        description: 'Status konnte nicht geändert werden',
-        variant: 'destructive',
-      });
+      toast({ title: 'Fehler', description: 'Status konnte nicht geändert werden', variant: 'destructive' });
     } else {
-      setCustomers(customers.map(c => 
-        c.id === customerId ? { ...c, status: newStatus } : c
-      ));
-      toast({
-        title: 'Erfolg',
-        description: `Kunde wurde ${newStatus === 'active' ? 'aktiviert' : 'gesperrt'}`,
-      });
+      setCustomers(customers.map(c => c.id === customerId ? { ...c, status: newStatus } : c));
+      toast({ title: 'Erfolg', description: `Kunde wurde ${newStatus === 'active' ? 'aktiviert' : 'gesperrt'}` });
+      setConfirmBlockDialog(null);
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer(prev => prev ? { ...prev, status: newStatus } : null);
+      }
     }
   };
 
-  const updateCustomerNotes = async (customerId: string, notes: string) => {
-    const { error } = await supabase
-      .from('customers')
-      .update({ notes })
-      .eq('id', customerId);
-
+  const saveCustomerDetails = async () => {
+    if (!selectedCustomer) return;
+    const { error } = await supabase.from('customers').update({ notes: editNotes, plan: editPlan }).eq('id', selectedCustomer.id);
     if (error) {
-      toast({
-        title: 'Fehler',
-        description: 'Notizen konnten nicht gespeichert werden',
-        variant: 'destructive',
-      });
+      toast({ title: 'Fehler', description: 'Änderungen konnten nicht gespeichert werden', variant: 'destructive' });
     } else {
-      setCustomers(customers.map(c => 
-        c.id === customerId ? { ...c, notes } : c
-      ));
+      setCustomers(customers.map(c => c.id === selectedCustomer.id ? { ...c, notes: editNotes, plan: editPlan } : c));
+      toast({ title: 'Gespeichert', description: 'Kundendetails wurden aktualisiert' });
     }
   };
 
-  const filteredCustomers = customers.filter(customer => {
+  const openCustomerDetail = (customer: CustomerEnriched) => {
+    setSelectedCustomer(customer);
+    setEditNotes(customer.notes || '');
+    setEditPlan(customer.plan);
+    setDetailDialogOpen(true);
+  };
+
+  // Unique categories/plans for filters
+  const uniqueCategories = useMemo(() => [...new Set(customers.map(c => c.category).filter(Boolean))], [customers]);
+  const uniquePlans = useMemo(() => [...new Set(customers.map(c => c.plan))], [customers]);
+
+  const filteredCustomers = enrichedCustomers.filter(customer => {
     const matchesSearch = 
       customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+      (customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (customer.profileName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
     const matchesStatus = statusFilter === 'all' || customer.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesPlan = planFilter === 'all' || customer.plan === planFilter;
+    const matchesCategory = categoryFilter === 'all' || customer.category === categoryFilter;
+    return matchesSearch && matchesStatus && matchesPlan && matchesCategory;
   });
 
-  const getCustomerEmail = (userId: string) => {
-    const customer = customers.find(c => c.id === userId);
-    return customer?.email || userId;
-  };
-
-  const getCustomerCompany = (userId: string) => {
-    const customer = customers.find(c => c.id === userId);
-    return customer?.company_name || '-';
-  };
+  const getCustomerEmail = (userId: string) => customers.find(c => c.id === userId)?.email || userId;
+  const getCustomerCompany = (userId: string) => customers.find(c => c.id === userId)?.company_name || '-';
 
   const formatSubscriptionStatus = (status: string) => {
     const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -270,13 +318,22 @@ const AdminDashboard = () => {
     return statusMap[status] || { label: status, variant: 'outline' as const };
   };
 
-  // Stats
+  // KPI Stats
   const totalCustomers = customers.length;
   const activeCustomers = customers.filter(c => c.status === 'active').length;
+  const suspendedCustomers = customers.filter(c => c.status === 'suspended').length;
   const totalCalls = callLogs.length;
-  const totalReservations = reservations.length;
+  const totalReservationsCount = reservations.length;
   const activeSubscriptions = stripeSubscriptions.filter(s => s.status === 'active' || s.status === 'trialing').length;
   const configuredVoiceAgents = voiceAgentConfigs.filter(v => v.is_active).length;
+  const totalRevenue = Object.values(revenueByUser).reduce((sum, v) => sum + v, 0);
+  const avgRevenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+
+  // Customer detail: last reservations
+  const customerReservations = useMemo(() => {
+    if (!selectedCustomer) return [];
+    return reservations.filter(r => r.user_id === selectedCustomer.id).slice(0, 10);
+  }, [selectedCustomer, reservations]);
 
   if (isLoading || dataLoading) {
     return (
@@ -309,107 +366,234 @@ const AdminDashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
           <Card className="glass-card border-border/50">
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Kunden</p>
+                  <p className="text-xs text-muted-foreground">Kunden</p>
                   <p className="text-2xl font-bold text-foreground">{totalCustomers}</p>
                 </div>
-                <Users className="w-8 h-8 text-primary" />
+                <Users className="w-7 h-7 text-primary" />
               </div>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Aktive Abos</p>
+                  <p className="text-xs text-muted-foreground">Aktive Abos</p>
                   <p className="text-2xl font-bold text-green-500">{activeSubscriptions}</p>
                 </div>
-                <CreditCard className="w-8 h-8 text-green-500" />
+                <CreditCard className="w-7 h-7 text-green-500" />
               </div>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Voice Agents</p>
+                  <p className="text-xs text-muted-foreground">Gesamtumsatz</p>
+                  <p className="text-2xl font-bold text-emerald-500">{totalRevenue.toFixed(0)}€</p>
+                </div>
+                <Euro className="w-7 h-7 text-emerald-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Ø Umsatz</p>
+                  <p className="text-2xl font-bold text-foreground">{avgRevenuePerCustomer.toFixed(0)}€</p>
+                </div>
+                <TrendingUp className="w-7 h-7 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Gesperrt</p>
+                  <p className="text-2xl font-bold text-red-500">{suspendedCustomers}</p>
+                </div>
+                <UserX className="w-7 h-7 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Voice Agents</p>
                   <p className="text-2xl font-bold text-purple-500">{configuredVoiceAgents}</p>
                 </div>
-                <Bot className="w-8 h-8 text-purple-500" />
+                <Bot className="w-7 h-7 text-purple-500" />
               </div>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Anrufe</p>
+                  <p className="text-xs text-muted-foreground">Anrufe</p>
                   <p className="text-2xl font-bold text-foreground">{totalCalls}</p>
                 </div>
-                <Phone className="w-8 h-8 text-blue-500" />
+                <Phone className="w-7 h-7 text-blue-500" />
               </div>
             </CardContent>
           </Card>
           <Card className="glass-card border-border/50">
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Reservierungen</p>
-                  <p className="text-2xl font-bold text-foreground">{totalReservations}</p>
+                  <p className="text-xs text-muted-foreground">Reservierungen</p>
+                  <p className="text-2xl font-bold text-foreground">{totalReservationsCount}</p>
                 </div>
-                <Calendar className="w-8 h-8 text-amber-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="glass-card border-border/50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Aktiv</p>
-                  <p className="text-2xl font-bold text-green-500">{activeCustomers}</p>
-                </div>
-                <Activity className="w-8 h-8 text-green-500" />
+                <Calendar className="w-7 h-7 text-amber-500" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="subscriptions" className="space-y-6">
+        <Tabs defaultValue="customers" className="space-y-6">
           <TabsList className="bg-secondary/50">
-            <TabsTrigger value="subscriptions">Abonnements</TabsTrigger>
-            <TabsTrigger value="voiceagents">Voice Agent Configs</TabsTrigger>
             <TabsTrigger value="customers">Kunden</TabsTrigger>
+            <TabsTrigger value="subscriptions">Abonnements</TabsTrigger>
+            <TabsTrigger value="voiceagents">Voice Agents</TabsTrigger>
             <TabsTrigger value="calls">Anrufe</TabsTrigger>
             <TabsTrigger value="reservations">Reservierungen</TabsTrigger>
           </TabsList>
 
-          {/* Subscriptions Tab */}
+          {/* ===== CUSTOMERS TAB ===== */}
+          <TabsContent value="customers">
+            <Card className="glass-card border-border/50">
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Kundenverwaltung
+                    </CardTitle>
+                    <CardDescription>{filteredCustomers.length} von {totalCustomers} Kunden</CardDescription>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Name, E-Mail, Firma..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-56 bg-secondary/50"
+                      />
+                    </div>
+                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 rounded-md bg-secondary/50 border border-border text-sm">
+                      <option value="all">Alle Status</option>
+                      <option value="active">Aktiv</option>
+                      <option value="suspended">Gesperrt</option>
+                    </select>
+                    <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} className="px-3 py-2 rounded-md bg-secondary/50 border border-border text-sm">
+                      <option value="all">Alle Pläne</option>
+                      {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                    <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="px-3 py-2 rounded-md bg-secondary/50 border border-border text-sm">
+                      <option value="all">Alle Kategorien</option>
+                      {uniqueCategories.map(c => <option key={c} value={c!}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {filteredCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      onClick={() => openCustomerDetail(customer)}
+                      className="p-4 rounded-xl border border-border/50 bg-card/50 hover:bg-card/80 cursor-pointer transition-all hover:shadow-md group"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        {/* Left info */}
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-primary">
+                              {(customer.company_name || customer.email).charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-foreground truncate">
+                                {customer.company_name || customer.profileName || customer.email}
+                              </p>
+                              <Badge variant={customer.status === 'active' ? 'default' : 'destructive'} className="text-[10px] px-1.5 py-0">
+                                {customer.status === 'active' ? 'Aktiv' : 'Gesperrt'}
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{customer.plan}</Badge>
+                              {customer.category && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{customer.category}</Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                              <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{customer.email}</span>
+                              <span>Seit {format(new Date(customer.created_at), 'dd.MM.yyyy', { locale: de })}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right metrics */}
+                        <div className="flex items-center gap-6 text-sm shrink-0">
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">Umsatz</p>
+                            <p className="font-bold text-emerald-500">{customer.totalRevenue.toFixed(0)}€</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">Buchungen</p>
+                            <p className="font-bold text-foreground">{customer.reservationCount}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">Kontakte</p>
+                            <p className="font-bold text-foreground">{customer.contactCount}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); setConfirmBlockDialog(customer); }}
+                          >
+                            {customer.status === 'active' ? (
+                              <Ban className="w-4 h-4 text-red-500" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredCustomers.length === 0 && (
+                    <div className="text-center text-muted-foreground py-12">Keine Kunden gefunden</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ===== SUBSCRIPTIONS TAB ===== */}
           <TabsContent value="subscriptions">
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <CreditCard className="w-5 h-5" />
-                      Stripe Abonnements
-                    </CardTitle>
+                    <CardTitle className="flex items-center gap-2"><CreditCard className="w-5 h-5" />Stripe Abonnements</CardTitle>
                     <CardDescription>Alle aktiven Subscriptions und Setup-Status</CardDescription>
                   </div>
-                  <Button variant="outline" onClick={fetchStripeSubscriptions} disabled={subscriptionsLoading}>
-                    Aktualisieren
-                  </Button>
+                  <Button variant="outline" onClick={fetchStripeSubscriptions} disabled={subscriptionsLoading}>Aktualisieren</Button>
                 </div>
               </CardHeader>
               <CardContent>
                 {subscriptionsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                  </div>
+                  <div className="flex items-center justify-center py-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -426,24 +610,19 @@ const AdminDashboard = () => {
                     <TableBody>
                       {stripeSubscriptions.map((sub) => {
                         const status = formatSubscriptionStatus(sub.status);
-                        
-                        // Safe date parsing with validation
                         const parseTimestamp = (ts: number | null | undefined) => {
                           if (!ts || ts <= 0) return null;
                           const date = new Date(ts * 1000);
                           return isNaN(date.getTime()) ? null : date;
                         };
-                        
                         const parseISODate = (isoString: string | null | undefined) => {
                           if (!isoString) return null;
                           const date = new Date(isoString);
                           return isNaN(date.getTime()) ? null : date;
                         };
-                        
                         const trialEnd = parseTimestamp(sub.trial_end);
                         const periodEnd = parseTimestamp(sub.current_period_end);
                         const minContractEnd = parseISODate(sub.metadata?.min_contract_end);
-                        
                         return (
                           <TableRow key={sub.id}>
                             <TableCell>
@@ -452,54 +631,21 @@ const AdminDashboard = () => {
                                 <p className="text-xs text-muted-foreground">{sub.id}</p>
                               </div>
                             </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {sub.metadata?.tier_name || 'Voice Agent Pro'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={status.variant}>{status.label}</Badge>
-                            </TableCell>
+                            <TableCell><Badge variant="outline">{sub.metadata?.tier_name || 'Voice Agent Pro'}</Badge></TableCell>
+                            <TableCell><Badge variant={status.variant}>{status.label}</Badge></TableCell>
                             <TableCell>
                               {sub.metadata?.setup_paid === 'true' ? (
-                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Bezahlt
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">Ausstehend</Badge>
-                              )}
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30"><CheckCircle className="w-3 h-3 mr-1" />Bezahlt</Badge>
+                              ) : (<Badge variant="outline">Ausstehend</Badge>)}
                             </TableCell>
-                            <TableCell>
-                              {trialEnd ? (
-                                <span className="text-sm">
-                                  {format(trialEnd, 'dd.MM.yyyy', { locale: de })}
-                                </span>
-                              ) : (
-                                '-'
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {periodEnd ? format(periodEnd, 'dd.MM.yyyy', { locale: de }) : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {minContractEnd ? (
-                                <span className="text-sm">
-                                  {format(minContractEnd, 'dd.MM.yyyy', { locale: de })}
-                                </span>
-                              ) : (
-                                '-'
-                              )}
-                            </TableCell>
+                            <TableCell>{trialEnd ? format(trialEnd, 'dd.MM.yyyy', { locale: de }) : '-'}</TableCell>
+                            <TableCell>{periodEnd ? format(periodEnd, 'dd.MM.yyyy', { locale: de }) : '-'}</TableCell>
+                            <TableCell>{minContractEnd ? format(minContractEnd, 'dd.MM.yyyy', { locale: de }) : '-'}</TableCell>
                           </TableRow>
                         );
                       })}
                       {stripeSubscriptions.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                            Keine Abonnements gefunden
-                          </TableCell>
-                        </TableRow>
+                        <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Keine Abonnements gefunden</TableCell></TableRow>
                       )}
                     </TableBody>
                   </Table>
@@ -508,14 +654,11 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Voice Agent Configs Tab */}
+          {/* ===== VOICE AGENTS TAB ===== */}
           <TabsContent value="voiceagents">
             <Card className="glass-card border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="w-5 h-5" />
-                  Voice Agent Konfigurationen
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2"><Bot className="w-5 h-5" />Voice Agent Konfigurationen</CardTitle>
                 <CardDescription>Alle Kunden Voice Agent Einstellungen</CardDescription>
               </CardHeader>
               <CardContent>
@@ -542,58 +685,18 @@ const AdminDashboard = () => {
                             <p className="text-xs text-muted-foreground">{getCustomerCompany(config.user_id)}</p>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-muted-foreground" />
-                            {config.business_name || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{config.industry || '-'}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {config.phone_number ? (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-sm">{config.phone_number}</span>
-                            </div>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {config.website_url ? (
-                            <a 
-                              href={config.website_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-primary hover:underline text-sm"
-                            >
-                              <Globe className="w-3 h-3" />
-                              Öffnen
-                            </a>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{config.language?.toUpperCase() || 'DE'}</Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {config.voice || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={config.is_active ? 'default' : 'secondary'} className={config.is_active ? 'bg-green-500' : ''}>
-                            {config.is_active ? 'Aktiv' : 'Inaktiv'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {format(new Date(config.updated_at), 'dd.MM.yyyy HH:mm', { locale: de })}
-                        </TableCell>
+                        <TableCell><div className="flex items-center gap-2"><Building2 className="w-4 h-4 text-muted-foreground" />{config.business_name || '-'}</div></TableCell>
+                        <TableCell><Badge variant="outline">{config.industry || '-'}</Badge></TableCell>
+                        <TableCell>{config.phone_number ? <div className="flex items-center gap-1"><Phone className="w-3 h-3 text-muted-foreground" /><span className="text-sm">{config.phone_number}</span></div> : '-'}</TableCell>
+                        <TableCell>{config.website_url ? <a href={config.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline text-sm"><Globe className="w-3 h-3" />Öffnen</a> : '-'}</TableCell>
+                        <TableCell><Badge variant="secondary">{config.language?.toUpperCase() || 'DE'}</Badge></TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{config.voice || '-'}</TableCell>
+                        <TableCell><Badge variant={config.is_active ? 'default' : 'secondary'} className={config.is_active ? 'bg-green-500' : ''}>{config.is_active ? 'Aktiv' : 'Inaktiv'}</Badge></TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{format(new Date(config.updated_at), 'dd.MM.yyyy HH:mm', { locale: de })}</TableCell>
                       </TableRow>
                     ))}
                     {voiceAgentConfigs.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                          Keine Voice Agent Konfigurationen vorhanden
-                        </TableCell>
-                      </TableRow>
+                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Keine Voice Agent Konfigurationen vorhanden</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -601,136 +704,7 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="customers">
-            <Card className="glass-card border-border/50">
-              <CardHeader>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <CardTitle>Kundenverwaltung</CardTitle>
-                    <CardDescription>Alle registrierten Kunden</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Suchen..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64 bg-secondary/50"
-                      />
-                    </div>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-3 py-2 rounded-md bg-secondary/50 border border-border text-sm"
-                    >
-                      <option value="all">Alle Status</option>
-                      <option value="active">Aktiv</option>
-                      <option value="suspended">Gesperrt</option>
-                    </select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>E-Mail</TableHead>
-                      <TableHead>Firma</TableHead>
-                      <TableHead>API-Key</TableHead>
-                      <TableHead>Webhook-URL</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Aktionen</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell className="font-medium">{customer.email}</TableCell>
-                        <TableCell>{customer.company_name || '-'}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <code className="text-xs bg-muted px-2 py-1 rounded max-w-[140px] truncate">
-                              {visibleApiKeys.has(customer.id) 
-                                ? customer.api_key 
-                                : '••••••••••••'}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => toggleApiKeyVisibility(customer.id)}
-                            >
-                              {visibleApiKeys.has(customer.id) ? (
-                                <EyeOff className="w-3 h-3" />
-                              ) : (
-                                <Eye className="w-3 h-3" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => copyToClipboard(customer.api_key, 'API-Key')}
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <code className="text-xs bg-muted px-2 py-1 rounded max-w-[180px] truncate">
-                              {webhookBaseUrl}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => copyToClipboard(webhookBaseUrl, 'Webhook-URL')}
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={customer.plan === 'enterprise' ? 'default' : 'secondary'}>
-                            {customer.plan}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={customer.status === 'active' ? 'default' : 'destructive'}>
-                            {customer.status === 'active' ? 'Aktiv' : 'Gesperrt'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleCustomerStatus(customer.id, customer.status)}
-                          >
-                            {customer.status === 'active' ? (
-                              <Ban className="w-4 h-4 text-red-500" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                            )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredCustomers.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          Keine Kunden gefunden
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
+          {/* ===== CALLS TAB ===== */}
           <TabsContent value="calls">
             <Card className="glass-card border-border/50">
               <CardHeader>
@@ -752,24 +726,14 @@ const AdminDashboard = () => {
                     {callLogs.map((call) => (
                       <TableRow key={call.id}>
                         <TableCell>{call.caller_phone || '-'}</TableCell>
-                        <TableCell>
-                          <Badge variant={call.call_status === 'completed' ? 'default' : 'secondary'}>
-                            {call.call_status}
-                          </Badge>
-                        </TableCell>
+                        <TableCell><Badge variant={call.call_status === 'completed' ? 'default' : 'secondary'}>{call.call_status}</Badge></TableCell>
                         <TableCell>{call.call_duration ? `${call.call_duration}s` : '-'}</TableCell>
                         <TableCell>{call.call_outcome || '-'}</TableCell>
-                        <TableCell>
-                          {format(new Date(call.started_at), 'dd.MM.yyyy HH:mm', { locale: de })}
-                        </TableCell>
+                        <TableCell>{format(new Date(call.started_at), 'dd.MM.yyyy HH:mm', { locale: de })}</TableCell>
                       </TableRow>
                     ))}
                     {callLogs.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          Keine Anrufe vorhanden
-                        </TableCell>
-                      </TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Keine Anrufe vorhanden</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -777,45 +741,42 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* ===== RESERVATIONS TAB ===== */}
           <TabsContent value="reservations">
             <Card className="glass-card border-border/50">
               <CardHeader>
                 <CardTitle>Reservierungen</CardTitle>
-                <CardDescription>Letzte 100 Reservierungen aller Kunden</CardDescription>
+                <CardDescription>Letzte 500 Reservierungen aller Kunden</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Salon</TableHead>
                       <TableHead>Kunde</TableHead>
                       <TableHead>Datum</TableHead>
                       <TableHead>Uhrzeit</TableHead>
                       <TableHead>Personen</TableHead>
+                      <TableHead>Umsatz</TableHead>
+                      <TableHead>Quelle</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {reservations.map((res) => (
                       <TableRow key={res.id}>
+                        <TableCell className="text-xs text-muted-foreground">{getCustomerCompany(res.user_id)}</TableCell>
                         <TableCell className="font-medium">{res.customer_name}</TableCell>
-                        <TableCell>
-                          {format(new Date(res.reservation_date), 'dd.MM.yyyy', { locale: de })}
-                        </TableCell>
+                        <TableCell>{format(new Date(res.reservation_date), 'dd.MM.yyyy', { locale: de })}</TableCell>
                         <TableCell>{res.reservation_time}</TableCell>
                         <TableCell>{res.party_size}</TableCell>
-                        <TableCell>
-                          <Badge variant={res.status === 'confirmed' ? 'default' : 'secondary'}>
-                            {res.status}
-                          </Badge>
-                        </TableCell>
+                        <TableCell>{res.price_paid ? `${(Number(res.price_paid) * res.party_size).toFixed(2)}€` : '-'}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-[10px]">{res.source}</Badge></TableCell>
+                        <TableCell><Badge variant={res.status === 'confirmed' ? 'default' : 'secondary'}>{res.status}</Badge></TableCell>
                       </TableRow>
                     ))}
                     {reservations.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          Keine Reservierungen vorhanden
-                        </TableCell>
-                      </TableRow>
+                      <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Keine Reservierungen vorhanden</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -824,6 +785,159 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* ===== CUSTOMER DETAIL DIALOG ===== */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedCustomer && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="font-bold text-primary">
+                      {(selectedCustomer.company_name || selectedCustomer.email).charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <span>{selectedCustomer.company_name || selectedCustomer.profileName || selectedCustomer.email}</span>
+                    <p className="text-sm font-normal text-muted-foreground">{selectedCustomer.email}</p>
+                  </div>
+                </DialogTitle>
+                <DialogDescription>
+                  Registriert am {format(new Date(selectedCustomer.created_at), 'dd.MM.yyyy', { locale: de })}
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Kategorie</p>
+                    <p className="text-sm font-medium">{selectedCustomer.category || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Telefon</p>
+                    <p className="text-sm font-medium">{selectedCustomer.phone || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Adresse</p>
+                    <p className="text-sm font-medium">
+                      {selectedCustomer.address ? `${selectedCustomer.address}, ${selectedCustomer.postal_code || ''} ${selectedCustomer.city || ''}` : '-'}
+                    </p>
+                  </div>
+                  {selectedCustomer.website_url && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Website</p>
+                      <a href={selectedCustomer.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" />{selectedCustomer.website_url}
+                      </a>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                    <p className="text-xs text-muted-foreground">Gesamtumsatz</p>
+                    <p className="text-2xl font-bold text-emerald-500">{selectedCustomer.totalRevenue.toFixed(2)}€</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1 p-3 rounded-lg bg-secondary/50">
+                      <p className="text-xs text-muted-foreground">Buchungen</p>
+                      <p className="text-lg font-bold">{selectedCustomer.reservationCount}</p>
+                    </div>
+                    <div className="flex-1 p-3 rounded-lg bg-secondary/50">
+                      <p className="text-xs text-muted-foreground">Kontakte</p>
+                      <p className="text-lg font-bold">{selectedCustomer.contactCount}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              {selectedCustomer.description && (
+                <div className="mt-4">
+                  <p className="text-xs text-muted-foreground mb-1">Beschreibung</p>
+                  <p className="text-sm text-foreground/80">{selectedCustomer.description}</p>
+                </div>
+              )}
+
+              {/* Last Reservations */}
+              {customerReservations.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-xs text-muted-foreground mb-2">Letzte Reservierungen</p>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {customerReservations.map(r => (
+                      <div key={r.id} className="flex items-center justify-between text-sm p-2 rounded bg-secondary/30">
+                        <span>{r.customer_name}</span>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{format(new Date(r.reservation_date), 'dd.MM.', { locale: de })} {r.reservation_time}</span>
+                          {r.price_paid && <span className="text-emerald-500 font-medium">{(Number(r.price_paid) * r.party_size).toFixed(2)}€</span>}
+                          <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Section */}
+              <div className="mt-4 space-y-3 border-t border-border/50 pt-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Plan</p>
+                  <select
+                    value={editPlan}
+                    onChange={(e) => setEditPlan(e.target.value)}
+                    className="w-full px-3 py-2 rounded-md bg-secondary/50 border border-border text-sm"
+                  >
+                    <option value="starter">Starter</option>
+                    <option value="professional">Professional</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Notizen</p>
+                  <Textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} rows={3} className="bg-secondary/50" />
+                </div>
+              </div>
+
+              <DialogFooter className="mt-4 gap-2">
+                <Button
+                  variant={selectedCustomer.status === 'active' ? 'destructive' : 'default'}
+                  onClick={() => setConfirmBlockDialog(selectedCustomer)}
+                  className="gap-2"
+                >
+                  {selectedCustomer.status === 'active' ? <><Ban className="w-4 h-4" />Sperren</> : <><CheckCircle className="w-4 h-4" />Aktivieren</>}
+                </Button>
+                <Button onClick={saveCustomerDetails}>Speichern</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== CONFIRM BLOCK DIALOG ===== */}
+      <Dialog open={!!confirmBlockDialog} onOpenChange={() => setConfirmBlockDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmBlockDialog?.status === 'active' ? 'Kunde sperren?' : 'Kunde aktivieren?'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmBlockDialog?.status === 'active'
+                ? `Möchten Sie "${confirmBlockDialog.company_name || confirmBlockDialog.email}" wirklich sperren? Der Kunde kann sich nicht mehr anmelden.`
+                : `Möchten Sie "${confirmBlockDialog?.company_name || confirmBlockDialog?.email}" wieder aktivieren?`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setConfirmBlockDialog(null)}>Abbrechen</Button>
+            <Button
+              variant={confirmBlockDialog?.status === 'active' ? 'destructive' : 'default'}
+              onClick={() => confirmBlockDialog && toggleCustomerStatus(confirmBlockDialog.id, confirmBlockDialog.status)}
+            >
+              {confirmBlockDialog?.status === 'active' ? 'Sperren' : 'Aktivieren'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
