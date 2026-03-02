@@ -71,6 +71,7 @@ const StaffCalendarView: React.FC<Props> = ({
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [calendarMode, setCalendarMode] = useState<'calendar' | 'availability'>('calendar');
   const [rowHeight, setRowHeight] = useState(80);
+  const [columnWidth, setColumnWidth] = useState(160);
   const [timeInterval, setTimeInterval] = useState<TimeInterval>(30);
   const [formOpen, setFormOpen] = useState(false);
   const [formInitial, setFormInitial] = useState<any>(null);
@@ -344,9 +345,10 @@ const StaffCalendarView: React.FC<Props> = ({
     return (
       <div
         key={`${staffId || 'unassigned'}-${ds}`}
-        className={`flex-1 relative border-r border-border last:border-r-0 min-w-[140px] transition-colors ${
+        className={`relative border-r border-border last:border-r-0 transition-colors ${
           dragOverStaff === (staffId || '__unassigned') ? 'bg-primary/5' : ''
         }`}
+        style={{ width: columnWidth, minWidth: columnWidth }}
         onDrop={e => handleDrop(e, staffId || '')}
         onDragOver={e => handleDragOver(e, staffId || '__unassigned')}
         onDragLeave={handleDragLeave}
@@ -524,6 +526,21 @@ const StaffCalendarView: React.FC<Props> = ({
                       </div>
                     </div>
                   </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="zen-label">Spaltenbreite</label>
+                      <span className="text-xs font-black text-primary">{columnWidth}px</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setColumnWidth(Math.max(80, columnWidth - 10))} className="p-1.5 bg-muted rounded-lg">
+                        <Minus className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                      <Slider value={[columnWidth]} onValueChange={v => setColumnWidth(v[0])} min={80} max={300} step={10} className="flex-1" />
+                      <button onClick={() => setColumnWidth(Math.min(300, columnWidth + 10))} className="p-1.5 bg-muted rounded-lg">
+                        <Plus className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                  </div>
                 </PopoverContent>
               </Popover>
 
@@ -587,14 +604,14 @@ const StaffCalendarView: React.FC<Props> = ({
             {viewMode === 'day' ? (
               <>
                 {/* Unassigned column */}
-                <div className="min-w-[140px] flex-1 px-3 flex items-center gap-2 border-r border-border bg-muted/30">
+                <div className="px-3 flex items-center gap-2 border-r border-border bg-muted/30" style={{ width: columnWidth, minWidth: columnWidth }}>
                   <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                   <span className="text-xs font-bold text-muted-foreground truncate">Offen</span>
                 </div>
                 {activeStaff.map(staff => (
-                  <div key={staff.id} className="min-w-[140px] flex-1 px-3 flex items-center gap-2 border-r border-border last:border-r-0 bg-card">
+                  <div key={staff.id} className="px-3 flex items-center gap-2 border-r border-border last:border-r-0 bg-card" style={{ width: columnWidth, minWidth: columnWidth }}>
                     <div className="w-7 h-7 rounded-lg overflow-hidden border border-border shrink-0"
                       style={{ backgroundColor: `${staff.color}20` }}>
                       {staff.avatar_url ? (
@@ -627,7 +644,7 @@ const StaffCalendarView: React.FC<Props> = ({
           </div>
 
           {/* Scrollable Grid */}
-          <div className="flex-1 overflow-auto no-scrollbar">
+          <div className="flex-1">
             <div className="flex min-w-max" style={{ minHeight: `${totalHeight}px` }}>
               {/* Time column */}
               <div className="w-16 border-r border-border bg-card shrink-0 sticky left-0 z-20">
