@@ -293,8 +293,8 @@ const ZenBookApp: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden p-4 gap-6 relative">
       {/* 3D Floating Sidebar */}
-      <aside className={`fixed lg:relative h-[calc(100vh-2rem)] z-50 flex flex-col gap-0 shrink-0 floating-3d rounded-2xl p-2 pt-1 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0 lg:p-3 overflow-hidden'}`}>
-        <div className={`flex items-center gap-3 mb-0 transition-opacity duration-300 ${!isSidebarOpen && 'lg:opacity-0'}`}>
+      <aside className={`fixed lg:relative h-[calc(100vh-2rem)] z-50 flex flex-col gap-0 shrink-0 floating-3d rounded-2xl px-2 py-0 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0 lg:p-3 overflow-hidden'}`}>
+        <div className={`flex items-center gap-3 -mb-2 transition-opacity duration-300 ${!isSidebarOpen && 'lg:opacity-0'}`}>
           <Logo onClick={() => { handleLogout(); setUserRole(null); }} showText={isSidebarOpen} />
         </div>
 
