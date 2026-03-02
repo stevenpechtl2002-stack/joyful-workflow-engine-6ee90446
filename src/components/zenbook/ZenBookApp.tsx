@@ -23,7 +23,8 @@ import {
   AlertTriangle,
   ShoppingBag,
   Receipt,
-  Euro
+  Euro,
+  Store
 } from 'lucide-react';
 import { 
   format, 
@@ -59,6 +60,7 @@ import Logo from '@/components/zenbook/Logo';
 import ConnectProducts from '@/components/zenbook/ConnectProducts';
 import KassenbuchView from '@/components/zenbook/KassenbuchView';
 import ZBonView from '@/components/zenbook/ZBonView';
+import SalonProfilePage from '@/pages/portal/SalonProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
@@ -79,6 +81,7 @@ const navItems = [
   { id: 'zbon', label: 'Z-Bon', icon: <Euro className="w-5 h-5" /> },
   { id: 'insights', label: 'KI Insights', icon: <PieChart className="w-5 h-5" /> },
   { id: 'api', label: 'API', icon: <Key className="w-5 h-5" /> },
+  { id: 'salon-profile', label: 'Profil', icon: <Store className="w-5 h-5" /> },
   { id: 'settings', label: 'Einstellungen', icon: <SettingsIcon className="w-5 h-5" /> },
 ];
 
@@ -461,6 +464,7 @@ const ZenBookApp: React.FC = () => {
           {currentView === 'connect-products' && <ConnectProducts />}
           {currentView === 'kassenbuch' && <KassenbuchView />}
           {currentView === 'zbon' && <ZBonView />}
+          {currentView === 'salon-profile' && <SalonProfilePage />}
           {currentView === 'settings' && <SettingsComponent onSimulateIncoming={handleIncomingWebhook} />}
         </div>
       </main>
