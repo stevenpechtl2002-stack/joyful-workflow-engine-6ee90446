@@ -11,10 +11,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { salon_id, date, staff_member_id, duration } = await req.json();
+    const { salon_id, slug, date, staff_member_id, duration } = await req.json();
     
-    if (!salon_id) {
-      return new Response(JSON.stringify({ error: "salon_id required" }), {
+    if (!salon_id && !slug) {
+      return new Response(JSON.stringify({ error: "salon_id or slug required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -24,18 +24,26 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Fetch salon info (including description and category)
-    const { data: salon } = await supabase
+    // Fetch salon info by id or slug
+    let salonQuery = supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url")
-      .eq("id", salon_id)
-      .single();
+      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, slug");
+    
+    if (salon_id) {
+      salonQuery = salonQuery.eq("id", salon_id);
+    } else {
+      salonQuery = salonQuery.eq("slug", slug);
+    }
+
+    const { data: salon } = await salonQuery.single();
 
     if (!salon) {
       return new Response(JSON.stringify({ error: "Salon not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const resolvedSalonId = salon.id;
 
     // Fetch products, staff, reviews, images, and all shifts (for opening hours) in parallel
     const [
@@ -45,11 +53,11 @@ Deno.serve(async (req) => {
       { data: images },
       { data: allShifts },
     ] = await Promise.all([
-      supabase.from("products").select("*").eq("user_id", salon_id).eq("is_active", true).order("sort_order"),
-      supabase.from("staff_members").select("*").eq("user_id", salon_id).eq("is_active", true).order("sort_order"),
-      supabase.from("salon_reviews").select("*").eq("salon_user_id", salon_id).order("created_at", { ascending: false }),
-      supabase.from("salon_images").select("*").eq("salon_user_id", salon_id).order("sort_order"),
-      supabase.from("staff_shifts").select("day_of_week, start_time, end_time, is_working").eq("user_id", salon_id),
+      supabase.from("products").select("*").eq("user_id", resolvedSalonId).eq("is_active", true).order("sort_order"),
+      supabase.from("staff_members").select("*").eq("user_id", resolvedSalonId).eq("is_active", true).order("sort_order"),
+      supabase.from("salon_reviews").select("*").eq("salon_user_id", resolvedSalonId).order("created_at", { ascending: false }),
+      supabase.from("salon_images").select("*").eq("salon_user_id", resolvedSalonId).order("sort_order"),
+      supabase.from("staff_shifts").select("day_of_week, start_time, end_time, is_working").eq("user_id", resolvedSalonId),
     ]);
 
     // Derive opening hours from staff shifts (earliest start, latest end per day)
@@ -79,7 +87,7 @@ Deno.serve(async (req) => {
       let resQuery = supabase
         .from("reservations")
         .select("reservation_time, end_time, staff_member_id")
-        .eq("user_id", salon_id)
+        .eq("user_id", resolvedSalonId)
         .eq("reservation_date", date)
         .neq("status", "cancelled");
       
@@ -92,7 +100,7 @@ Deno.serve(async (req) => {
       let excQuery = supabase
         .from("shift_exceptions")
         .select("staff_member_id, start_time, end_time")
-        .eq("user_id", salon_id)
+        .eq("user_id", resolvedSalonId)
         .eq("exception_date", date);
 
       if (staff_member_id) {
@@ -105,7 +113,7 @@ Deno.serve(async (req) => {
       let shiftQuery = supabase
         .from("staff_shifts")
         .select("staff_member_id, start_time, end_time, is_working")
-        .eq("user_id", salon_id)
+        .eq("user_id", resolvedSalonId)
         .eq("day_of_week", dayOfWeek);
 
       if (staff_member_id) {
@@ -145,6 +153,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       salon: {
         id: salon.id,
+        slug: salon.slug,
         name: salon.company_name || 'Salon',
         city: salon.city,
         address: salon.address,

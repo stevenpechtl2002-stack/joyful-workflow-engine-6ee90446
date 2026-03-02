@@ -107,10 +107,21 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
       .eq('id', user.id);
   };
 
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   const nextStep = async () => {
     const next = Math.min(step + 1, 5);
     // Save address data when leaving step 1
     if (step === 1 && user) {
+      const slug = generateSlug(formData.name || '');
       await supabase
         .from('customers')
         .update({
@@ -119,6 +130,7 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
           city: formData.city || undefined,
           postal_code: formData.postalCode || undefined,
           category: formData.category || 'Friseur',
+          slug: slug || undefined,
         } as any)
         .eq('id', user.id);
     }
@@ -246,6 +258,7 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
       }
 
       // Save company info + address + set published
+      const slug = generateSlug(formData.name || '');
       const { error: publishError } = await supabase
         .from('customers')
         .update({ 
@@ -256,6 +269,7 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
           city: formData.city || undefined,
           postal_code: formData.postalCode || undefined,
           category: formData.category || 'Friseur',
+          slug: slug || undefined,
         } as any)
         .eq('id', user.id);
       if (publishError) throw publishError;

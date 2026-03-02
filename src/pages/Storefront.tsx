@@ -10,6 +10,7 @@ import { de } from 'date-fns/locale';
 interface Salon {
   id: string;
   name: string;
+  slug: string | null;
   city: string | null;
   address: string | null;
   postal_code: string | null;
@@ -217,7 +218,7 @@ const Storefront: React.FC = () => {
                     return (
                       <div
                         key={d.id}
-                        onClick={() => salon && navigate(`/storefront/${salon.id}`)}
+                        onClick={() => salon && navigate(`/storefront/${salon.slug || salon.id}`)}
                         className="zen-card cursor-pointer group border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background hover:border-primary/40 transition-all"
                       >
                         <div className="flex items-center gap-3 mb-2">
@@ -248,7 +249,7 @@ const Storefront: React.FC = () => {
             {filtered.map(salon => (
               <div
                 key={salon.id}
-                onClick={() => navigate(`/storefront/${salon.id}`)}
+                onClick={() => navigate(`/storefront/${salon.slug || salon.id}`)}
                 className="zen-card card-3d cursor-pointer group relative overflow-hidden"
               >
                 {/* Cover image */}

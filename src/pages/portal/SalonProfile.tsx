@@ -72,9 +72,20 @@ const SalonProfile = () => {
     load();
   }, [user?.id]);
 
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   const handleSave = async () => {
     if (!user?.id) return;
     setSaving(true);
+    const slug = generateSlug(formData.company_name || '');
     const { error } = await supabase
       .from('customers')
       .update({
@@ -90,6 +101,7 @@ const SalonProfile = () => {
         facebook_url: formData.facebook_url || null,
         logo_url: formData.logo_url || null,
         cover_image_url: formData.cover_image_url || null,
+        slug: slug || null,
       } as any)
       .eq('id', user.id);
     setSaving(false);
@@ -167,7 +179,7 @@ const SalonProfile = () => {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href={`/storefront/${user?.id}`}
+              href={`/storefront/${generateSlug(formData.company_name) || user?.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-muted text-muted-foreground font-bold text-sm hover:bg-muted/80 transition-colors"

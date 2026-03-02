@@ -323,6 +323,7 @@ export type Database = {
           postal_code: string | null
           published: boolean
           sales_rep_id: string | null
+          slug: string | null
           status: string
           stripe_account_id: string | null
           updated_at: string
@@ -349,6 +350,7 @@ export type Database = {
           postal_code?: string | null
           published?: boolean
           sales_rep_id?: string | null
+          slug?: string | null
           status?: string
           stripe_account_id?: string | null
           updated_at?: string
@@ -375,6 +377,7 @@ export type Database = {
           postal_code?: string | null
           published?: boolean
           sales_rep_id?: string | null
+          slug?: string | null
           status?: string
           stripe_account_id?: string | null
           updated_at?: string
