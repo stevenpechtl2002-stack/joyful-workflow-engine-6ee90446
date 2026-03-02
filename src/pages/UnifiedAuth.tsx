@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, ArrowRight, ArrowLeft, Building2, Heart, Phone } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ArrowLeft, Building2, Heart, Phone, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
@@ -137,6 +137,23 @@ const UnifiedAuth = () => {
     );
   }
 
+  // Show loading screen while auth state is being determined or redirecting
+  if (isLoading || (user && hasRedirected.current)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-hero" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 flex flex-col items-center gap-4"
+        >
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-muted-foreground font-medium">Wird geladen…</p>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Mode selection screen
   if (!mode) {
     return (
@@ -256,8 +273,17 @@ const UnifiedAuth = () => {
                     </div>
                   </div>
                   <Button type="submit" variant="hero" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Anmelden...' : 'Anmelden'}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Anmelden…
+                      </>
+                    ) : (
+                      <>
+                        Anmelden
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
                   </Button>
                   {!isBusiness && (
                     <>
@@ -375,8 +401,17 @@ const UnifiedAuth = () => {
                     </div>
                   </div>
                   <Button type="submit" variant="hero" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Registrieren...' : 'Account erstellen'}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Registrieren…
+                      </>
+                    ) : (
+                      <>
+                        Account erstellen
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
                   </Button>
                   {!isBusiness && (
                     <>
