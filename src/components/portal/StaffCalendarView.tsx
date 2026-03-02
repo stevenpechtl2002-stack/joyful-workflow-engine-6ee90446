@@ -415,7 +415,7 @@ export const StaffCalendarView = () => {
 
       {/* Unassigned column */}
       <div className="flex-shrink-0 border-r border-border-subtle bg-muted/30" style={{ width: columnWidth }}>
-        <div className="h-12 border-b border-border-subtle flex items-center justify-center sticky top-0 z-10 bg-muted/30">
+        <div className="h-12 border-b border-border-subtle flex items-center justify-center sticky top-0 z-10 bg-card">
           <span className="text-xs font-medium text-muted-foreground">Nicht zugewiesen</span>
         </div>
         <div
@@ -674,18 +674,18 @@ export const StaffCalendarView = () => {
       <div className="relative" style={{ width: isFullscreen ? '100%' : (containerWidth || '100%'), maxWidth: '100vw' }}>
         {/* Resize handle top-left corner - outside scrollable area */}
         <div
-          className="absolute top-0 left-0 z-50 w-6 h-6 cursor-nwse-resize flex items-center justify-center bg-card border border-border rounded-br-md hover:bg-muted transition-colors"
+          className="absolute top-0 left-0 z-[60] w-8 h-8 cursor-nwse-resize flex items-center justify-center bg-background border border-border rounded-br-lg shadow-md hover:bg-muted transition-colors pointer-events-auto"
           onMouseDown={handleContainerResizeStart}
           title="Größe ändern"
         >
-          <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+          <Plus className="w-4 h-4 text-primary" />
         </div>
 
         {/* Fullscreen toggle top-right corner */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-0 right-0 z-50 w-7 h-7 rounded-bl-md rounded-tr-lg border border-border bg-card hover:bg-muted"
+          className="absolute top-0 right-0 z-[60] w-8 h-8 rounded-bl-lg rounded-tr-lg border border-border bg-background shadow-md hover:bg-muted pointer-events-auto"
           onClick={() => {
             if (isFullscreen) {
               setContainerWidth(savedSize.current.width);
@@ -700,19 +700,19 @@ export const StaffCalendarView = () => {
           }}
           title={isFullscreen ? 'Verkleinern' : 'Vollbild'}
         >
-          {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-muted-foreground" /> : <Maximize2 className="w-3.5 h-3.5 text-muted-foreground" />}
+          {isFullscreen ? <Minimize2 className="w-4 h-4 text-primary" /> : <Maximize2 className="w-4 h-4 text-primary" />}
         </Button>
 
-        <Card 
+        <div 
           ref={containerRef}
-          className="overflow-auto"
+          className="overflow-auto rounded-lg border bg-card text-card-foreground shadow-sm"
           style={{ 
             height: isFullscreen ? (window.innerHeight - 200) : containerHeight,
             maxHeight: '100vh',
           }}
         >
           {viewMode === 'day' ? renderDayView() : renderWeekView()}
-        </Card>
+        </div>
       </div>
 
       {/* New reservation dialog */}
