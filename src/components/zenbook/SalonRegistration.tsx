@@ -75,14 +75,16 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
 
   // Load saved onboarding step
   useEffect(() => {
+    let cancelled = false;
     const loadStep = async () => {
-      if (!user) { setLoadingStep(false); return; }
+      if (!user) { if (!cancelled) setLoadingStep(false); return; }
       try {
         const { data } = await supabase
           .from('customers')
           .select('onboarding_step, published')
           .eq('id', user.id)
           .single();
+        if (cancelled) return;
         if (data?.onboarding_step && data.onboarding_step > 1) {
           setStep(data.onboarding_step);
         }
@@ -93,9 +95,10 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
       } catch (e) {
         console.error('Error loading onboarding step:', e);
       }
-      setLoadingStep(false);
+      if (!cancelled) setLoadingStep(false);
     };
     loadStep();
+    return () => { cancelled = true; };
   }, [user]);
 
   // Save step progress
@@ -279,7 +282,11 @@ const SalonRegistration: React.FC<Props> = ({ onComplete, onCancel }) => {
       toast.success('🎉 Dein Profil ist jetzt live!');
       setTimeout(() => {
         setShowConfetti(false);
-        onComplete();
+        try {
+          onComplete();
+        } catch (e) {
+          console.error('Error completing onboarding:', e);
+        }
       }, 3000);
     } catch (error) {
       console.error('Error publishing:', error);
