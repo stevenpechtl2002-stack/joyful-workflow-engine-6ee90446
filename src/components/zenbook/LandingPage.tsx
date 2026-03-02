@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserRole } from '@/types';
 import {
   Search, MapPin, Calendar, ArrowRight, ChevronDown, Moon, Star, Clock,
@@ -37,6 +38,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
   { icon: <UserCircle className="w-5 h-5" />, label: 'Männer' },
   { icon: <Percent className="w-5 h-5" />, label: 'Sale %' }];
 
+  const navigate = useNavigate();
 
   const treatmentCategories = [
   { icon: <Scissors className="w-8 h-8" />, label: 'Friseur', count: 'Neu', color: 'from-primary/20 to-primary/5' },
@@ -134,7 +136,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
               key={cat.label}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${cat.label === 'Sale %' ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/30' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
               whileHover={{ y: -3, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' }}
-              whileTap={{ scale: 0.95 }}>
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { if (cat.label === 'Sale %') navigate('/storefront?filter=sale'); }}>
 
                 {cat.icon}
                 {cat.label}

@@ -3,7 +3,7 @@ import { Search, MapPin, Store, Heart, User, Loader2, Sparkles, Star, Camera, Pe
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Logo from '@/components/zenbook/Logo';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -43,6 +43,8 @@ const Storefront: React.FC = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const saleFilter = searchParams.get('filter') === 'sale';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,7 +98,9 @@ const Storefront: React.FC = () => {
   const cities = [...new Set(salons.map(s => s.city).filter(Boolean))] as string[];
 
   // Filter salons
+  const salonIdsWithDiscounts = new Set(discounts.map(d => d.user_id));
   const filtered = salons.filter(s => {
+    if (saleFilter && !salonIdsWithDiscounts.has(s.id)) return false;
     if (cityFilter && s.city !== cityFilter) return false;
     if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
@@ -123,8 +127,16 @@ const Storefront: React.FC = () => {
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-primary/20 via-background to-pink-500/10 py-16 text-center">
-        <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-3">Finde deinen <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-500">Salon</span></h1>
-        <p className="text-lg text-muted-foreground font-medium mb-8">Entdecke die besten Salons in deiner Nähe und buche direkt online.</p>
+        <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-3">
+          {saleFilter ? (
+            <>Aktuelle <span className="text-transparent bg-clip-text bg-gradient-to-r from-destructive to-primary">Angebote</span></>
+          ) : (
+            <>Finde deinen <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-pink-500">Salon</span></>
+          )}
+        </h1>
+        <p className="text-lg text-muted-foreground font-medium mb-8">
+          {saleFilter ? 'Entdecke die besten Rabatte und Aktionen der Salons.' : 'Entdecke die besten Salons in deiner Nähe und buche direkt online.'}
+        </p>
 
         {/* Search & Filter */}
         <div className="max-w-2xl mx-auto px-6 flex flex-col sm:flex-row gap-3">
