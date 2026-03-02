@@ -106,7 +106,9 @@ const SalonProfile = () => {
     const { error } = await supabase.storage.from('salon-logos').upload(path, file, { upsert: true });
     if (error) { toast.error('Upload fehlgeschlagen'); setUploadingLogo(false); return; }
     const { data: urlData } = supabase.storage.from('salon-logos').getPublicUrl(path);
-    setFormData(prev => ({ ...prev, logo_url: urlData.publicUrl + '?t=' + Date.now() }));
+    const newLogoUrl = urlData.publicUrl + '?t=' + Date.now();
+    setFormData(prev => ({ ...prev, logo_url: newLogoUrl }));
+    await supabase.from('customers').update({ logo_url: newLogoUrl } as any).eq('id', user.id);
     setUploadingLogo(false);
     toast.success('Logo hochgeladen!');
   };
@@ -120,7 +122,9 @@ const SalonProfile = () => {
     const { error } = await supabase.storage.from('salon-logos').upload(path, file, { upsert: true });
     if (error) { toast.error('Upload fehlgeschlagen'); setUploadingCover(false); return; }
     const { data: urlData } = supabase.storage.from('salon-logos').getPublicUrl(path);
-    setFormData(prev => ({ ...prev, cover_image_url: urlData.publicUrl + '?t=' + Date.now() }));
+    const newCoverUrl = urlData.publicUrl + '?t=' + Date.now();
+    setFormData(prev => ({ ...prev, cover_image_url: newCoverUrl }));
+    await supabase.from('customers').update({ cover_image_url: newCoverUrl } as any).eq('id', user.id);
     setUploadingCover(false);
     toast.success('Cover-Bild hochgeladen!');
   };
@@ -176,7 +180,10 @@ const SalonProfile = () => {
                     <>
                       <img src={formData.cover_image_url} alt="Cover" className="w-full h-full object-cover" />
                       <button
-                        onClick={() => setFormData(prev => ({ ...prev, cover_image_url: '' }))}
+                        onClick={async () => {
+                          setFormData(prev => ({ ...prev, cover_image_url: '' }));
+                          if (user?.id) await supabase.from('customers').update({ cover_image_url: null } as any).eq('id', user.id);
+                        }}
                         className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                       >
                         <X className="w-4 h-4" />

@@ -99,25 +99,6 @@ const SalonImageManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Description */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Salon-Beschreibung</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Textarea
-            placeholder="Beschreibe deinen Salon – was macht euch besonders?"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <Button onClick={handleSaveDescription} disabled={savingDesc} size="sm">
-            {savingDesc ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Speichern
-          </Button>
-        </CardContent>
-      </Card>
-
       {/* Images */}
       <Card>
         <CardHeader>
