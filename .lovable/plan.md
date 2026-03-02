@@ -1,15 +1,22 @@
 
 
-## Plan: Login direkt zum Kalender statt Dashboard
+## Plan: Google Login für Kunden aktivieren
 
-Der User möchte nach dem Login direkt in den Kalender (`/` = ZenBookApp) statt ins Dashboard (`/portal`).
+### Vorgehen
 
-### Änderungen
+1. **Lovable Cloud Social Auth konfigurieren** - Das Projekt nutzt Lovable Cloud, das Google OAuth automatisch verwaltet. Ich werde die `lovable.auth.signInWithOAuth("google")` Methode einbinden.
 
-1. **`src/pages/UnifiedAuth.tsx`** – Nach erfolgreichem Business-Login Redirect von `/portal` auf `/` ändern
-2. **`src/contexts/AuthContext.tsx`** – Falls dort auch ein Redirect nach `/portal` existiert, ebenfalls auf `/` ändern
+2. **`src/pages/UnifiedAuth.tsx` anpassen** - Im Kunden-Login-Bereich (wenn `mode === 'customer'`) einen "Mit Google anmelden" Button hinzufügen, sowohl im Login- als auch im Signup-Tab. Der Button ruft `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` auf.
+
+3. **Lovable Auth Module generieren** - Das `@lovable.dev/cloud-auth-js` Paket und das Modul in `src/integrations/lovable/` müssen erstellt werden, um die OAuth-Funktion bereitzustellen.
+
+4. **Redirect-Handling** - Nach Google-Login wird der User wie gewohnt über den bestehenden `useEffect` in `UnifiedAuth.tsx` basierend auf Rollen weitergeleitet (Kunde → `/storefront/profile`).
 
 ### Betroffene Dateien
-- `src/pages/UnifiedAuth.tsx`
-- Eventuell `src/contexts/AuthContext.tsx` oder andere Auth-Flows
+- `src/pages/UnifiedAuth.tsx` - Google-Button im Kunden-Bereich
+- `src/integrations/lovable/` - Auto-generiertes Auth-Modul (wird vom Tool erstellt)
+
+### UI-Änderung
+- Trennlinie "oder" zwischen E-Mail-Login und Google-Button
+- Google-Button mit Google-Icon, nur sichtbar wenn `mode === 'customer'`
 
