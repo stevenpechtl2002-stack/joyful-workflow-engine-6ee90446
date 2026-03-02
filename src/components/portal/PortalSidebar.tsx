@@ -38,7 +38,6 @@ const PortalSidebar = () => {
     { icon: Workflow, label: 'Dienstplan', path: '/portal/shifts' },
     { icon: FileText, label: 'Reservierungen', path: '/portal/reservations' },
     { icon: Receipt, label: 'Verkauf', path: '/portal/sales' },
-    { icon: CreditCard, label: 'Abonnement', path: '/portal/subscriptions' },
     { icon: Bell, label: 'Benachrichtigungen', path: '/portal/notifications' },
     { icon: User, label: 'Profil', path: '/portal/profile' },
   ];
