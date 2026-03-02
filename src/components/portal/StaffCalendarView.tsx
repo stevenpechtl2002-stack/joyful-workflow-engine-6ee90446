@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2, Maximize2, Minimize2 } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useStaffMembers, useUpdateReservationStaff, StaffMember } from '@/hooks/useStaffMembers';
@@ -64,6 +64,8 @@ export const StaffCalendarView = () => {
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(600);
   const [columnWidth, setColumnWidth] = useState(160);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const savedSize = useRef<{ width: number | null; height: number }>({ width: null, height: 600 });
   const containerRef = useRef<HTMLDivElement>(null);
   const isResizingContainer = useRef(false);
   const isResizingColumn = useRef(false);
@@ -669,7 +671,7 @@ export const StaffCalendarView = () => {
       )}
 
       {/* Calendar grid with resize wrapper */}
-      <div className="relative" style={{ width: containerWidth || '100%', maxWidth: '100vw' }}>
+      <div className="relative" style={{ width: isFullscreen ? '100%' : (containerWidth || '100%'), maxWidth: '100vw' }}>
         {/* Resize handle top-left corner - outside scrollable area */}
         <div
           className="absolute top-0 left-0 z-50 w-6 h-6 cursor-nwse-resize flex items-center justify-center bg-card border border-border rounded-br-md hover:bg-muted transition-colors"
@@ -679,11 +681,33 @@ export const StaffCalendarView = () => {
           <Plus className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
 
+        {/* Fullscreen toggle top-right corner */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-0 right-0 z-50 w-7 h-7 rounded-bl-md rounded-tr-lg border border-border bg-card hover:bg-muted"
+          onClick={() => {
+            if (isFullscreen) {
+              setContainerWidth(savedSize.current.width);
+              setContainerHeight(savedSize.current.height);
+              setIsFullscreen(false);
+            } else {
+              savedSize.current = { width: containerWidth, height: containerHeight };
+              setContainerWidth(null);
+              setContainerHeight(window.innerHeight - 200);
+              setIsFullscreen(true);
+            }
+          }}
+          title={isFullscreen ? 'Verkleinern' : 'Vollbild'}
+        >
+          {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-muted-foreground" /> : <Maximize2 className="w-3.5 h-3.5 text-muted-foreground" />}
+        </Button>
+
         <Card 
           ref={containerRef}
           className="overflow-auto"
           style={{ 
-            height: containerHeight,
+            height: isFullscreen ? (window.innerHeight - 200) : containerHeight,
             maxHeight: '100vh',
           }}
         >
