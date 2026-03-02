@@ -1,35 +1,39 @@
 
 
-## Plan: Salon-URLs mit Namen statt IDs
+## Plan: Erweitertes Admin Dashboard mit Kunden-Übersicht & Umsätzen
 
-Aktuell: `/storefront/abc-123-uuid` → Neu: `/salon/salonname` (oder `/storefront/salonname`)
+Das bestehende Admin Dashboard unter `src/pages/admin/AdminDashboard.tsx` wird erweitert um ein modernes Kundenmanagement mit Gesamtumsätzen, Sperr-Funktionen und Detail-Ansichten.
 
-### Ansatz: Slug-Feld in der `customers`-Tabelle
+### Änderungen an `src/pages/admin/AdminDashboard.tsx`
 
-1. **Neues Feld `slug`** in der `customers`-Tabelle (unique, text). Wird aus `company_name` generiert (lowercase, Umlaute ersetzen, Sonderzeichen entfernen, Leerzeichen zu Bindestrichen).
+**1. Zusätzliche Daten laden**
+- `transactions` Tabelle abfragen, um pro Kunde den Gesamtumsatz zu berechnen (`SUM(amount)` gruppiert nach `user_id`)
+- `reservations` mit `price_paid` für Umsatz-Aggregation nutzen
+- `profiles` Tabelle für vollständige Namen
+- Gesamtumsatz-KPI-Karte im Stats-Bereich hinzufügen
 
-2. **Edge Function `storefront-salon-detail`** erweitern: Neben `salon_id` auch `slug` als Lookup akzeptieren. Wenn `slug` übergeben wird, wird der Salon per Slug gesucht.
+**2. Customers-Tab modernisieren**
+- Kundenliste im modernen Card-Layout statt nur Tabelle
+- Pro Kunde anzeigen: Name, E-Mail, Firma, Kategorie, Plan, Status, Registrierungsdatum, Gesamtumsatz, Anzahl Reservierungen, Anzahl Kontakte
+- Sperren/Aktivieren Button mit Bestätigungs-Dialog
+- Expandierbare Detailansicht pro Kunde (letzte Reservierungen, Umsatz-Verlauf)
+- Suchfeld und Filter (Status, Plan, Kategorie)
 
-3. **Edge Function `list-salons`** erweitern: Slug im Response mitsenden, damit die Storefront den Slug für Links nutzen kann.
+**3. Neue KPI-Karten**
+- Gesamtumsatz aller Kunden (Summe aller `transactions.amount` bzw. `reservations.price_paid`)
+- Durchschnittlicher Umsatz pro Kunde
+- Gesperrte Kunden Anzahl
 
-4. **Route ändern**: `/storefront/:salonId` bleibt bestehen, akzeptiert jetzt aber auch Slugs. SalonDetail.tsx prüft ob der Parameter ein UUID oder ein Slug ist und ruft die Edge Function entsprechend auf.
+**4. Kunden-Detailansicht (Dialog)**
+- Klick auf Kunde öffnet Dialog mit:
+  - Profil-Infos, Salon-Beschreibung, Kontaktdaten
+  - Umsatz-Übersicht (Gesamt, letzter Monat)
+  - Letzte Reservierungen
+  - Aktionen: Sperren/Entsperren, Notizen bearbeiten, Plan ändern
 
-5. **Storefront.tsx**: Links ändern von `/storefront/${salon.id}` zu `/storefront/${salon.slug || salon.id}`.
+### Keine Datenbankänderungen nötig
+Alle benötigten Daten (transactions, reservations, customers, profiles) existieren bereits. Der Admin hat via RLS bereits Zugriff auf alle Tabellen.
 
-6. **Slug-Generierung**: Beim Speichern des Salon-Profils (SalonRegistration / SalonProfile) wird automatisch ein Slug generiert. Bestehende Salons bekommen per Migration einen Slug aus ihrem `company_name`.
-
-### Technische Details
-
-**Migration:**
-- `ALTER TABLE customers ADD COLUMN slug text UNIQUE;`
-- Update bestehende Salons: Slug aus company_name generieren
-- Slug-Format: `mein-salon-berlin` (lowercase, keine Umlaute, keine Sonderzeichen)
-
-**Dateien:**
-- `supabase/functions/storefront-salon-detail/index.ts` — Slug-Lookup hinzufügen
-- `supabase/functions/list-salons/index.ts` — Slug im Response
-- `src/pages/SalonDetail.tsx` — Slug statt UUID an Edge Function senden
-- `src/pages/Storefront.tsx` — Links mit Slug
-- `src/components/zenbook/SalonRegistration.tsx` — Slug beim Erstellen generieren
-- `src/pages/portal/SalonProfile.tsx` — Slug beim Update generieren
+### Dateien
+- `src/pages/admin/AdminDashboard.tsx` — Hauptänderung: Kunden-Tab erweitern, Umsatzdaten laden, moderne UI
 
