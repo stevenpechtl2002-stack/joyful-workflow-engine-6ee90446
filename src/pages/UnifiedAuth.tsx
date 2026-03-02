@@ -58,7 +58,7 @@ const UnifiedAuth = () => {
       } else if (roles.includes('sales')) {
         navigate('/sales');
       } else if (roles.includes('manager') || mode === 'business') {
-        navigate('/portal');
+        navigate('/');
       } else {
         navigate('/storefront/profile');
       }
