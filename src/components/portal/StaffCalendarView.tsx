@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, User, Phone, Mail, Clock, Calendar, Users, FileText, Pencil, Sparkles, Trash2 } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useStaffMembers, useUpdateReservationStaff, StaffMember } from '@/hooks/useStaffMembers';
@@ -412,7 +412,7 @@ export const StaffCalendarView = () => {
       </div>
 
       {/* Unassigned column */}
-      <div className="flex-shrink-0 w-32 border-r border-border-subtle bg-muted/30">
+      <div className="flex-shrink-0 border-r border-border-subtle bg-muted/30" style={{ width: columnWidth }}>
         <div className="h-12 border-b border-border-subtle flex items-center justify-center sticky top-0 z-10 bg-muted/30">
           <span className="text-xs font-medium text-muted-foreground">Nicht zugewiesen</span>
         </div>
@@ -668,28 +668,28 @@ export const StaffCalendarView = () => {
         </div>
       )}
 
-      {/* Calendar grid */}
-      <Card 
-        ref={containerRef}
-        className="overflow-auto relative"
-        style={{ 
-          width: containerWidth || '100%', 
-          height: containerHeight,
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-        }}
-      >
-        {viewMode === 'day' ? renderDayView() : renderWeekView()}
-        
-        {/* Resize handle bottom-right corner */}
+      {/* Calendar grid with resize wrapper */}
+      <div className="relative" style={{ width: containerWidth || '100%', maxWidth: '100vw' }}>
+        {/* Resize handle top-left corner - outside scrollable area */}
         <div
-          className="absolute bottom-0 right-0 w-5 h-5 cursor-nwse-resize z-30 flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+          className="absolute top-0 left-0 z-50 w-6 h-6 cursor-nwse-resize flex items-center justify-center bg-card border border-border rounded-br-md hover:bg-muted transition-colors"
           onMouseDown={handleContainerResizeStart}
           title="Größe ändern"
         >
-          <Maximize2 className="w-3 h-3 text-muted-foreground rotate-90" />
+          <Plus className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
-      </Card>
+
+        <Card 
+          ref={containerRef}
+          className="overflow-auto"
+          style={{ 
+            height: containerHeight,
+            maxHeight: '100vh',
+          }}
+        >
+          {viewMode === 'day' ? renderDayView() : renderWeekView()}
+        </Card>
+      </div>
 
       {/* New reservation dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
