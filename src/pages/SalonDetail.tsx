@@ -107,9 +107,10 @@ const SalonDetailPage: React.FC = () => {
     if (!salonId) return;
     const fetchSalon = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('storefront-salon-detail', {
-          body: { salon_id: salonId },
-        });
+        // Determine if param is UUID or slug
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(salonId);
+        const body = isUuid ? { salon_id: salonId } : { slug: salonId };
+        const { data, error } = await supabase.functions.invoke('storefront-salon-detail', { body });
         if (error) throw error;
         setSalon(data.salon);
         setProducts(data.products || []);
@@ -119,6 +120,10 @@ const SalonDetailPage: React.FC = () => {
         setOpeningHours(data.opening_hours || {});
         setAvgRating(data.avg_rating || 0);
         setReviewCount(data.review_count || 0);
+        // Update URL to slug if available
+        if (data.salon?.slug && salonId !== data.salon.slug) {
+          navigate(`/storefront/${data.salon.slug}`, { replace: true });
+        }
       } catch (e) {
         console.error('Error loading salon:', e);
       }
@@ -128,14 +133,14 @@ const SalonDetailPage: React.FC = () => {
   }, [salonId]);
 
   useEffect(() => {
-    if (!salonId || !selectedDate) return;
+    if (!salon?.id || !selectedDate) return;
     const fetchSlots = async () => {
       setLoadingSlots(true);
       setSelectedSlot('');
       try {
         const product = products.find(p => p.id === selectedProduct);
         const { data, error } = await supabase.functions.invoke('storefront-salon-detail', {
-          body: { salon_id: salonId, date: selectedDate, staff_member_id: selectedStaff || undefined, duration: product?.duration_minutes || 30 },
+          body: { salon_id: salon.id, date: selectedDate, staff_member_id: selectedStaff || undefined, duration: product?.duration_minutes || 30 },
         });
         if (error) throw error;
         setSlots(data.available_slots || []);
@@ -145,7 +150,7 @@ const SalonDetailPage: React.FC = () => {
       setLoadingSlots(false);
     };
     fetchSlots();
-  }, [salonId, selectedDate, selectedStaff, selectedProduct, products]);
+  }, [salon?.id, selectedDate, selectedStaff, selectedProduct, products]);
 
   const handleBook = async () => {
     if (!customerName.trim()) { toast.error('Bitte gib deinen Namen ein'); return; }
@@ -159,7 +164,7 @@ const SalonDetailPage: React.FC = () => {
       const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
 
       const bookingBody = {
-        salon_user_id: salonId,
+        salon_user_id: salon?.id,
         staff_member_id: selectedStaff || null,
         product_id: selectedProduct || null,
         booking_date: selectedDate,
@@ -232,7 +237,7 @@ const SalonDetailPage: React.FC = () => {
       setNewComment('');
       setNewRating(5);
       // Refresh
-      const { data } = await supabase.functions.invoke('storefront-salon-detail', { body: { salon_id: salonId } });
+      const { data } = await supabase.functions.invoke('storefront-salon-detail', { body: { salon_id: salon?.id } });
       if (data) {
         setReviews(data.reviews || []);
         setAvgRating(data.avg_rating || 0);

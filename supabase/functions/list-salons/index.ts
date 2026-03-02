@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
     const { data: salons, error } = await supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, published, created_at, category, description, cover_image_url, logo_url")
+      .select("id, company_name, email, city, address, postal_code, published, created_at, category, description, cover_image_url, logo_url, slug")
       .not("company_name", "is", null)
       .neq("company_name", "")
       .eq("published", true)
@@ -45,6 +45,7 @@ Deno.serve(async (req) => {
       return {
         id: salon.id,
         name: salon.company_name,
+        slug: salon.slug || null,
         city: salon.city || null,
         address: salon.address || null,
         postal_code: salon.postal_code || null,
