@@ -1,37 +1,58 @@
 
 
-## Plan: Kategorie-Seiten für den Marktplatz
+## Plan: KI Smart Setup - Website/Treatwell Import
 
-Jede Kategorie (Friseur, Nägel, Kosmetik, Massage, Männer) bekommt eine eigene gefilterte Ansicht auf der Storefront. Statt separate Seiten-Komponenten zu erstellen, nutzen wir den bestehenden Query-Parameter-Ansatz (wie bei `filter=sale`).
+Ein neuer "Smart Setup" Schritt im Salon-Onboarding, bei dem der Nutzer seine Website- oder Treatwell-URL eingibt. Das System scrapt die Seite, extrahiert alle relevanten Infos per KI und füllt automatisch Salon-Name, Beschreibung, Kategorie, Adresse, Services (mit Preisen & Dauer) aus.
 
-### Ansatz: URL-Parameter `category`
+### Architektur
 
-Die Storefront-Seite bekommt einen neuen URL-Parameter `category`, z.B. `/storefront?category=Friseur`. Jede Kategorie-Taste auf der LandingPage navigiert dorthin.
+```text
+[User gibt URL ein]
+       ↓
+[Edge Function: smart-import]
+       ↓
+[Firecrawl: Seite scrapen → Markdown]
+       ↓
+[Lovable AI (Gemini): Strukturierte Daten extrahieren]
+       ↓
+[JSON Response: name, description, category, address, services[]]
+       ↓
+[Frontend: Felder vorausfüllen, User bestätigt]
+```
+
+### Voraussetzungen
+
+- **Firecrawl Connector** muss verbunden sein (zum Scrapen der Website/Treatwell-Seite)
+- **Lovable AI** ist bereits verfügbar (LOVABLE_API_KEY vorhanden)
 
 ### Änderungen
 
-**1. `src/components/zenbook/LandingPage.tsx`**
-- Alle Kategorie-Buttons (Friseur, Nägel, Kosmetik, Massage, Männer) bekommen einen `onClick`-Handler: `navigate('/storefront?category=<Name>')`
-- "Nägel" mappt auf die Salon-Kategorie "Nagelstudio"
-- "Männer" mappt auf "Barbershop"
+**1. Firecrawl Connector verbinden**
+- Prüfen ob Firecrawl bereits verbunden ist, ggf. User auffordern
 
-**2. `src/pages/Storefront.tsx`**
-- Neuen Query-Parameter `category` auslesen
-- Salon-Liste nach `salon.category` filtern wenn gesetzt
-- Hero-Überschrift dynamisch anpassen (z.B. "Die besten Friseure")
-- Kategorie-Mapping: Nägel → Nagelstudio, Männer → Barbershop
-- Kategorie-Filter-Chips oben anzeigen (die gleichen 5 Buttons), aktive Kategorie hervorheben
+**2. Neue Edge Function: `supabase/functions/smart-import/index.ts`**
+- Nimmt URL entgegen
+- Scrapt die Seite via Firecrawl API (Markdown-Format)
+- Sendet Markdown an Lovable AI mit Tool-Calling, um strukturierte Daten zu extrahieren:
+  - `salon_name`, `description`, `category`, `address`, `city`, `postal_code`, `phone`, `website_url`
+  - `services[]` mit `name`, `duration_minutes`, `price`, `category`
+- Gibt strukturiertes JSON zurück
 
-### Mapping-Tabelle
-| Button-Label | Salon-Kategorie |
-|---|---|
-| Friseur | Friseur |
-| Nägel | Nagelstudio |
-| Kosmetik | Kosmetik |
-| Massage | Massage |
-| Männer | Barbershop |
+**3. `src/components/zenbook/SalonRegistration.tsx` erweitern**
+- Im Step 1 einen neuen Bereich oben: "Smart Setup" mit URL-Eingabefeld und "KI Import starten" Button
+- Bei Klick: Edge Function aufrufen, Ladeanimation zeigen
+- Ergebnis in `formData` und `services` einfüllen
+- User kann alle vorausgefüllten Felder noch anpassen bevor er weitergeht
 
-### Dateien
-- `src/components/zenbook/LandingPage.tsx` — onClick für alle Kategorie-Buttons
-- `src/pages/Storefront.tsx` — category-Filter + dynamischer Hero + Kategorie-Navigation
+**4. `supabase/config.toml` aktualisieren**
+- Neue Function `smart-import` mit `verify_jwt = false`
+
+### UI-Flow
+
+Step 1 bekommt oben ein auffälliges Banner:
+- Sparkles-Icon + "KI Smart Setup"
+- URL-Eingabefeld (Placeholder: "Website-URL oder Treatwell-Profil einfügen")
+- Button "Automatisch ausfüllen"
+- Loading-State mit Fortschrittsanzeige
+- Nach Import: Alle Felder sind ausgefüllt, grüner Hinweis "X Infos importiert"
 
