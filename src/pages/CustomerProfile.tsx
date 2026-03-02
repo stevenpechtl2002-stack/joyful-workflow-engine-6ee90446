@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, Calendar, Clock, MapPin, Store, LogOut, Loader2, User, CalendarDays, Star, Sparkles, Save, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -88,14 +88,30 @@ const CustomerProfile: React.FC = () => {
     setFavorites(prev => prev.filter(f => f.salon_user_id !== salonId));
   };
 
-  const saveProfile = async () => {
+  const saveProfile = useCallback(async (name: string, phone: string) => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({ full_name: profileName, phone: profilePhone }).eq('id', user.id);
+    const { error } = await supabase.from('profiles').update({ full_name: name, phone: phone }).eq('id', user.id);
     setSaving(false);
     if (error) toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
     else toast({ title: 'Profil gespeichert' });
-  };
+  }, [user, toast]);
+
+  // Auto-save with debounce
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const initialLoadRef = useRef(true);
+
+  useEffect(() => {
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      return;
+    }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveProfile(profileName, profilePhone);
+    }, 1500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [profileName, profilePhone, saveProfile]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -170,7 +186,7 @@ const CustomerProfile: React.FC = () => {
               <div><label className="text-xs font-bold text-muted-foreground uppercase">Name</label><Input value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="Dein Name" /></div>
               <div><label className="text-xs font-bold text-muted-foreground uppercase">E-Mail</label><Input value={user?.email || ''} disabled className="opacity-60" /></div>
               <div><label className="text-xs font-bold text-muted-foreground uppercase">Telefon</label><Input value={profilePhone} onChange={e => setProfilePhone(e.target.value)} placeholder="+49..." /></div>
-              <Button onClick={saveProfile} disabled={saving} className="w-full"><Save className="w-4 h-4 mr-2" />{saving ? 'Speichert...' : 'Profil speichern'}</Button>
+              <Button onClick={() => saveProfile(profileName, profilePhone)} disabled={saving} className="w-full"><Save className="w-4 h-4 mr-2" />{saving ? 'Speichert...' : 'Profil speichern'}</Button>
             </div>
           </motion.div>
 
