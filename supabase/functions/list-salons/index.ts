@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
     const { data: salons, error } = await supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, published, created_at, category")
+      .select("id, company_name, email, city, address, postal_code, published, created_at, category, description, cover_image_url, logo_url")
       .not("company_name", "is", null)
       .neq("company_name", "")
       .order("created_at", { ascending: false });
@@ -38,6 +38,9 @@ Deno.serve(async (req) => {
         ? Math.round((reviewList.reduce((s, r) => s + r.rating, 0) / reviewList.length) * 10) / 10
         : 0;
 
+      // Use cover_image_url from profile, fallback to first gallery image
+      const coverImage = salon.cover_image_url || (imgs && imgs.length > 0 ? imgs[0].image_url : null);
+
       return {
         id: salon.id,
         name: salon.company_name,
@@ -45,12 +48,14 @@ Deno.serve(async (req) => {
         address: salon.address || null,
         postal_code: salon.postal_code || null,
         category: salon.category || 'Friseur',
+        description: salon.description || null,
+        logo_url: salon.logo_url || null,
         published: salon.published,
         product_count: productCount || 0,
         staff_count: staffCount || 0,
         avg_rating: avgRating,
         review_count: reviewList.length,
-        cover_image: imgs && imgs.length > 0 ? imgs[0].image_url : null,
+        cover_image: coverImage,
       };
     }));
 
