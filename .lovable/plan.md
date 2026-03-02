@@ -1,40 +1,31 @@
 
 
-## Plan: Fix Login-Redirect-Loop in UnifiedAuth
+## Plan: Fix Redirect-Loop zwischen Storefront und Login
 
 ### Problem
-The `useEffect` on line 55-67 in `src/pages/UnifiedAuth.tsx` calls `navigate()` repeatedly because:
-1. Each `navigate` call triggers a re-render
-2. The `roles` array is a new reference on each render (from `useAuth`)
-3. `onAuthStateChange` and `getSession` both fire, causing duplicate state updates and re-triggers of the effect
+`CustomerProfile.tsx` (Zeile 53) prüft `if (!user) { navigate('/login') }` — aber es verwendet `useAuth` aus `@/hooks/useAuth`, nicht aus `@/contexts/AuthContext`. Dieser Hook hat seinen eigenen Loading-State. Solange der noch lädt, ist `user === null`, und es wird sofort zurück auf `/login` navigiert. Das erzeugt den Loop:
 
-This creates a "Maximum update depth exceeded" loop where the page bounces between `/login` and the target route.
+1. UnifiedAuth erkennt User + Rolle → navigiert zu `/storefront/profile`
+2. CustomerProfile mountet, `user` ist noch `null` (loading) → navigiert zurück zu `/login`
+3. UnifiedAuth mountet neu (neuer Ref) → navigiert wieder zu `/storefront/profile`
+4. Endlosschleife
 
-### Fix in `src/pages/UnifiedAuth.tsx`
+### Fix
 
-1. Add a `useRef` (`hasRedirected`) to track if a redirect has already been performed
-2. Guard the `navigate()` calls with this ref so the redirect only fires once
-3. Use `navigate(..., { replace: true })` to avoid polluting browser history
+**`src/pages/CustomerProfile.tsx`**: Loading-State abfragen bevor redirected wird.
 
 ```typescript
-const hasRedirected = useRef(false);
+const { user, loading } = useAuth();
 
 useEffect(() => {
-  if (!isLoading && user && roles.length > 0 && !hasRedirected.current) {
-    hasRedirected.current = true;
-    if (roles.includes('admin')) {
-      navigate('/admin', { replace: true });
-    } else if (roles.includes('sales')) {
-      navigate('/sales', { replace: true });
-    } else if (roles.includes('manager') || mode === 'business') {
-      navigate('/', { replace: true });
-    } else {
-      navigate('/storefront/profile', { replace: true });
-    }
-  }
-}, [user, isLoading, roles, navigate, mode]);
+  if (loading) return; // Wait for auth to load
+  if (!user) { navigate('/login'); return; }
+  // ... rest of loadData
+}, [user, loading]);
 ```
 
-### Files
-- `src/pages/UnifiedAuth.tsx` -- add `useRef` import and redirect guard
+**Gleichen Check auch in `src/pages/Storefront.tsx`** falls dort ein ähnliches Redirect-Pattern existiert.
+
+### Dateien
+- `src/pages/CustomerProfile.tsx` — Loading-Guard vor Redirect hinzufügen
 
