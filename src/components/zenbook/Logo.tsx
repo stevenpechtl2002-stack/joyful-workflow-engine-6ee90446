@@ -16,7 +16,7 @@ const Logo: React.FC<LogoProps> = ({
   className = '' 
 }) => {
   const isClickable = !!onClick;
-  const heightClass = variant === 'light' ? 'h-[160px]' : 'h-[130px]';
+  const heightClass = variant === 'light' ? 'h-[200px]' : 'h-[170px]';
   
   const logoContent = (
     <img 
@@ -30,7 +30,7 @@ const Logo: React.FC<LogoProps> = ({
     return (
       <motion.button
         onClick={onClick}
-        className={`flex items-center cursor-pointer ${className}`}
+        className={`flex items-center cursor-pointer py-0 ${className}`}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -40,7 +40,7 @@ const Logo: React.FC<LogoProps> = ({
   }
 
   return (
-    <div className={`flex items-center ${className}`}>
+    <div className={`flex items-center py-0 ${className}`}>
       {logoContent}
     </div>
   );
