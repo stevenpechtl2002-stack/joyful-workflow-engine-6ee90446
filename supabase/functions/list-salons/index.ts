@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
       .from("customers")
       .select("id, company_name, email, city, address, postal_code, published, created_at, category")
       .not("company_name", "is", null)
+      .neq("company_name", "")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
 
       return {
         id: salon.id,
-        name: salon.company_name || salon.email,
+        name: salon.company_name,
         city: salon.city || null,
         address: salon.address || null,
         postal_code: salon.postal_code || null,
