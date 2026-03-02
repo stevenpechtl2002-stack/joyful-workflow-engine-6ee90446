@@ -1,12 +1,11 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   format, isSameDay, addDays, startOfWeek, endOfWeek, eachDayOfInterval, getDay
 } from 'date-fns';
 import { de } from 'date-fns/locale';
 import {
   Plus, ChevronLeft, ChevronRight, LayoutGrid, CalendarDays, Clock,
-  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck,
-  Maximize2, Minimize2
+  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
@@ -79,68 +78,7 @@ const StaffCalendarView: React.FC<Props> = ({
   const [detailReservation, setDetailReservation] = useState<Reservation | null>(null);
   const [dragOverStaff, setDragOverStaff] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
-  const [containerHeight, setContainerHeight] = useState<number>(640);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const savedSize = useRef<{ width: number | null; height: number }>({ width: null, height: 640 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const isResizingContainer = useRef(false);
-
-  const getFullscreenHeight = useCallback(() => Math.max(420, window.innerHeight - 220), []);
-
-  const handleContainerResizeStart = useCallback((e: React.MouseEvent) => {
-    if (isFullscreen) return;
-    e.preventDefault();
-    isResizingContainer.current = true;
-
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = containerRef.current?.offsetWidth || 980;
-    const startHeight = containerHeight;
-
-    const handleMouseMove = (ev: MouseEvent) => {
-      if (!isResizingContainer.current) return;
-      const newWidth = Math.max(760, Math.min(window.innerWidth - 100, startWidth + (ev.clientX - startX)));
-      const newHeight = Math.max(420, Math.min(window.innerHeight - 120, startHeight + (ev.clientY - startY)));
-      setContainerWidth(newWidth);
-      setContainerHeight(newHeight);
-    };
-
-    const handleMouseUp = () => {
-      isResizingContainer.current = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    document.body.style.cursor = 'nwse-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [containerHeight, isFullscreen]);
-
-  const toggleFullscreen = useCallback(() => {
-    if (isFullscreen) {
-      setContainerWidth(savedSize.current.width);
-      setContainerHeight(savedSize.current.height);
-      setIsFullscreen(false);
-      return;
-    }
-
-    savedSize.current = { width: containerWidth, height: containerHeight };
-    setContainerWidth(null);
-    setContainerHeight(getFullscreenHeight());
-    setIsFullscreen(true);
-  }, [containerHeight, containerWidth, getFullscreenHeight, isFullscreen]);
-
-  useEffect(() => {
-    if (!isFullscreen) return;
-
-    const onResize = () => setContainerHeight(getFullscreenHeight());
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [getFullscreenHeight, isFullscreen]);
 
   const activeStaff = useMemo(() =>
     staffMembers.filter(s => s.is_active).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
@@ -420,7 +358,7 @@ const StaffCalendarView: React.FC<Props> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mb-2 px-4 pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-6">
           <h3 className="text-3xl font-black text-foreground tracking-tighter">
             {format(selectedDate, 'EEEE, d. MMMM', { locale: de })}
@@ -562,39 +500,9 @@ const StaffCalendarView: React.FC<Props> = ({
         <AvailabilityView />
       ) : (
       <div
-        className="relative flex-1"
-        style={{ width: isFullscreen ? '100%' : (containerWidth || '100%'), maxWidth: '100%' }}
+        ref={containerRef}
+        className="flex-1 overflow-auto flex flex-col bg-card border-t border-border"
       >
-        <button
-          type="button"
-          aria-label="Kalendergröße ändern"
-          disabled={isFullscreen}
-          className="absolute top-2 left-2 z-[60] w-8 h-8 cursor-nwse-resize flex items-center justify-center bg-background border border-border rounded-lg shadow-md hover:bg-muted transition-colors pointer-events-auto disabled:opacity-40 disabled:cursor-not-allowed"
-          onMouseDown={handleContainerResizeStart}
-          title="Größe ändern"
-        >
-          <Plus className="w-4 h-4 text-primary" />
-        </button>
-
-        <button
-          type="button"
-          aria-label={isFullscreen ? 'Kalender verkleinern' : 'Kalender Vollbild'}
-          className="absolute top-2 right-2 z-[60] w-8 h-8 flex items-center justify-center bg-background border border-border rounded-lg shadow-md hover:bg-muted transition-colors pointer-events-auto"
-          onClick={toggleFullscreen}
-          title={isFullscreen ? 'Verkleinern' : 'Vollbild'}
-        >
-          {isFullscreen ? <Minimize2 className="w-4 h-4 text-primary" /> : <Maximize2 className="w-4 h-4 text-primary" />}
-        </button>
-
-        <div
-          ref={containerRef}
-          className="bg-card border border-border rounded-2xl overflow-auto flex flex-col shadow-sm"
-          style={{
-            height: containerHeight,
-            minHeight: 420,
-            maxHeight: isFullscreen ? 'calc(100vh - 12rem)' : 'none',
-          }}
-        >
           {/* Header Row */}
           <div className="flex border-b border-border bg-card sticky top-0 z-20" style={{ minHeight: '56px' }}>
             <div className="w-16 border-r border-border shrink-0 flex items-center justify-center sticky left-0 z-30 bg-card">
@@ -669,7 +577,6 @@ const StaffCalendarView: React.FC<Props> = ({
             </div>
           </div>
         </div>
-      </div>
       )}
 
       {/* Reservation Form */}

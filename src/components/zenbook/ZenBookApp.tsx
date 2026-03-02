@@ -416,7 +416,7 @@ const ZenBookApp: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-10 relative no-scrollbar bg-white">
+        <div className={`flex-1 overflow-auto relative no-scrollbar bg-white ${currentView === 'calendar' ? 'p-0' : 'p-10'}`}>
           {/* Unpublished Banner */}
           {isPublished === false && (
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-4 animate-in slide-in-from-top-4">
