@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Store, Heart, User, Loader2, Sparkles, Star, Camera } from 'lucide-react';
+import { Search, MapPin, Store, Heart, User, Loader2, Sparkles, Star, Camera, Percent, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Logo from '@/components/zenbook/Logo';
 import { useNavigate, Link } from 'react-router-dom';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 interface Salon {
   id: string;
@@ -22,8 +24,19 @@ interface Salon {
   cover_image: string | null;
 }
 
+interface StorefrontDiscount {
+  id: string;
+  user_id: string;
+  name: string;
+  discount_type: string;
+  discount_value: number;
+  valid_from: string;
+  valid_until: string;
+}
+
 const Storefront: React.FC = () => {
   const [salons, setSalons] = useState<Salon[]>([]);
+  const [discounts, setDiscounts] = useState<StorefrontDiscount[]>([]);
   const [loading, setLoading] = useState(true);
   const [cityFilter, setCityFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,17 +45,20 @@ const Storefront: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchSalons = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('list-salons');
-        if (error) throw error;
-        setSalons(Array.isArray(data) ? data : []);
+        const [salonsRes, discountsRes] = await Promise.all([
+          supabase.functions.invoke('list-salons'),
+          supabase.from('discounts' as any).select('id, user_id, name, discount_type, discount_value, valid_from, valid_until').gte('valid_until', new Date().toISOString().split('T')[0]).eq('is_active', true),
+        ]);
+        if (!salonsRes.error) setSalons(Array.isArray(salonsRes.data) ? salonsRes.data : []);
+        if (!discountsRes.error && discountsRes.data) setDiscounts(discountsRes.data as any[]);
       } catch (e) {
-        console.error('Error loading salons:', e);
+        console.error('Error loading data:', e);
       }
       setLoading(false);
     };
-    fetchSalons();
+    fetchData();
   }, []);
 
   // Load favorites if logged in
@@ -146,7 +162,47 @@ const Storefront: React.FC = () => {
             <p className="text-sm mt-2">Versuche einen anderen Suchbegriff oder eine andere Stadt.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <>
+            {/* Featured Discounts */}
+            {discounts.length > 0 && (
+              <div className="mb-10">
+                <h2 className="text-xl font-black text-foreground mb-4 flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-primary" /> Aktuelle Angebote
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {discounts.map(d => {
+                    const salon = salons.find(s => s.id === d.user_id);
+                    return (
+                      <div
+                        key={d.id}
+                        onClick={() => salon && navigate(`/storefront/${salon.id}`)}
+                        className="zen-card cursor-pointer group border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background hover:border-primary/40 transition-all"
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-lg font-black text-primary">
+                              {d.discount_type === 'percentage' ? `${d.discount_value}%` : `${d.discount_value}€`}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-black text-foreground truncate group-hover:text-primary transition-colors">{d.name}</h3>
+                            {salon && <p className="text-xs text-muted-foreground font-medium">{salon.name}</p>}
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground font-bold">
+                          Gültig bis {format(new Date(d.valid_until), 'dd. MMM yyyy', { locale: de })}
+                        </p>
+                        <div className="flex items-center gap-1 text-xs font-bold text-primary mt-2">
+                          Zum Salon <ArrowRight className="w-3 h-3" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map(salon => (
               <div
                 key={salon.id}
@@ -215,6 +271,7 @@ const Storefront: React.FC = () => {
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
     </div>

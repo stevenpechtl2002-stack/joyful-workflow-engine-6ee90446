@@ -493,6 +493,59 @@ export type Database = {
         }
         Relationships: []
       }
+      discounts: {
+        Row: {
+          applies_to: string
+          category: string | null
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          name: string
+          product_id: string | null
+          user_id: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          applies_to?: string
+          category?: string | null
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          product_id?: string | null
+          user_id: string
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          applies_to?: string
+          category?: string | null
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          product_id?: string | null
+          user_id?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discounts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
