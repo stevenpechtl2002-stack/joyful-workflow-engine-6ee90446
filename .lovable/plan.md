@@ -1,31 +1,33 @@
 
 
-## Plan: Fix Redirect-Loop zwischen Storefront und Login
+## Plan: Live Insights + Storefront-Buchungen im Admin Dashboard
 
-### Problem
-`CustomerProfile.tsx` (Zeile 53) prüft `if (!user) { navigate('/login') }` — aber es verwendet `useAuth` aus `@/hooks/useAuth`, nicht aus `@/contexts/AuthContext`. Dieser Hook hat seinen eigenen Loading-State. Solange der noch lädt, ist `user === null`, und es wird sofort zurück auf `/login` navigiert. Das erzeugt den Loop:
+### Was geändert wird
 
-1. UnifiedAuth erkennt User + Rolle → navigiert zu `/storefront/profile`
-2. CustomerProfile mountet, `user` ist noch `null` (loading) → navigiert zurück zu `/login`
-3. UnifiedAuth mountet neu (neuer Ref) → navigiert wieder zu `/storefront/profile`
-4. Endlosschleife
+**1. Insights-Komponente auf Live-Daten umstellen** (`src/components/zenbook/Insights.tsx`)
 
-### Fix
+- Props (`appointments`, `services`, `staff`) entfernen — stattdessen `useRevenueStats('week')` und `useReservations()` direkt nutzen
+- KPI-Karten zeigen echte Werte: Gesamtbuchungen (aus Reservierungen), Umsatz (aus `useRevenueStats`), Kundenanzahl (aus Kontakte)
+- Alle Werte starten bei 0 wenn keine Daten vorhanden
+- Chart-Daten: Reservierungen der letzten 7 Tage nach Wochentag aggregieren
+- AI-Insights Text durch datenbasierte Zusammenfassung ersetzen (echte Zahlen statt "12% Wachstum" und "74% Kundenbindung")
+- Parent-Komponente `ZenBookApp.tsx` anpassen: Props entfernen bei `<Insights />`
 
-**`src/pages/CustomerProfile.tsx`**: Loading-State abfragen bevor redirected wird.
+**2. Storefront-Buchungen im Admin Dashboard anzeigen** (`src/pages/admin/AdminDashboard.tsx`)
 
-```typescript
-const { user, loading } = useAuth();
+- `storefront_bookings` Tabelle zusätzlich in `fetchAllData()` abfragen
+- Neuen Tab "Storefront-Buchungen" hinzufügen mit Spalten: Salon, Kunde, Telefon, E-Mail, Datum, Uhrzeit, Status, Zahlungsstatus
+- Storefront-Buchungen in die KPI-Karte "Reservierungen" mit einrechnen
+- KPI-Karte hinzufügen: "Storefront-Buchungen" Gesamtzahl
 
-useEffect(() => {
-  if (loading) return; // Wait for auth to load
-  if (!user) { navigate('/login'); return; }
-  // ... rest of loadData
-}, [user, loading]);
-```
+### Technische Details
 
-**Gleichen Check auch in `src/pages/Storefront.tsx`** falls dort ein ähnliches Redirect-Pattern existiert.
+- `storefront_bookings` hat bereits eine Admin-ALL RLS Policy — kein DB-Change nötig
+- `useRevenueStats` existiert bereits und berechnet Umsatz aus `reservations` + `products` — wird direkt in Insights verwendet
+- Insights braucht keine neuen Hooks, nutzt bestehende `useRevenueStats` und die Reservierungs-Hooks
 
 ### Dateien
-- `src/pages/CustomerProfile.tsx` — Loading-Guard vor Redirect hinzufügen
+- `src/components/zenbook/Insights.tsx` — komplett auf Live-Daten umbauen
+- `src/components/zenbook/ZenBookApp.tsx` — Props bei Insights entfernen
+- `src/pages/admin/AdminDashboard.tsx` — Storefront-Buchungen Tab + Daten hinzufügen
 
