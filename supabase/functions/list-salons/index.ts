@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
       .select("id, company_name, email, city, address, postal_code, published, created_at, category, description, cover_image_url, logo_url")
       .not("company_name", "is", null)
       .neq("company_name", "")
+      .eq("published", true)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
