@@ -122,6 +122,7 @@ const AdminDashboard = () => {
   const [customers, setCustomers] = useState<CustomerWithApiKey[]>([]);
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [reservations, setReservations] = useState<ReservationFull[]>([]);
+  const [storefrontBookings, setStorefrontBookings] = useState<any[]>([]);
   const [voiceAgentConfigs, setVoiceAgentConfigs] = useState<VoiceAgentConfig[]>([]);
   const [stripeSubscriptions, setStripeSubscriptions] = useState<StripeSubscription[]>([]);
   const [transactions, setTransactions] = useState<{ user_id: string; amount: number }[]>([]);
@@ -172,7 +173,7 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setDataLoading(true);
     try {
-      const [customersRes, apiKeysRes, callLogsRes, reservationsRes, voiceAgentRes, transactionsRes, contactsRes, profilesRes] = await Promise.all([
+      const [customersRes, apiKeysRes, callLogsRes, reservationsRes, voiceAgentRes, transactionsRes, contactsRes, profilesRes, storefrontRes] = await Promise.all([
         supabase.from('customers').select('*').order('created_at', { ascending: false }),
         supabase.from('customer_api_keys').select('customer_id, api_key'),
         supabase.from('call_logs').select('*').order('started_at', { ascending: false }).limit(100),
@@ -181,6 +182,7 @@ const AdminDashboard = () => {
         supabase.from('transactions').select('user_id, amount'),
         supabase.from('contacts').select('user_id'),
         supabase.from('profiles').select('id, full_name'),
+        supabase.from('storefront_bookings').select('*').order('created_at', { ascending: false }).limit(500),
       ]);
 
       if (customersRes.data) {
@@ -189,6 +191,7 @@ const AdminDashboard = () => {
       }
       if (callLogsRes.data) setCallLogs(callLogsRes.data);
       if (reservationsRes.data) setReservations(reservationsRes.data as ReservationFull[]);
+      if (storefrontRes.data) setStorefrontBookings(storefrontRes.data);
       if (voiceAgentRes.data) setVoiceAgentConfigs(voiceAgentRes.data);
       
       // Aggregate transactions per user
@@ -323,7 +326,7 @@ const AdminDashboard = () => {
   const activeCustomers = customers.filter(c => c.status === 'active').length;
   const suspendedCustomers = customers.filter(c => c.status === 'suspended').length;
   const totalCalls = callLogs.length;
-  const totalReservationsCount = reservations.length;
+  const totalReservationsCount = reservations.length + storefrontBookings.length;
   const activeSubscriptions = stripeSubscriptions.filter(s => s.status === 'active' || s.status === 'trialing').length;
   const configuredVoiceAgents = voiceAgentConfigs.filter(v => v.is_active).length;
   const totalRevenue = Object.values(revenueByUser).reduce((sum, v) => sum + v, 0);
@@ -455,6 +458,17 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+          <Card className="glass-card border-border/50">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Storefront</p>
+                  <p className="text-2xl font-bold text-foreground">{storefrontBookings.length}</p>
+                </div>
+                <Globe className="w-7 h-7 text-indigo-500" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tabs */}
@@ -465,6 +479,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="voiceagents">Voice Agents</TabsTrigger>
             <TabsTrigger value="calls">Anrufe</TabsTrigger>
             <TabsTrigger value="reservations">Reservierungen</TabsTrigger>
+            <TabsTrigger value="storefront">Storefront-Buchungen</TabsTrigger>
           </TabsList>
 
           {/* ===== CUSTOMERS TAB ===== */}
@@ -777,6 +792,52 @@ const AdminDashboard = () => {
                     ))}
                     {reservations.length === 0 && (
                       <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Keine Reservierungen vorhanden</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ===== STOREFRONT BOOKINGS TAB ===== */}
+          <TabsContent value="storefront">
+            <Card className="glass-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  Storefront-Buchungen
+                </CardTitle>
+                <CardDescription>{storefrontBookings.length} Buchungen über den Storefront</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Salon</TableHead>
+                      <TableHead>Kunde</TableHead>
+                      <TableHead>Telefon</TableHead>
+                      <TableHead>E-Mail</TableHead>
+                      <TableHead>Datum</TableHead>
+                      <TableHead>Uhrzeit</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Zahlung</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {storefrontBookings.map((b: any) => (
+                      <TableRow key={b.id}>
+                        <TableCell className="text-xs text-muted-foreground">{getCustomerCompany(b.salon_user_id)}</TableCell>
+                        <TableCell className="font-medium">{b.customer_name}</TableCell>
+                        <TableCell className="text-xs">{b.customer_phone || '-'}</TableCell>
+                        <TableCell className="text-xs">{b.customer_email || '-'}</TableCell>
+                        <TableCell>{format(new Date(b.booking_date), 'dd.MM.yyyy', { locale: de })}</TableCell>
+                        <TableCell>{b.booking_time}</TableCell>
+                        <TableCell><Badge variant={b.status === 'confirmed' ? 'default' : 'secondary'}>{b.status || 'pending'}</Badge></TableCell>
+                        <TableCell><Badge variant={b.payment_status === 'paid' ? 'default' : 'outline'}>{b.payment_status || 'pending'}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                    {storefrontBookings.length === 0 && (
+                      <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Keine Storefront-Buchungen vorhanden</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
