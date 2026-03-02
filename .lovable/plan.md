@@ -1,28 +1,29 @@
 
 
-## Plan: Spaltenbreite einstellbar + Header-Sync reparieren
+## Plan: Kalender auf Vollbild wie Treatwell
 
-### Problem-Analyse
-1. **Header und Grid scrollen unabhaengig**: Die Header-Zeile (Zeile 582) ist `sticky top-0` im aeusseren Container, aber der Grid-Body (Zeile 630) hat ein eigenes `overflow-auto` mit `no-scrollbar`. Das bedeutet: horizontales Scrollen im Grid bewegt die Mitarbeiter-Header NICHT mit - sie bleiben stehen waehrend die Zeilen sich verschieben.
+### Analyse
 
-2. **Spaltenbreite nicht einstellbar**: Aktuell nutzen alle Spalten `min-w-[140px] flex-1`, sodass sie sich gleichmaessig aufteilen. Es gibt keine Moeglichkeit, die Breite anzupassen, damit alle Mitarbeiter sichtbar sind.
+Das Treatwell-Layout zeigt: Der Kalender nimmt den **gesamten verfuegbaren Platz** ein - keine extra Padding, kein Card-Wrapper mit fester Hoehe. Die Staff-Spalten fuellen die volle Breite und Hoehe des Hauptbereichs.
 
-### Loesung
-
-**`src/components/zenbook/StaffCalendarView.tsx`**:
-
-1. **Inneres `overflow-auto` entfernen** (Zeile 630): Das `div.flex-1.overflow-auto.no-scrollbar` wird zu einem einfachen `div.flex-1` ohne eigenes Scrolling. Der aeussere Container (Zeile 572-580) uebernimmt das gesamte Scrollen - damit bewegen sich Header und Grid-Body synchron horizontal.
-
-2. **`columnWidth` State hinzufuegen**: Ein neuer State `columnWidth` (Standard: 160px) bestimmt die Breite jeder Mitarbeiter-Spalte. Statt `min-w-[140px] flex-1` bekommen alle Spalten eine feste `width` und `minWidth` basierend auf diesem Wert.
-
-3. **Spaltenbreite in den Einstellungen**: Im bestehenden Settings-Popover (Zeile 491-528) wird ein neuer Slider fuer "Spaltenbreite" hinzugefuegt (80px bis 300px), analog zur bestehenden Zeilenhoehe-Einstellung.
-
-4. **Konsistente Breiten**: Sowohl die Header-Spalten (Zeile 590-610) als auch die Grid-Spalten in `renderColumn` (Zeile 347) verwenden denselben `columnWidth`-Wert, sodass sie immer ausgerichtet bleiben.
+Aktuell hat der Kalender:
+- `containerHeight` State mit Default 640px - begrenzt die Hoehe kuenstlich
+- `p-10` Padding im Main-Content-Bereich (Zeile 419 in ZenBookApp)
+- Resize-Controls und Fullscreen-Toggle die eigentlich ueberfluessig werden
 
 ### Aenderungen
-- Neuen State `columnWidth` mit Default 160 hinzufuegen (bei den anderen States ~Zeile 73)
-- `renderColumn`: `min-w-[140px] flex-1` ersetzen durch `style={{ width: columnWidth, minWidth: columnWidth }}` (Zeile 347)
-- Header-Spalten: gleiche feste Breite anwenden (Zeilen 590, 597)
-- Inneres `overflow-auto no-scrollbar` vom Grid-Body entfernen (Zeile 630)
-- Settings-Popover: Slider fuer Spaltenbreite ergaenzen (nach Zeile 509)
+
+**1. `src/components/zenbook/ZenBookApp.tsx`** (Zeile 419):
+- Wenn `currentView === 'calendar'`: Padding von `p-10` auf `p-0` reduzieren, damit der Kalender den gesamten Platz nutzt
+- Fuer alle anderen Views bleibt `p-10`
+
+**2. `src/components/zenbook/StaffCalendarView.tsx`**:
+- Container-Hoehe: Statt fester `containerHeight` wird `flex-1` mit `h-full` verwendet - der Kalender fuellt automatisch den gesamten verfuegbaren Platz
+- Entfernen der manuellen Resize-Controls (Plus-Icon oben links) und Fullscreen-Toggle (Maximize oben rechts) - nicht mehr noetig wenn der Kalender immer den vollen Platz einnimmt
+- Die States `containerWidth`, `containerHeight`, `isFullscreen`, `savedSize`, `isResizingContainer` und zugehoerige Handler (`handleContainerResizeStart`, `toggleFullscreen`) werden entfernt
+- Der aeussere Wrapper bekommt `h-full flex flex-col` und der Kalender-Grid-Container bekommt `flex-1 overflow-auto` statt einer festen Pixel-Hoehe
+- Header-Bereich (`mb-6`) wird auf `mb-2 px-4 pt-2` komprimiert fuer weniger Platzverschwendung (aehnlich Treatwell)
+
+### Ergebnis
+Der Kalender fuellt wie bei Treatwell den gesamten Bildschirmbereich automatisch aus - ohne manuelle Groessenanpassung noetig.
 
