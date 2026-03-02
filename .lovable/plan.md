@@ -1,16 +1,26 @@
 
 
-## Plan: Salon-Profil als klarer "Profil"-Menüpunkt
+## Problem Analysis
 
-### Was ist das Ziel?
-Der bestehende Menüpunkt "Salon-Profil" im Portal-Sidebar soll der zentrale Ort sein, um die Mini-Website (Marktplatzprofil) einzustellen. Keine neuen Features nötig -- die Seite `/portal/salon-profile` existiert bereits mit allen Einstellungen (Logo, Cover, Name, Kontakt, Social Media, Galerie).
+After investigating the code and database, I found the issue:
 
-### Änderung
+When you upload a **Logo** or **Cover-Bild** on the Salon-Profil page, the image file is uploaded to storage successfully, but the **URL is only saved in the browser's temporary state** (React state). The URL is **not automatically saved to the database**. You must manually click "Salon-Profil speichern" at the bottom of the page after every image upload.
 
-**`src/components/portal/PortalSidebar.tsx`**
-- Der Menüpunkt "Salon-Profil" ist bereits vorhanden (Zeile mit `Store`-Icon, Pfad `/portal/salon-profile`)
-- Falls gewünscht: Label von "Salon-Profil" zu "Profil" umbenennen oder an prominentere Position verschieben (z.B. weiter oben in der Liste)
+This is confusing and error-prone -- if you navigate away without clicking save, the uploaded image URL is lost (the file exists in storage but the database doesn't know about it).
 
-### Zusammenfassung
-Es ist alles bereits implementiert. Die einzige mögliche Anpassung wäre das Umbenennen oder Umpositionieren des Menüpunkts. Wenn du auf "Salon-Profil" im Sidebar klickst, kommst du direkt zur Konfigurationsseite deiner Mini-Website.
+**Database confirms this:** Your cover image URL is saved (you probably clicked save after uploading it), but no logo URL exists in the database.
+
+## Proposed Fix
+
+**Auto-save image URLs to the database immediately after upload**, so users don't have to remember to click "save" separately.
+
+### Changes to `src/pages/portal/SalonProfile.tsx`:
+1. In `handleLogoUpload`: After successfully uploading the file and getting the public URL, immediately update the `customers` table with the new `logo_url` (in addition to updating local state)
+2. In `handleCoverUpload`: Same -- immediately update the `customers` table with the new `cover_image_url`
+3. When the user clicks the X to remove a cover image, also immediately persist that removal to the database
+
+### Changes to `src/components/portal/SalonImageManager.tsx`:
+4. Remove the duplicate "Salon-Beschreibung" Card section, since `SalonProfile.tsx` already has a description field -- this avoids confusion about which description field is authoritative
+
+No database or Edge Function changes are needed.
 
