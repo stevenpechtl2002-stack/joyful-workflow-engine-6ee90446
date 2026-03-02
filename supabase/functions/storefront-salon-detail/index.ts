@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       salon: {
         id: salon.id,
-        name: salon.company_name || salon.email,
+        name: salon.company_name || 'Salon',
         city: salon.city,
         address: salon.address,
         postal_code: salon.postal_code,
