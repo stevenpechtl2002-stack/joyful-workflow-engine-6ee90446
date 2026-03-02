@@ -293,13 +293,13 @@ const ZenBookApp: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden p-4 gap-6 relative">
       {/* 3D Floating Sidebar */}
-      <aside className={`fixed lg:relative h-[calc(100vh-2rem)] z-50 flex flex-col gap-4 shrink-0 floating-3d rounded-2xl p-6 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0 lg:p-3 overflow-hidden'}`}>
-        <div className={`flex items-center gap-3 mb-4 transition-opacity duration-300 ${!isSidebarOpen && 'lg:opacity-0'}`}>
+      <aside className={`fixed lg:relative h-[calc(100vh-2rem)] z-50 flex flex-col gap-2 shrink-0 floating-3d rounded-2xl p-4 pt-3 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0 lg:p-3 overflow-hidden'}`}>
+        <div className={`flex items-center gap-3 mb-1 transition-opacity duration-300 ${!isSidebarOpen && 'lg:opacity-0'}`}>
           <Logo onClick={() => { handleLogout(); setUserRole(null); }} showText={isSidebarOpen} />
         </div>
 
         {/* Small Calendar - Now at top above navigation */}
-        <div className={`mb-4 transition-all duration-300 ${!isSidebarOpen && 'lg:scale-0 lg:h-0 overflow-hidden'}`}>
+        <div className={`mb-2 transition-all duration-300 ${!isSidebarOpen && 'lg:scale-0 lg:h-0 overflow-hidden'}`}>
            <div className="flex items-center justify-between px-2 mb-3">
              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{format(currentMonth, 'MMMM yyyy', { locale: de })}</span>
              <div className="flex gap-1">
