@@ -17,10 +17,15 @@ import {
   Search, LogOut, Shield, Ban, CheckCircle,
   TrendingUp, Clock, Key, Copy, Eye, EyeOff, Link2,
   CreditCard, Bot, Globe, Building2, ChevronDown, ChevronUp,
-  Mail, MapPin, Tag, BarChart3, UserX, Euro, ExternalLink
+  Mail, MapPin, Tag, BarChart3, UserX, Euro, ExternalLink,
+  UserPlus
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subWeeks, startOfWeek, endOfWeek, eachWeekOfInterval, eachMonthOfInterval, startOfMonth, subMonths, isWithinInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
+import {
+  BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
 
 interface Customer {
   id: string;
@@ -114,6 +119,15 @@ interface StripeSubscription {
   };
 }
 
+const CHART_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(142, 71%, 45%)',
+  'hsl(38, 92%, 50%)',
+  'hsl(280, 65%, 60%)',
+  'hsl(200, 80%, 50%)',
+  'hsl(350, 80%, 55%)',
+];
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, roles, signOut, isLoading } = useAuth();
@@ -125,7 +139,7 @@ const AdminDashboard = () => {
   const [storefrontBookings, setStorefrontBookings] = useState<any[]>([]);
   const [voiceAgentConfigs, setVoiceAgentConfigs] = useState<VoiceAgentConfig[]>([]);
   const [stripeSubscriptions, setStripeSubscriptions] = useState<StripeSubscription[]>([]);
-  const [transactions, setTransactions] = useState<{ user_id: string; amount: number }[]>([]);
+  const [transactions, setTransactions] = useState<{ user_id: string; amount: number; created_at?: string }[]>([]);
   const [contactCounts, setContactCounts] = useState<Record<string, number>>({});
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -179,7 +193,7 @@ const AdminDashboard = () => {
         supabase.from('call_logs').select('*').order('started_at', { ascending: false }).limit(100),
         supabase.from('reservations').select('id, user_id, customer_name, reservation_date, reservation_time, party_size, status, price_paid, source').order('reservation_date', { ascending: false }).limit(500),
         supabase.from('voice_agent_config').select('*').order('updated_at', { ascending: false }),
-        supabase.from('transactions').select('user_id, amount'),
+        supabase.from('transactions').select('user_id, amount, created_at'),
         supabase.from('contacts').select('user_id'),
         supabase.from('profiles').select('id, full_name'),
         supabase.from('storefront_bookings').select('*').order('created_at', { ascending: false }).limit(500),
@@ -193,18 +207,12 @@ const AdminDashboard = () => {
       if (reservationsRes.data) setReservations(reservationsRes.data as ReservationFull[]);
       if (storefrontRes.data) setStorefrontBookings(storefrontRes.data);
       if (voiceAgentRes.data) setVoiceAgentConfigs(voiceAgentRes.data);
-      
-      // Aggregate transactions per user
-      if (transactionsRes.data) setTransactions(transactionsRes.data);
-
-      // Count contacts per user
+      if (transactionsRes.data) setTransactions(transactionsRes.data as any);
       if (contactsRes.data) {
         const counts: Record<string, number> = {};
         contactsRes.data.forEach((c: any) => { counts[c.user_id] = (counts[c.user_id] || 0) + 1; });
         setContactCounts(counts);
       }
-
-      // Profile names
       if (profilesRes.data) {
         const map: Record<string, string> = {};
         profilesRes.data.forEach((p: any) => { if (p.full_name) map[p.id] = p.full_name; });
@@ -235,7 +243,6 @@ const AdminDashboard = () => {
   const revenueByUser = useMemo(() => {
     const map: Record<string, number> = {};
     transactions.forEach(t => { map[t.user_id] = (map[t.user_id] || 0) + Number(t.amount); });
-    // Also add reservation price_paid
     reservations.forEach(r => {
       if (r.price_paid) map[r.user_id] = (map[r.user_id] || 0) + Number(r.price_paid) * r.party_size;
     });
@@ -248,7 +255,6 @@ const AdminDashboard = () => {
     return map;
   }, [reservations]);
 
-  // Enriched customers
   const enrichedCustomers: CustomerEnriched[] = useMemo(() => {
     return customers.map(c => ({
       ...c,
@@ -258,6 +264,58 @@ const AdminDashboard = () => {
       profileName: profiles[c.id] || null,
     }));
   }, [customers, revenueByUser, reservationCountByUser, contactCounts, profiles]);
+
+  // ===== CHART DATA =====
+  const registrationsPerMonth = useMemo(() => {
+    const now = new Date();
+    const months = eachMonthOfInterval({ start: subMonths(now, 11), end: now });
+    return months.map(m => {
+      const monthStr = format(m, 'yyyy-MM');
+      const count = customers.filter(c => c.created_at.startsWith(monthStr)).length;
+      return { name: format(m, 'MMM yy', { locale: de }), registrierungen: count };
+    });
+  }, [customers]);
+
+  const revenuePerMonth = useMemo(() => {
+    const now = new Date();
+    const months = eachMonthOfInterval({ start: subMonths(now, 11), end: now });
+    return months.map(m => {
+      const monthStr = format(m, 'yyyy-MM');
+      const txRevenue = transactions
+        .filter(t => t.created_at && t.created_at.startsWith(monthStr))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      const resRevenue = reservations
+        .filter(r => r.reservation_date.startsWith(monthStr) && r.price_paid)
+        .reduce((sum, r) => sum + Number(r.price_paid!) * r.party_size, 0);
+      return { name: format(m, 'MMM yy', { locale: de }), umsatz: txRevenue + resRevenue };
+    });
+  }, [transactions, reservations]);
+
+  const reservationsPerWeek = useMemo(() => {
+    const now = new Date();
+    const weeks = eachWeekOfInterval({ start: subWeeks(now, 7), end: now }, { weekStartsOn: 1 });
+    return weeks.map(w => {
+      const weekEnd = endOfWeek(w, { weekStartsOn: 1 });
+      const resCount = reservations.filter(r => {
+        const d = new Date(r.reservation_date);
+        return d >= w && d <= weekEnd;
+      }).length;
+      const sfCount = storefrontBookings.filter((b: any) => {
+        const d = new Date(b.booking_date);
+        return d >= w && d <= weekEnd;
+      }).length;
+      return { name: `KW ${format(w, 'w')}`, reservierungen: resCount, storefront: sfCount };
+    });
+  }, [reservations, storefrontBookings]);
+
+  const categoryDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    customers.forEach(c => {
+      const cat = c.category || 'Ohne Kategorie';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [customers]);
 
   const toggleCustomerStatus = async (customerId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
@@ -292,7 +350,6 @@ const AdminDashboard = () => {
     setDetailDialogOpen(true);
   };
 
-  // Unique categories/plans for filters
   const uniqueCategories = useMemo(() => [...new Set(customers.map(c => c.category).filter(Boolean))], [customers]);
   const uniquePlans = useMemo(() => [...new Set(customers.map(c => c.plan))], [customers]);
 
@@ -332,11 +389,21 @@ const AdminDashboard = () => {
   const totalRevenue = Object.values(revenueByUser).reduce((sum, v) => sum + v, 0);
   const avgRevenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
 
-  // Customer detail: last reservations
   const customerReservations = useMemo(() => {
     if (!selectedCustomer) return [];
     return reservations.filter(r => r.user_id === selectedCustomer.id).slice(0, 10);
   }, [selectedCustomer, reservations]);
+
+  // Customer detail extras
+  const selectedVoiceAgent = useMemo(() => {
+    if (!selectedCustomer) return null;
+    return voiceAgentConfigs.find(v => v.user_id === selectedCustomer.id) || null;
+  }, [selectedCustomer, voiceAgentConfigs]);
+
+  const selectedSubscription = useMemo(() => {
+    if (!selectedCustomer) return null;
+    return stripeSubscriptions.find(s => s.customer_email === selectedCustomer.email) || null;
+  }, [selectedCustomer, stripeSubscriptions]);
 
   if (isLoading || dataLoading) {
     return (
@@ -458,14 +525,123 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* ===== CHARTS SECTION ===== */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Registrierungen pro Monat */}
           <Card className="glass-card border-border/50">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Storefront</p>
-                  <p className="text-2xl font-bold text-foreground">{storefrontBookings.length}</p>
-                </div>
-                <Globe className="w-7 h-7 text-indigo-500" />
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-primary" />
+                Registrierungen pro Monat
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={registrationsPerMonth}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Tooltip
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Bar dataKey="registrierungen" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Umsatz-Trend */}
+          <Card className="glass-card border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Euro className="w-4 h-4 text-emerald-500" />
+                Umsatz-Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenuePerMonth}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Tooltip
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                      formatter={(value: number) => [`${value.toFixed(0)}€`, 'Umsatz']}
+                    />
+                    <defs>
+                      <linearGradient id="colorUmsatz" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="umsatz" stroke="hsl(142, 71%, 45%)" fill="url(#colorUmsatz)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Reservierungen pro Woche */}
+          <Card className="glass-card border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-amber-500" />
+                Reservierungen pro Woche
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={reservationsPerWeek}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                    <Line type="monotone" dataKey="reservierungen" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="storefront" stroke="hsl(200, 80%, 50%)" strokeWidth={2} dot={{ r: 4 }} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Kundenverteilung nach Kategorie */}
+          <Card className="glass-card border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Tag className="w-4 h-4 text-purple-500" />
+                Kundenverteilung nach Kategorie
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, value }) => `${name} (${value})`}
+                      labelLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+                    >
+                      {categoryDistribution.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -475,6 +651,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="customers" className="space-y-6">
           <TabsList className="bg-secondary/50">
             <TabsTrigger value="customers">Kunden</TabsTrigger>
+            <TabsTrigger value="registrations">Registrierungen</TabsTrigger>
             <TabsTrigger value="subscriptions">Abonnements</TabsTrigger>
             <TabsTrigger value="voiceagents">Voice Agents</TabsTrigger>
             <TabsTrigger value="calls">Anrufe</TabsTrigger>
@@ -529,7 +706,6 @@ const AdminDashboard = () => {
                       className="p-4 rounded-xl border border-border/50 bg-card/50 hover:bg-card/80 cursor-pointer transition-all hover:shadow-md group"
                     >
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        {/* Left info */}
                         <div className="flex items-center gap-4 flex-1 min-w-0">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                             <span className="text-sm font-bold text-primary">
@@ -555,8 +731,6 @@ const AdminDashboard = () => {
                             </div>
                           </div>
                         </div>
-
-                        {/* Right metrics */}
                         <div className="flex items-center gap-6 text-sm shrink-0">
                           <div className="text-center">
                             <p className="text-xs text-muted-foreground">Umsatz</p>
@@ -590,6 +764,54 @@ const AdminDashboard = () => {
                     <div className="text-center text-muted-foreground py-12">Keine Kunden gefunden</div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ===== REGISTRATIONS TAB ===== */}
+          <TabsContent value="registrations">
+            <Card className="glass-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="w-5 h-5" />
+                  Alle Registrierungen
+                </CardTitle>
+                <CardDescription>Chronologische Liste aller Kunden-Registrierungen ({customers.length})</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Datum</TableHead>
+                      <TableHead>Name / Firma</TableHead>
+                      <TableHead>E-Mail</TableHead>
+                      <TableHead>Kategorie</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Umsatz</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {enrichedCustomers.map((c) => (
+                      <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openCustomerDetail(c)}>
+                        <TableCell className="text-sm">{format(new Date(c.created_at), 'dd.MM.yyyy HH:mm', { locale: de })}</TableCell>
+                        <TableCell className="font-medium">{c.company_name || c.profileName || '-'}</TableCell>
+                        <TableCell className="text-sm">{c.email}</TableCell>
+                        <TableCell>{c.category ? <Badge variant="secondary" className="text-[10px]">{c.category}</Badge> : '-'}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-[10px]">{c.plan}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant={c.status === 'active' ? 'default' : 'destructive'} className="text-[10px]">
+                            {c.status === 'active' ? 'Aktiv' : 'Gesperrt'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium text-emerald-500">{c.totalRevenue.toFixed(0)}€</TableCell>
+                      </TableRow>
+                    ))}
+                    {customers.length === 0 && (
+                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Keine Registrierungen vorhanden</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -910,6 +1132,92 @@ const AdminDashboard = () => {
                       <p className="text-lg font-bold">{selectedCustomer.contactCount}</p>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Technical Info: API Key, Webhook, Voice Agent, Stripe */}
+              <div className="mt-4 space-y-3 border-t border-border/50 pt-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Technische Details</p>
+                
+                {/* API Key */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">API-Key</p>
+                      <p className="text-sm font-mono">
+                        {selectedCustomer.api_key 
+                          ? (visibleApiKeys.has(selectedCustomer.id) ? selectedCustomer.api_key : '••••••••-••••-••••-••••')
+                          : 'Nicht vorhanden'}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedCustomer.api_key && (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => toggleApiKeyVisibility(selectedCustomer.id)}>
+                        {visibleApiKeys.has(selectedCustomer.id) ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(selectedCustomer.api_key!, 'API-Key')}>
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Webhook URL */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Webhook-URL</p>
+                      <p className="text-xs font-mono truncate">{webhookBaseUrl}?api_key={selectedCustomer.api_key || 'N/A'}</p>
+                    </div>
+                  </div>
+                  {selectedCustomer.api_key && (
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`${webhookBaseUrl}?api_key=${selectedCustomer.api_key}`, 'Webhook-URL')}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Voice Agent Status */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Voice Agent</p>
+                      <p className="text-sm">
+                        {selectedVoiceAgent 
+                          ? `${selectedVoiceAgent.business_name || 'Konfiguriert'} — ${selectedVoiceAgent.is_active ? 'Aktiv' : 'Inaktiv'}`
+                          : 'Nicht konfiguriert'}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedVoiceAgent && (
+                    <Badge variant={selectedVoiceAgent.is_active ? 'default' : 'secondary'} className={selectedVoiceAgent.is_active ? 'bg-green-500' : ''}>
+                      {selectedVoiceAgent.is_active ? 'Aktiv' : 'Inaktiv'}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Stripe Subscription */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Stripe Abo</p>
+                      <p className="text-sm">
+                        {selectedSubscription
+                          ? `${selectedSubscription.metadata?.tier_name || 'Abo'} — ${formatSubscriptionStatus(selectedSubscription.status).label}`
+                          : 'Kein Abo'}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedSubscription && (
+                    <Badge variant={formatSubscriptionStatus(selectedSubscription.status).variant}>
+                      {formatSubscriptionStatus(selectedSubscription.status).label}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
