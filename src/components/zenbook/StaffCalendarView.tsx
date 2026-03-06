@@ -5,7 +5,7 @@ import {
 import { de } from 'date-fns/locale';
 import {
   Plus, ChevronLeft, ChevronRight, LayoutGrid, CalendarDays, Clock,
-  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck
+  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
@@ -18,6 +18,7 @@ import { Product } from '@/hooks/useProducts';
 import ReservationForm from './ReservationForm';
 import { AvailabilityView } from '@/components/portal/AvailabilityView';
 import { StaffManagementDialog } from '@/components/portal/StaffManagementDialog';
+import { SmartTextImport } from '@/components/portal/SmartTextImport';
 
 const SLOT_HEIGHT = 30; // px per 30 min
 const START_HOUR = 8;
@@ -78,6 +79,7 @@ const StaffCalendarView: React.FC<Props> = ({
   const [detailReservation, setDetailReservation] = useState<Reservation | null>(null);
   const [dragOverStaff, setDragOverStaff] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [isSmartImportOpen, setIsSmartImportOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const activeStaff = useMemo(() =>
@@ -358,11 +360,9 @@ const StaffCalendarView: React.FC<Props> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="mb-2 px-4 pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-6">
-          <h3 className="text-3xl font-black text-foreground tracking-tighter">
-            {format(selectedDate, 'EEEE, d. MMMM', { locale: de })}
-          </h3>
+      <div className="mb-2 px-4 pt-2 space-y-2">
+        {/* Top row: Date centered */}
+        <div className="flex items-center justify-center gap-4">
           <div className="flex gap-1 bg-muted p-1 rounded-2xl border border-border shadow-sm">
             <button onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'day' ? -1 : -7))}
               className="p-2 hover:bg-card hover:shadow-sm rounded-xl text-muted-foreground transition-all">
@@ -377,121 +377,131 @@ const StaffCalendarView: React.FC<Props> = ({
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+          <h3 className="text-3xl font-black text-foreground tracking-tighter">
+            {format(selectedDate, 'EEEE, d. MMMM', { locale: de })}
+          </h3>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Calendar mode toggle */}
-          <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
-            <button onClick={() => setCalendarMode('calendar')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
-                calendarMode === 'calendar' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-              }`}>
-              <CalendarDays className="w-3.5 h-3.5" /> KALENDER
-            </button>
-            <button onClick={() => setCalendarMode('availability')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
-                calendarMode === 'availability' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-              }`}>
-              <CheckCircle2 className="w-3.5 h-3.5" /> FREIE SLOTS
-            </button>
+        {/* Bottom row: Mode toggles + actions */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
+              <button onClick={() => setCalendarMode('calendar')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
+                  calendarMode === 'calendar' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                }`}>
+                <CalendarDays className="w-3.5 h-3.5" /> KALENDER
+              </button>
+              <button onClick={() => setCalendarMode('availability')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
+                  calendarMode === 'availability' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                }`}>
+                <CheckCircle2 className="w-3.5 h-3.5" /> FREIE SLOTS
+              </button>
+            </div>
+            <StaffManagementDialog trigger={
+              <button className="flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
+                <Users className="w-3.5 h-3.5" /> DIENSTPLAN
+              </button>
+            } />
           </div>
 
-          {/* Dienstplan button */}
-          <StaffManagementDialog trigger={
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
-              <Users className="w-3.5 h-3.5" /> DIENSTPLAN
-            </button>
-          } />
-
-          {calendarMode === 'calendar' && (
-            <>
-              {/* View toggle */}
-              <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
-                <button onClick={() => setViewMode('day')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
-                    viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                  }`}>
-                  <LayoutGrid className="w-3.5 h-3.5" /> TAG
-                </button>
-                <button onClick={() => setViewMode('week')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
-                    viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                  }`}>
-                  <CalendarDays className="w-3.5 h-3.5" /> WOCHE
-                </button>
-              </div>
-
-              {/* Settings */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="p-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground transition-all">
-                    <Settings2 className="w-4 h-4" />
+          <div className="flex items-center gap-3">
+            {calendarMode === 'calendar' && (
+              <>
+                <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
+                  <button onClick={() => setViewMode('day')}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
+                      viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                    }`}>
+                    <LayoutGrid className="w-3.5 h-3.5" /> TAG
                   </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 p-5 bg-card border border-border rounded-2xl shadow-2xl" align="end">
-                  <div className="space-y-5">
-                    <div>
-                      <h4 className="text-sm font-black text-foreground mb-1">Einstellungen</h4>
+                  <button onClick={() => setViewMode('week')}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
+                      viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                    }`}>
+                    <CalendarDays className="w-3.5 h-3.5" /> WOCHE
+                  </button>
+                </div>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="p-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground transition-all">
+                      <Settings2 className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-5 bg-card border border-border rounded-2xl shadow-2xl" align="end">
+                    <div className="space-y-5">
+                      <div>
+                        <h4 className="text-sm font-black text-foreground mb-1">Einstellungen</h4>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="zen-label">Zeilenhöhe</label>
+                          <span className="text-xs font-black text-primary">{rowHeight}px</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => setRowHeight(Math.max(40, rowHeight - 10))} className="p-1.5 bg-muted rounded-lg">
+                            <Minus className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                          <Slider value={[rowHeight]} onValueChange={v => setRowHeight(v[0])} min={40} max={160} step={10} className="flex-1" />
+                          <button onClick={() => setRowHeight(Math.min(160, rowHeight + 10))} className="p-1.5 bg-muted rounded-lg">
+                            <Plus className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="zen-label">Intervall</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {TIME_INTERVALS.map(interval => (
+                            <button key={interval} onClick={() => setTimeInterval(interval)}
+                              className={`py-2 rounded-xl text-xs font-black transition-all ${
+                                timeInterval === interval
+                                  ? 'bg-primary text-primary-foreground shadow-lg'
+                                  : 'bg-muted text-muted-foreground hover:bg-card border border-border'
+                              }`}>
+                              {interval}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <label className="zen-label">Zeilenhöhe</label>
-                        <span className="text-xs font-black text-primary">{rowHeight}px</span>
+                        <label className="zen-label">Spaltenbreite</label>
+                        <span className="text-xs font-black text-primary">{columnWidth}px</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button onClick={() => setRowHeight(Math.max(40, rowHeight - 10))} className="p-1.5 bg-muted rounded-lg">
+                        <button onClick={() => setColumnWidth(Math.max(80, columnWidth - 10))} className="p-1.5 bg-muted rounded-lg">
                           <Minus className="w-3 h-3 text-muted-foreground" />
                         </button>
-                        <Slider value={[rowHeight]} onValueChange={v => setRowHeight(v[0])} min={40} max={160} step={10} className="flex-1" />
-                        <button onClick={() => setRowHeight(Math.min(160, rowHeight + 10))} className="p-1.5 bg-muted rounded-lg">
+                        <Slider value={[columnWidth]} onValueChange={v => setColumnWidth(v[0])} min={80} max={300} step={10} className="flex-1" />
+                        <button onClick={() => setColumnWidth(Math.min(300, columnWidth + 10))} className="p-1.5 bg-muted rounded-lg">
                           <Plus className="w-3 h-3 text-muted-foreground" />
                         </button>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="zen-label">Intervall</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {TIME_INTERVALS.map(interval => (
-                          <button key={interval} onClick={() => setTimeInterval(interval)}
-                            className={`py-2 rounded-xl text-xs font-black transition-all ${
-                              timeInterval === interval
-                                ? 'bg-primary text-primary-foreground shadow-lg'
-                                : 'bg-muted text-muted-foreground hover:bg-card border border-border'
-                            }`}>
-                            {interval}m
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="zen-label">Spaltenbreite</label>
-                      <span className="text-xs font-black text-primary">{columnWidth}px</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setColumnWidth(Math.max(80, columnWidth - 10))} className="p-1.5 bg-muted rounded-lg">
-                        <Minus className="w-3 h-3 text-muted-foreground" />
-                      </button>
-                      <Slider value={[columnWidth]} onValueChange={v => setColumnWidth(v[0])} min={80} max={300} step={10} className="flex-1" />
-                      <button onClick={() => setColumnWidth(Math.min(300, columnWidth + 10))} className="p-1.5 bg-muted rounded-lg">
-                        <Plus className="w-3 h-3 text-muted-foreground" />
-                      </button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
 
-              {/* Add button */}
-              <button onClick={() => {
-                setEditingId(null);
-                setFormInitial({ date: dateStr, time: '09:00', end_time: '10:00' });
-                setFormOpen(true);
-              }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all">
-                <Plus className="w-4 h-4" /> Termin
-              </button>
-            </>
-          )}
+                {/* Treatwell Import button */}
+                <button 
+                  onClick={() => setIsSmartImportOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all"
+                >
+                  <ImageIcon className="w-4 h-4" /> Treatwell Import
+                </button>
+
+                <button onClick={() => {
+                  setEditingId(null);
+                  setFormInitial({ date: dateStr, time: '09:00', end_time: '10:00' });
+                  setFormOpen(true);
+                }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all">
+                  <Plus className="w-4 h-4" /> Termin
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -680,6 +690,16 @@ const StaffCalendarView: React.FC<Props> = ({
           </div>
         </div>
       )}
+
+      {/* Smart Text Import Dialog */}
+      <SmartTextImport
+        isOpen={isSmartImportOpen}
+        onClose={() => setIsSmartImportOpen(false)}
+        onSuccess={() => {
+          setIsSmartImportOpen(false);
+        }}
+        defaultDate={selectedDate}
+      />
     </div>
   );
 };
