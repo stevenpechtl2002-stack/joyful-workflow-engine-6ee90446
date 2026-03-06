@@ -640,15 +640,16 @@ export const StaffCalendarView = () => {
             </Button>
           </div>
           <Button 
-            variant="outline" 
+            variant="default" 
             size="sm" 
+            className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md"
             onClick={() => {
               setSmartImportStaffId(undefined);
               setIsSmartImportOpen(true);
             }}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Text Import
+            Treatwell Import
           </Button>
           <StaffManagementDialog />
         </div>
