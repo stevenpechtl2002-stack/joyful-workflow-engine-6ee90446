@@ -5,10 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// fiskaly uses separate URLs for different operations
-const FISKALY_MIDDLEWARE = 'https://kassensichv-middleware.fiskaly.com/api/v2';
-const FISKALY_BACKEND = 'https://kassensichv.fiskaly.com/api/v2';
-
+const FISKALY_MW = 'https://kassensichv-middleware.fiskaly.com/api/v2';
+const FISKALY_BE = 'https://kassensichv.fiskaly.com/api/v2';
 const ADMIN_PIN = '112877';
 
 Deno.serve(async (req) => {
@@ -28,137 +26,163 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
     }
 
     const apiKey = Deno.env.get('FISKALY_API_KEY');
     const apiSecret = Deno.env.get('FISKALY_API_SECRET');
-    const tssId = Deno.env.get('FISKALY_TSS_ID');
 
-    if (!apiKey || !apiSecret || !tssId) {
+    if (!apiKey || !apiSecret) {
       return new Response(JSON.stringify({ error: 'Fiskaly credentials not configured' }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 1: Get API token (backend - for TSS management)
-    console.log('[FISKALY] Getting backend API token...');
-    const apiAuthResp = await fetch(`${FISKALY_BACKEND}/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
-    });
-
-    if (!apiAuthResp.ok) {
-      const errText = await apiAuthResp.text();
-      return new Response(JSON.stringify({ error: 'Fiskaly API auth failed', details: errText }), { status: 500, headers: corsHeaders });
-    }
-
-    const apiAuthData = await apiAuthResp.json() as any;
-    const apiToken = apiAuthData.access_token;
-    console.log('[FISKALY] API auth successful');
-
-    // Step 2: Check TSS state
-    const tssResp = await fetch(`${FISKALY_BACKEND}/tss/${tssId}`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${apiToken}` },
-    });
-
-    if (!tssResp.ok) {
-      const errText = await tssResp.text();
-      return new Response(JSON.stringify({ error: 'Failed to get TSS', details: errText }), { status: 500, headers: corsHeaders });
-    }
-
-    const tssData = await tssResp.json() as any;
-    console.log('[FISKALY] TSS state:', tssData.state);
-
-    // Step 3: Initialize TSS if needed
-    if (tssData.state === 'UNINITIALIZED' || tssData.state === 'CREATED') {
-      if (tssData.state === 'CREATED') {
-        console.log('[FISKALY] Moving TSS to UNINITIALIZED...');
-        const deployResp = await fetch(`${FISKALY_BACKEND}/tss/${tssId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiToken}`,
-          },
-          body: JSON.stringify({ state: 'UNINITIALIZED' }),
-        });
-        if (!deployResp.ok) {
-          const errText = await deployResp.text();
-          return new Response(JSON.stringify({ error: 'TSS deploy failed', details: errText }), { status: 500, headers: corsHeaders });
-        }
-        console.log('[FISKALY] TSS set to UNINITIALIZED');
-      }
-
-      // Get admin token via MIDDLEWARE auth with admin PIN
-      console.log('[FISKALY] Getting admin token via middleware...');
-      const adminAuthResp = await fetch(`${FISKALY_MIDDLEWARE}/auth`, {
+    // Auth via both endpoints
+    console.log('[FISKALY] Authenticating...');
+    const [beAuthResp, mwAuthResp] = await Promise.all([
+      fetch(`${FISKALY_BE}/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          api_key: apiKey,
-          api_secret: apiSecret,
-          tss_id: tssId,
-          type: 'admin',
-          admin_pin: ADMIN_PIN,
-        }),
-      });
+        body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      }),
+      fetch(`${FISKALY_MW}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      }),
+    ]);
 
-      if (!adminAuthResp.ok) {
-        const errText = await adminAuthResp.text();
-        console.log('[FISKALY] Middleware admin auth failed:', errText);
-        return new Response(JSON.stringify({ 
-          error: 'Admin authentication failed', 
-          details: errText 
-        }), { status: 500, headers: corsHeaders });
-      }
-
-      const adminAuthData = await adminAuthResp.json() as any;
-      const adminToken = adminAuthData.access_token;
-      console.log('[FISKALY] Middleware admin auth successful');
-
-      // Initialize TSS via MIDDLEWARE with admin token
-      console.log('[FISKALY] Initializing TSS via middleware...');
-      const initResp = await fetch(`${FISKALY_MIDDLEWARE}/tss/${tssId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify({ state: 'INITIALIZED' }),
-      });
-
-      if (!initResp.ok) {
-        const errText = await initResp.text();
-        console.log('[FISKALY] Init failed:', errText);
-        return new Response(JSON.stringify({ error: 'TSS initialization failed', details: errText }), { status: 500, headers: corsHeaders });
-      }
-      console.log('[FISKALY] TSS initialized successfully!');
+    if (!beAuthResp.ok || !mwAuthResp.ok) {
+      return new Response(JSON.stringify({ error: 'Auth failed' }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 4: Get middleware token for client registration
-    console.log('[FISKALY] Getting middleware token...');
-    const mwAuthResp = await fetch(`${FISKALY_MIDDLEWARE}/auth`, {
+    const { access_token: beToken } = await beAuthResp.json() as any;
+    const { access_token: mwToken } = await mwAuthResp.json() as any;
+    console.log('[FISKALY] Auth OK');
+
+    // List all TSS to find unused ones to disable
+    console.log('[FISKALY] Listing all TSS...');
+    const listResp = await fetch(`${FISKALY_BE}/tss`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${beToken}` },
+    });
+    const listData = await listResp.json() as any;
+    const allTss = listData.data || [];
+    console.log('[FISKALY] Found', allTss.length, 'TSS');
+
+    // Disable TSS that are UNINITIALIZED or CREATED (not needed)
+    for (const tss of allTss) {
+      if (tss.state === 'UNINITIALIZED' || tss.state === 'CREATED') {
+        console.log('[FISKALY] Disabling unused TSS:', tss._id, 'state:', tss.state);
+        
+        if (tss.state === 'UNINITIALIZED') {
+          // Need admin auth to disable - try changing PIN first if we have PUK
+          // For UNINITIALIZED without PUK, we use middleware to disable
+          const disableResp = await fetch(`${FISKALY_MW}/tss/${tss._id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${mwToken}`,
+            },
+            body: JSON.stringify({ state: 'DISABLED' }),
+          });
+          console.log('[FISKALY] Disable result:', disableResp.status);
+        }
+      }
+    }
+
+    // Now create a new TSS via BACKEND
+    const newTssId = crypto.randomUUID();
+    console.log('[FISKALY] Creating new TSS:', newTssId);
+    const createResp = await fetch(`${FISKALY_BE}/tss/${newTssId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${beToken}`,
+      },
+      body: JSON.stringify({ description: 'ZenBook KassenSichV TSE' }),
+    });
+    const createText = await createResp.text();
+    console.log('[FISKALY] Create TSS:', createResp.status);
+    if (!createResp.ok) {
+      return new Response(JSON.stringify({ error: 'Create TSS failed', details: createText }), { status: 500, headers: corsHeaders });
+    }
+    const tssData = JSON.parse(createText);
+    const adminPuk = tssData.admin_puk;
+    console.log('[FISKALY] PUK:', !!adminPuk);
+    if (!adminPuk) {
+      return new Response(JSON.stringify({ error: 'No PUK' }), { status: 500, headers: corsHeaders });
+    }
+
+    // Deploy TSS via MIDDLEWARE
+    console.log('[FISKALY] Deploying...');
+    const deployResp = await fetch(`${FISKALY_MW}/tss/${newTssId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mwToken}`,
+      },
+      body: JSON.stringify({ state: 'UNINITIALIZED' }),
+    });
+    console.log('[FISKALY] Deploy:', deployResp.status);
+    if (!deployResp.ok) {
+      const err = await deployResp.text();
+      return new Response(JSON.stringify({ error: 'Deploy failed', details: err }), { status: 500, headers: corsHeaders });
+    }
+
+    // Set admin PIN with PUK via MIDDLEWARE
+    console.log('[FISKALY] Setting PIN...');
+    const pinResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/admin`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mwToken}`,
+      },
+      body: JSON.stringify({ admin_puk: adminPuk, new_admin_pin: ADMIN_PIN }),
+    });
+    console.log('[FISKALY] PIN:', pinResp.status);
+
+    // Admin auth via MIDDLEWARE
+    console.log('[FISKALY] Admin auth...');
+    const adminAuthResp = await fetch(`${FISKALY_MW}/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      body: JSON.stringify({
+        api_key: apiKey,
+        api_secret: apiSecret,
+        tss_id: newTssId,
+        type: 'admin',
+        admin_pin: ADMIN_PIN,
+      }),
     });
+    console.log('[FISKALY] Admin auth:', adminAuthResp.status);
+    if (!adminAuthResp.ok) {
+      const err = await adminAuthResp.text();
+      return new Response(JSON.stringify({ error: 'Admin auth failed', details: err }), { status: 500, headers: corsHeaders });
+    }
+    const { access_token: adminToken } = await adminAuthResp.json() as any;
 
-    if (!mwAuthResp.ok) {
-      const errText = await mwAuthResp.text();
-      return new Response(JSON.stringify({ error: 'Middleware auth failed', details: errText }), { status: 500, headers: corsHeaders });
+    // Initialize via MIDDLEWARE with admin token
+    console.log('[FISKALY] Initializing...');
+    const initResp = await fetch(`${FISKALY_MW}/tss/${newTssId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ state: 'INITIALIZED' }),
+    });
+    console.log('[FISKALY] Init:', initResp.status);
+    if (!initResp.ok) {
+      const err = await initResp.text();
+      return new Response(JSON.stringify({ error: 'Init failed', details: err }), { status: 500, headers: corsHeaders });
     }
 
-    const mwAuthData = await mwAuthResp.json() as any;
-    const mwToken = mwAuthData.access_token;
-
-    // Step 5: Register client
+    // Register client via MIDDLEWARE
     const clientId = crypto.randomUUID();
     console.log('[FISKALY] Registering client:', clientId);
-
-    const clientResp = await fetch(`${FISKALY_MIDDLEWARE}/tss/${tssId}/client/${clientId}`, {
+    const clientResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/client/${clientId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -166,18 +190,17 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({ serial_number: `ZENBOOK-${clientId.substring(0, 8).toUpperCase()}` }),
     });
-
     if (!clientResp.ok) {
-      const errText = await clientResp.text();
-      console.log('[FISKALY] Client registration failed:', errText);
-      return new Response(JSON.stringify({ error: 'Client registration failed', details: errText }), { status: 500, headers: corsHeaders });
+      const err = await clientResp.text();
+      return new Response(JSON.stringify({ error: 'Client reg failed', details: err }), { status: 500, headers: corsHeaders });
     }
 
     const clientData = await clientResp.json();
-    console.log('[FISKALY] Client registered successfully:', clientId);
+    console.log('[FISKALY] SUCCESS! TSS:', newTssId, 'Client:', clientId);
 
     return new Response(JSON.stringify({
       success: true,
+      tss_id: newTssId,
       client_id: clientId,
       client: clientData,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
