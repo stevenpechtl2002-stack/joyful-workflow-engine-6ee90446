@@ -55,8 +55,8 @@ const FiskalySetupCard: React.FC = () => {
       </p>
 
       {result?.success && (
-        <div className="mb-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-          <p className="text-xs font-bold text-green-400">✓ Client erfolgreich registriert</p>
+        <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+          <p className="text-xs font-bold text-primary">✓ Client erfolgreich registriert</p>
           <p className="text-[10px] text-muted-foreground mt-1 font-mono">Client-ID: {result.client_id}</p>
         </div>
       )}
