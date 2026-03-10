@@ -20,6 +20,64 @@ interface Props {
   onSimulateIncoming: (payload: any) => void;
 }
 
+const FiskalySetupCard: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; client_id?: string; error?: string } | null>(null);
+
+  const handleSetup = async () => {
+    setLoading(true);
+    setResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('fiskaly-setup');
+      if (error) throw error;
+      setResult(data);
+    } catch (err: any) {
+      setResult({ success: false, error: err.message || 'Unbekannter Fehler' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 border border-border shadow-xl card-3d rim-light">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-inner">
+          <Receipt className="w-7 h-7" />
+        </div>
+        <div>
+          <h4 className="text-2xl font-black text-foreground tracking-tighter">TSE / KassenSichV</h4>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">fiskaly Cloud-TSE</p>
+        </div>
+      </div>
+
+      <p className="text-sm text-muted-foreground mb-6">
+        Registriere automatisch einen fiskaly Client unter deiner TSS. Damit wird dein Kassensystem KassenSichV-konform.
+      </p>
+
+      {result?.success && (
+        <div className="mb-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+          <p className="text-xs font-bold text-green-400">✓ Client erfolgreich registriert</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-mono">Client-ID: {result.client_id}</p>
+        </div>
+      )}
+
+      {result && !result.success && (
+        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
+          <p className="text-xs font-bold text-destructive">Fehler: {result.error}</p>
+        </div>
+      )}
+
+      <button
+        onClick={handleSetup}
+        disabled={loading}
+        className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-black text-xs hover:bg-primary/90 transition-all disabled:opacity-50 uppercase tracking-widest"
+      >
+        {loading ? 'Wird eingerichtet...' : 'fiskaly Client registrieren'}
+      </button>
+    </div>
+  );
+};
+
 const Settings: React.FC<Props> = ({ onSimulateIncoming }) => {
   const { isAuthenticated } = useAuth();
   const [webhookUrl, setWebhookUrl] = useState(localStorage.getItem('zenbook_webhook_url') || '');

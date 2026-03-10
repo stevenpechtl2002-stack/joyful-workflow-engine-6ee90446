@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.pos-checkout]
 verify_jwt = false
+
+[functions.fiskaly-setup]
+verify_jwt = false
