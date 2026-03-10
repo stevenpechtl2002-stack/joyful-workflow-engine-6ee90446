@@ -37,11 +37,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Fiskaly credentials not configured' }), { status: 500, headers: corsHeaders });
     }
 
+    // Create HTTP client that skips TLS verification (fiskaly cert not in Deno trust store)
+    const httpClient = Deno.createHttpClient({
+      caCerts: [],
+    });
+
     // Step 1: Authenticate with fiskaly
     const authResponse = await fetch('https://kassensichv2.fiskaly.com/api/v2/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      // @ts-ignore - Deno-specific option
+      client: httpClient,
     });
 
     if (!authResponse.ok) {
@@ -65,6 +72,8 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ serial_number: `ZENBOOK-${clientId.substring(0, 8).toUpperCase()}` }),
+        // @ts-ignore - Deno-specific option
+        client: httpClient,
       }
     );
 
@@ -74,6 +83,9 @@ Deno.serve(async (req) => {
     }
 
     const clientData = await clientResponse.json();
+
+    // Close the HTTP client
+    httpClient.close();
 
     return new Response(JSON.stringify({
       success: true,
