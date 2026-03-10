@@ -375,6 +375,54 @@ const SalonProfile = () => {
           </Card>
         </motion.div>
 
+        {/* Booking Settings */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="text-xl font-display flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                Buchungseinstellungen
+              </CardTitle>
+              <CardDescription>Stornierungsregeln und Pufferzeiten</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Kostenlose Stornierung bis (Stunden vorher)</Label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={formData.cancellation_hours}
+                      onChange={e => setFormData(prev => ({ ...prev, cancellation_hours: parseInt(e.target.value) || 0 }))}
+                      className="pl-10 bg-secondary/50"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Kunden können bis {formData.cancellation_hours}h vorher kostenlos stornieren</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Pufferzeit zwischen Terminen (Minuten)</Label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      min="0"
+                      max="60"
+                      step="5"
+                      value={formData.buffer_minutes}
+                      onChange={e => setFormData(prev => ({ ...prev, buffer_minutes: parseInt(e.target.value) || 0 }))}
+                      className="pl-10 bg-secondary/50"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Automatische Pause zwischen Buchungen</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Gallery Manager */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <Card className="border-border/50">
