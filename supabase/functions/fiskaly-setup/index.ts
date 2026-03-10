@@ -92,9 +92,9 @@ Deno.serve(async (req) => {
         console.log('[FISKALY] TSS set to UNINITIALIZED');
       }
 
-      // Get admin token via backend auth with admin PIN
-      console.log('[FISKALY] Getting admin token...');
-      const adminAuthResp = await fetch(`${FISKALY_BACKEND}/auth`, {
+      // Get admin token via MIDDLEWARE auth with admin PIN
+      console.log('[FISKALY] Getting admin token via middleware...');
+      const adminAuthResp = await fetch(`${FISKALY_MIDDLEWARE}/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,20 +108,20 @@ Deno.serve(async (req) => {
 
       if (!adminAuthResp.ok) {
         const errText = await adminAuthResp.text();
-        console.log('[FISKALY] Admin auth failed:', errText);
+        console.log('[FISKALY] Middleware admin auth failed:', errText);
         return new Response(JSON.stringify({ 
-          error: 'Admin authentication failed. Bitte prüfe die Admin-PIN im fiskaly Dashboard.', 
+          error: 'Admin authentication failed', 
           details: errText 
         }), { status: 500, headers: corsHeaders });
       }
 
       const adminAuthData = await adminAuthResp.json() as any;
       const adminToken = adminAuthData.access_token;
-      console.log('[FISKALY] Admin auth successful');
+      console.log('[FISKALY] Middleware admin auth successful');
 
-      // Initialize TSS with admin token via backend
-      console.log('[FISKALY] Initializing TSS...');
-      const initResp = await fetch(`${FISKALY_BACKEND}/tss/${tssId}`, {
+      // Initialize TSS via MIDDLEWARE with admin token
+      console.log('[FISKALY] Initializing TSS via middleware...');
+      const initResp = await fetch(`${FISKALY_MIDDLEWARE}/tss/${tssId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
