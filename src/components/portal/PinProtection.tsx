@@ -40,7 +40,7 @@ export const PinProtectionProvider = ({ children }: { children: ReactNode }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
   const [inactivityTimeout, setInactivityTimeoutState] = useState(1); // minutes
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
 
   // Load timeout setting from localStorage
