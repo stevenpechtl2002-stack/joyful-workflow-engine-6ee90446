@@ -599,7 +599,12 @@ const StaffCalendarView: React.FC<Props> = ({
                   {activeStaff.map((staff) => renderColumn(staff.id, selectedDate))}
                 </> :
 
-            weekDays.map((day) => renderColumn(null, day))
+            weekDays.map((day) => (
+              <React.Fragment key={`week-col-${day.toString()}`}>
+                {renderColumn(null, day)}
+                {activeStaff.map((staff) => renderColumn(staff.id, day))}
+              </React.Fragment>
+            ))
             }
             </div>
           </div>
