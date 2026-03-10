@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Fetch salon info by id or slug
     let salonQuery = supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, slug");
+      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, slug, cancellation_hours, buffer_minutes");
     
     if (salon_id) {
       salonQuery = salonQuery.eq("id", salon_id);
@@ -81,8 +81,9 @@ Deno.serve(async (req) => {
 
     // If date provided, fetch available slots
     let available_slots: string[] | null = null;
+    const bufferMinutes = salon.buffer_minutes || 0;
     if (date) {
-      const durationMinutes = duration || 30;
+      const durationMinutes = (duration || 30) + bufferMinutes;
       
       let resQuery = supabase
         .from("reservations")
@@ -166,6 +167,8 @@ Deno.serve(async (req) => {
         facebook_url: salon.facebook_url,
         logo_url: salon.logo_url,
         cover_image_url: salon.cover_image_url,
+        cancellation_hours: salon.cancellation_hours ?? 24,
+        buffer_minutes: salon.buffer_minutes ?? 0,
       },
       products: products || [],
       staff: (staff || []).map(s => ({ id: s.id, name: s.name, color: s.color })),

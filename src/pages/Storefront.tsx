@@ -41,6 +41,7 @@ const Storefront: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [cityFilter, setCityFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -105,8 +106,17 @@ const Storefront: React.FC = () => {
     if (saleFilter && !salonIdsWithDiscounts.has(s.id)) return false;
     if (categoryFilter && s.category !== categoryFilter) return false;
     if (cityFilter && s.city !== cityFilter) return false;
-    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!s.name.toLowerCase().includes(q) && !(s.city || '').toLowerCase().includes(q) && !(s.category || '').toLowerCase().includes(q)) return false;
+    }
     return true;
+  });
+
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'rating') return b.avg_rating - a.avg_rating;
+    return 0; // keep server order (newest)
   });
 
   return (
@@ -189,6 +199,13 @@ const Storefront: React.FC = () => {
             <option value="">Alle Städte</option>
             {cities.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+          <select
+            className="px-6 py-4 rounded-xl bg-card border border-border font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all appearance-none min-w-[140px]"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'newest' | 'rating')}>
+            <option value="newest">Neueste</option>
+            <option value="rating">Beste Bewertung</option>
+          </select>
         </div>
       </div>
 
@@ -246,7 +263,7 @@ const Storefront: React.FC = () => {
           }
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((salon) =>
+            {sorted.map((salon) =>
             <div
               key={salon.id}
               onClick={() => navigate(`/storefront/${salon.slug || salon.id}`)}

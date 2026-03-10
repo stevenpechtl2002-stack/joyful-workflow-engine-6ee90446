@@ -37,6 +37,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Get salon's buffer_minutes setting
+    const { data: salonSettings } = await supabase
+      .from("customers")
+      .select("buffer_minutes")
+      .eq("id", salon_user_id)
+      .single();
+    const bufferMinutes = salonSettings?.buffer_minutes || 0;
+
+    // Apply buffer to end_time if set
+    let adjustedEndTime = end_time;
+    if (bufferMinutes > 0 && end_time) {
+      const [h, m] = end_time.split(':').map(Number);
+      const endDate = new Date(2000, 0, 1, h, m + bufferMinutes);
+      adjustedEndTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+    }
+
     // Create storefront booking
     const { data: booking, error: bookingError } = await supabase
       .from("storefront_bookings")
@@ -47,7 +63,7 @@ Deno.serve(async (req) => {
         product_id: product_id || null,
         booking_date,
         booking_time,
-        end_time: end_time || null,
+        end_time: adjustedEndTime || null,
         customer_name,
         customer_phone: customer_phone || null,
         customer_email: customer_email || null,
@@ -70,7 +86,7 @@ Deno.serve(async (req) => {
         customer_email: customer_email || null,
         reservation_date: booking_date,
         reservation_time: booking_time,
-        end_time: end_time || null,
+        end_time: adjustedEndTime || null,
         staff_member_id: staff_member_id || null,
         product_id: product_id || null,
         source: 'storefront',

@@ -304,6 +304,8 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          buffer_minutes: number
+          cancellation_hours: number
           category: string | null
           city: string | null
           company_name: string | null
@@ -331,6 +333,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          buffer_minutes?: number
+          cancellation_hours?: number
           category?: string | null
           city?: string | null
           company_name?: string | null
@@ -358,6 +362,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          buffer_minutes?: number
+          cancellation_hours?: number
           category?: string | null
           city?: string | null
           company_name?: string | null
