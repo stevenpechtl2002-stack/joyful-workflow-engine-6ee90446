@@ -1077,10 +1077,14 @@ export type Database = {
           payment_method: string
           reservation_id: string | null
           staff_member_id: string | null
+          status: string
           transaction_date: string
           transaction_number: string
           transaction_time: string
           transaction_type: string
+          tse_signature: string | null
+          tse_timestamp: string | null
+          tse_transaction_id: string | null
           user_id: string
         }
         Insert: {
@@ -1093,10 +1097,14 @@ export type Database = {
           payment_method?: string
           reservation_id?: string | null
           staff_member_id?: string | null
+          status?: string
           transaction_date?: string
           transaction_number: string
           transaction_time?: string
           transaction_type?: string
+          tse_signature?: string | null
+          tse_timestamp?: string | null
+          tse_transaction_id?: string | null
           user_id: string
         }
         Update: {
@@ -1109,10 +1117,14 @@ export type Database = {
           payment_method?: string
           reservation_id?: string | null
           staff_member_id?: string | null
+          status?: string
           transaction_date?: string
           transaction_number?: string
           transaction_time?: string
           transaction_type?: string
+          tse_signature?: string | null
+          tse_timestamp?: string | null
+          tse_transaction_id?: string | null
           user_id?: string
         }
         Relationships: [
