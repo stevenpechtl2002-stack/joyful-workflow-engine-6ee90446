@@ -420,9 +420,6 @@ const StaffCalendarView: React.FC<Props> = ({
                 <CalendarDays className="w-3.5 h-3.5" /> WOCHE
               </button>
             </div>
-          </div>
-
-
 
 
 
