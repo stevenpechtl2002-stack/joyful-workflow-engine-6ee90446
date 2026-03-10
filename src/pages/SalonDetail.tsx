@@ -746,7 +746,12 @@ const SalonDetailPage: React.FC = () => {
                   <button onClick={handleBook} disabled={booking || !selectedSlot || !customerName.trim()} className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-black text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none">
                     {booking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                     {booking ? 'Wird gebucht...' : 'Jetzt buchen'}
-                  </button>
+                   </button>
+                   {salon?.cancellation_hours != null && salon.cancellation_hours > 0 && (
+                     <p className="text-[11px] text-muted-foreground text-center mt-2">
+                       ✓ Kostenlose Stornierung bis {salon.cancellation_hours}h vorher
+                     </p>
+                   )}
                 </div>
               </div>
             </div>
