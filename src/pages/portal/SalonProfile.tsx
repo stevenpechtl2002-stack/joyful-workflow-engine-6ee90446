@@ -49,7 +49,7 @@ const SalonProfile = () => {
     const load = async () => {
       const { data } = await supabase
         .from('customers')
-        .select('company_name, category, description, address, postal_code, city, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, published')
+        .select('company_name, category, description, address, postal_code, city, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, published, cancellation_hours, buffer_minutes')
         .eq('id', user.id)
         .single();
       if (data) {
