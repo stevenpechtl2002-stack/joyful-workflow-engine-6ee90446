@@ -5,7 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FISKALY_BASE = 'https://kassensichv-middleware.fiskaly.com/api/v2';
+const FISKALY_MW = 'https://kassensichv-middleware.fiskaly.com/api/v2';
+const FISKALY_BE = 'https://kassensichv.fiskaly.com/api/v2';
 const ADMIN_PIN = '112877';
 
 Deno.serve(async (req) => {
