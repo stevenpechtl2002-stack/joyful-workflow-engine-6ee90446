@@ -59,10 +59,77 @@ Deno.serve(async (req) => {
     const accessToken = (authData as any).access_token;
     console.log('[FISKALY] Auth successful');
 
-    // Step 2: Generate client ID
+    // Step 2: Initialize TSS if needed (must be INITIALIZED to register clients)
+    console.log('[FISKALY] Checking TSS state...');
+    const tssGetResponse = await fetch(`${FISKALY_TSS_BASE}/${tssId}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    
+    if (tssGetResponse.ok) {
+      const tssData = await tssGetResponse.json() as any;
+      console.log('[FISKALY] TSS state:', tssData.state);
+      
+      if (tssData.state === 'CREATED') {
+        // Need to initialize: CREATED -> UNINITIALIZED -> INITIALIZED
+        console.log('[FISKALY] Deploying TSS...');
+        const deployResp = await fetch(`${FISKALY_TSS_BASE}/${tssId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ state: 'UNINITIALIZED' }),
+        });
+        if (!deployResp.ok) {
+          const errText = await deployResp.text();
+          console.log('[FISKALY] Deploy failed:', errText);
+        } else {
+          console.log('[FISKALY] TSS set to UNINITIALIZED');
+        }
+        
+        // Now initialize
+        console.log('[FISKALY] Initializing TSS...');
+        const initResp = await fetch(`${FISKALY_TSS_BASE}/${tssId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ state: 'INITIALIZED' }),
+        });
+        if (!initResp.ok) {
+          const errText = await initResp.text();
+          console.log('[FISKALY] Init failed:', errText);
+          return new Response(JSON.stringify({ error: 'TSS initialization failed', details: errText }), { status: 500, headers: corsHeaders });
+        }
+        console.log('[FISKALY] TSS initialized successfully');
+      } else if (tssData.state === 'UNINITIALIZED') {
+        // Just initialize
+        console.log('[FISKALY] Initializing TSS...');
+        const initResp = await fetch(`${FISKALY_TSS_BASE}/${tssId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ state: 'INITIALIZED' }),
+        });
+        if (!initResp.ok) {
+          const errText = await initResp.text();
+          return new Response(JSON.stringify({ error: 'TSS initialization failed', details: errText }), { status: 500, headers: corsHeaders });
+        }
+        console.log('[FISKALY] TSS initialized successfully');
+      }
+    } else {
+      const errText = await tssGetResponse.text();
+      console.log('[FISKALY] TSS GET failed:', errText);
+    }
+
+    // Step 3: Generate client ID
     const clientId = crypto.randomUUID();
 
-    // Step 3: Register client under TSS
+    // Step 4: Register client under TSS
     console.log('[FISKALY] Registering client:', clientId);
     const clientResponse = await fetch(
       `${FISKALY_TSS_BASE}/${tssId}/client/${clientId}`,
