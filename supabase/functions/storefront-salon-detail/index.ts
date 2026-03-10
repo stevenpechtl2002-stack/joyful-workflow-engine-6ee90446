@@ -81,8 +81,9 @@ Deno.serve(async (req) => {
 
     // If date provided, fetch available slots
     let available_slots: string[] | null = null;
+    const bufferMinutes = salon.buffer_minutes || 0;
     if (date) {
-      const durationMinutes = duration || 30;
+      const durationMinutes = (duration || 30) + bufferMinutes;
       
       let resQuery = supabase
         .from("reservations")
