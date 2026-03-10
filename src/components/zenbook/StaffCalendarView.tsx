@@ -37,6 +37,7 @@ interface Props {
   onCreateReservation: (data: any) => Promise<any>;
   onUpdateReservation: (id: string, data: any) => Promise<any>;
   onDeleteReservation: (id: string) => Promise<void>;
+  onNavigate?: (view: string) => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -66,7 +67,7 @@ const sourceLabels: Record<string, string> = {
 const StaffCalendarView: React.FC<Props> = ({
   reservations, staffMembers, shifts, exceptions, products,
   selectedDate, setSelectedDate,
-  onCreateReservation, onUpdateReservation, onDeleteReservation
+  onCreateReservation, onUpdateReservation, onDeleteReservation, onNavigate
 }) => {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [calendarMode, setCalendarMode] = useState<'calendar' | 'availability'>('calendar');
@@ -363,7 +364,20 @@ const StaffCalendarView: React.FC<Props> = ({
       <div className="mb-2 px-4 pt-2 space-y-2">
 
         {/* Bottom row: Mode toggles + actions */}
-        <div className="flex items-center justify-end gap-3 flex-wrap">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setViewMode(viewMode === 'day' ? 'week' : 'day')}
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl font-black text-[10px] transition-all ${
+              viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-muted hover:bg-card border border-border text-muted-foreground hover:text-foreground shadow-sm'}`}>
+              <LayoutGrid className="w-3.5 h-3.5" /> WOCHENKALENDER
+            </button>
+            {onNavigate && (
+              <button onClick={() => onNavigate('staff')}
+                className="flex items-center gap-2 px-3 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
+                <Users className="w-3.5 h-3.5" /> PERSONAL
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
