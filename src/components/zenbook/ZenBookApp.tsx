@@ -39,7 +39,8 @@ import {
   startOfDay,
   parseISO,
   addMonths,
-  subMonths } from
+  subMonths,
+  addDays } from
 'date-fns';
 import { de } from 'date-fns/locale';
 import { ViewType, Appointment, AppointmentStatus, Staff, Service, UserRole } from '@/types';
@@ -409,6 +410,27 @@ const ZenBookApp: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Live
             </div>
+            {currentView === 'calendar' && (
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5 bg-muted p-0.5 rounded-xl border border-border">
+                  <button onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+                    className="p-1.5 hover:bg-card rounded-lg text-muted-foreground transition-all">
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setSelectedDate(new Date())}
+                    className="px-2.5 py-1 text-[10px] font-black text-primary hover:bg-card rounded-lg transition-all">
+                    Heute
+                  </button>
+                  <button onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+                    className="p-1.5 hover:bg-card rounded-lg text-muted-foreground transition-all">
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <span className="text-sm font-bold text-foreground tracking-tight">
+                  {format(selectedDate, 'EEE, d. MMM', { locale: de })}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-6">
             <div className="relative group hidden md:block">
