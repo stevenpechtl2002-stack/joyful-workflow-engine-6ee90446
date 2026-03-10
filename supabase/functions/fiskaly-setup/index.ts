@@ -1,30 +1,17 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import https from "node:https";
+import process from "node:process";
+
+// Disable TLS verification for fiskaly (cert not in Deno edge runtime trust store)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function httpsRequest(url: string, options: { method: string; headers: Record<string, string>; body?: string }): Promise<{ status: number; body: string }> {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
-    const req = https.request({
-      hostname: urlObj.hostname,
-      path: urlObj.pathname,
-      method: options.method,
-      headers: options.headers,
-      rejectUnauthorized: false, // Skip TLS verification for fiskaly
-    }, (res) => {
-      let data = '';
-      res.on('data', (chunk: string) => data += chunk);
-      res.on('end', () => resolve({ status: res.statusCode || 500, body: data }));
-    });
-    req.on('error', reject);
-    if (options.body) req.write(options.body);
-    req.end();
-  });
-}
+// fiskaly API base URLs - try middleware first, fallback to direct
+const FISKALY_AUTH_URL = 'https://kassensichv-middleware.fiskaly.com/api/v2/auth';
+const FISKALY_TSS_BASE = 'https://kassensichv-middleware.fiskaly.com/api/v2/tss';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -57,26 +44,32 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Fiskaly credentials not configured' }), { status: 500, headers: corsHeaders });
     }
 
+    console.log('[FISKALY] Attempting auth...');
+
     // Step 1: Authenticate with fiskaly
-    const authResult = await httpsRequest('https://kassensichv2.fiskaly.com/api/v2/auth', {
+    const authResponse = await fetch(FISKALY_AUTH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
     });
 
-    if (authResult.status !== 200) {
-      return new Response(JSON.stringify({ error: 'Fiskaly auth failed', details: authResult.body }), { status: 500, headers: corsHeaders });
+    if (!authResponse.ok) {
+      const errText = await authResponse.text();
+      console.log('[FISKALY] Auth failed:', errText);
+      return new Response(JSON.stringify({ error: 'Fiskaly auth failed', details: errText }), { status: 500, headers: corsHeaders });
     }
 
-    const authData = JSON.parse(authResult.body);
-    const accessToken = authData.access_token;
+    const authData = await authResponse.json();
+    const accessToken = (authData as any).access_token;
+    console.log('[FISKALY] Auth successful');
 
     // Step 2: Generate client ID
     const clientId = crypto.randomUUID();
 
     // Step 3: Register client under TSS
-    const clientResult = await httpsRequest(
-      `https://kassensichv2.fiskaly.com/api/v2/tss/${tssId}/client/${clientId}`,
+    console.log('[FISKALY] Registering client:', clientId);
+    const clientResponse = await fetch(
+      `${FISKALY_TSS_BASE}/${tssId}/client/${clientId}`,
       {
         method: 'PUT',
         headers: {
@@ -87,11 +80,14 @@ Deno.serve(async (req) => {
       }
     );
 
-    if (clientResult.status < 200 || clientResult.status >= 300) {
-      return new Response(JSON.stringify({ error: 'Client registration failed', details: clientResult.body }), { status: 500, headers: corsHeaders });
+    if (!clientResponse.ok) {
+      const errText = await clientResponse.text();
+      console.log('[FISKALY] Client registration failed:', errText);
+      return new Response(JSON.stringify({ error: 'Client registration failed', details: errText }), { status: 500, headers: corsHeaders });
     }
 
-    const clientData = JSON.parse(clientResult.body);
+    const clientData = await clientResponse.json();
+    console.log('[FISKALY] Client registered successfully:', clientId);
 
     return new Response(JSON.stringify({
       success: true,
@@ -100,6 +96,7 @@ Deno.serve(async (req) => {
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
+    console.error('[FISKALY] Error:', error.message);
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
   }
 });
