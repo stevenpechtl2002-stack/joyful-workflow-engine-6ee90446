@@ -471,7 +471,8 @@ const ZenBookApp: React.FC = () => {
             setSelectedDate={setSelectedDate}
             onCreateReservation={createReservation}
             onUpdateReservation={updateReservation}
-            onDeleteReservation={deleteSupabaseReservation} />
+            onDeleteReservation={deleteSupabaseReservation}
+            onNavigate={(view) => setCurrentView(view as ViewType)} />
 
           }
           {currentView === 'customers' && <CustomerManagement />}
