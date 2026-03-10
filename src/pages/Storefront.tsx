@@ -41,6 +41,7 @@ const Storefront: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [cityFilter, setCityFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const navigate = useNavigate();
