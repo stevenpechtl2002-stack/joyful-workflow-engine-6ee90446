@@ -57,6 +57,11 @@ const Settings: React.FC<Props> = ({ onSimulateIncoming }) => {
           </div>
         )}
 
+        {/* Fiskaly TSE Setup */}
+        {isAuthenticated && (
+          <FiskalySetupCard />
+        )}
+
         {/* Database 3D Card */}
         <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 border border-border shadow-xl card-3d flex flex-col rim-light">
           <div className="flex items-center gap-4 mb-8">
