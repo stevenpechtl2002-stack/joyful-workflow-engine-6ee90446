@@ -99,7 +99,7 @@ const CustomerProfile: React.FC = () => {
   }, [user, toast]);
 
   // Auto-save with debounce
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadRef = useRef(true);
 
   useEffect(() => {
