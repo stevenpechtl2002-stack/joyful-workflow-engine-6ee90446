@@ -748,6 +748,14 @@ const StaffCalendarView: React.FC<Props> = ({
             }
             </div>
 
+            {/* POS Checkout Section */}
+            <PosCheckoutSection
+              reservation={detailReservation}
+              onCompleted={() => {
+                setDetailReservation(null);
+              }}
+            />
+
             <div className="flex gap-2 mt-5">
               <button onClick={() => {
               handleEditFromDetail();
