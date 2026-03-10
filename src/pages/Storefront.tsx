@@ -105,8 +105,17 @@ const Storefront: React.FC = () => {
     if (saleFilter && !salonIdsWithDiscounts.has(s.id)) return false;
     if (categoryFilter && s.category !== categoryFilter) return false;
     if (cityFilter && s.city !== cityFilter) return false;
-    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!s.name.toLowerCase().includes(q) && !(s.city || '').toLowerCase().includes(q) && !(s.category || '').toLowerCase().includes(q)) return false;
+    }
     return true;
+  });
+
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'rating') return b.avg_rating - a.avg_rating;
+    return 0; // keep server order (newest)
   });
 
   return (
