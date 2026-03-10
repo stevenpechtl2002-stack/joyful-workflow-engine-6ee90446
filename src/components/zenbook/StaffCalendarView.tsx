@@ -601,12 +601,15 @@ const StaffCalendarView: React.FC<Props> = ({
                   {activeStaff.map((staff) => renderColumn(staff.id, selectedDate))}
                 </> :
 
-            weekDays.map((day) => (
-              <React.Fragment key={`week-col-${day.toString()}`}>
-                {renderColumn(null, day)}
-                {activeStaff.map((staff) => renderColumn(staff.id, day))}
-              </React.Fragment>
-            ))
+            weekDays.map((day) => {
+              const weekColWidth = Math.max(columnWidth * 0.6, 80);
+              return (
+                <React.Fragment key={`week-col-${day.toString()}`}>
+                  {renderColumn(null, day, weekColWidth)}
+                  {activeStaff.map((staff) => renderColumn(staff.id, day, weekColWidth))}
+                </React.Fragment>
+              );
+            })
             }
             </div>
           </div>
