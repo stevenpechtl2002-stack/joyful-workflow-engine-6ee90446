@@ -198,6 +198,13 @@ const Storefront: React.FC = () => {
             <option value="">Alle Städte</option>
             {cities.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+          <select
+            className="px-6 py-4 rounded-xl bg-card border border-border font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all appearance-none min-w-[140px]"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'newest' | 'rating')}>
+            <option value="newest">Neueste</option>
+            <option value="rating">Beste Bewertung</option>
+          </select>
         </div>
       </div>
 
