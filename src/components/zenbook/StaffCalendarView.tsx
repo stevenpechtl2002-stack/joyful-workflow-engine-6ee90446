@@ -5,7 +5,7 @@ import {
 import { de } from 'date-fns/locale';
 import {
   Plus, ChevronLeft, ChevronRight, LayoutGrid, CalendarDays, Clock,
-  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon } from
+  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon, CreditCard, Banknote, Globe, Loader2 } from
 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
