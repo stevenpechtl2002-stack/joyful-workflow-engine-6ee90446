@@ -1,8 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import process from "node:process";
-
-// Disable TLS verification for fiskaly (cert not in Deno edge runtime trust store)
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
