@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.fiskaly-setup]
 verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = false
