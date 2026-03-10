@@ -18,6 +18,13 @@ export interface Reservation {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  payment_method: 'online' | 'card' | 'cash' | null;
+  payment_status: string;
+  tse_transaction_id: string | null;
+  tse_signature: string | null;
+  tse_timestamp: string | null;
+  price_paid?: number | null;
+  party_size?: number;
 }
 
 export function useReservations(dateFilter?: string) {
