@@ -367,15 +367,60 @@ const StaffCalendarView: React.FC<Props> = ({
 
         {/* Bottom row: Mode toggles + actions */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          
+          <div className="flex items-center gap-3">
+            {/* Date display */}
+            <div className="flex items-center gap-2">
+              <span className="text-base font-black text-foreground leading-tight">
+                {format(selectedDate, 'EEEE,', { locale: de })}
+                <br />
+                <span className="text-sm font-bold text-muted-foreground">
+                  {format(selectedDate, 'd. MMMM yyyy', { locale: de })}
+                </span>
+              </span>
+            </div>
 
+            {/* Date navigation */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
+                className="p-2 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSelectedDate(new Date())}
+                className="px-3 py-2 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all"
+              >
+                HEUTE
+              </button>
+              <button
+                onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
+                className="p-2 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
 
-
-
-
-
-
-
+            {/* View mode toggle */}
+            <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
+              <button
+                onClick={() => setViewMode('day')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black transition-all ${
+                  viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" /> TAG
+              </button>
+              <button
+                onClick={() => setViewMode('week')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black transition-all ${
+                  viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5" /> WOCHE
+              </button>
+            </div>
+          </div>
 
 
 
