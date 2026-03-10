@@ -38,36 +38,63 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Fiskaly credentials not configured' }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 1: Auth via BACKEND (for TSS creation only)
-    console.log('[FISKALY] Auth via backend...');
-    const beAuthResp = await fetch(`${FISKALY_BE}/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
-    });
-    if (!beAuthResp.ok) {
-      const err = await beAuthResp.text();
-      return new Response(JSON.stringify({ error: 'BE auth failed', details: err }), { status: 500, headers: corsHeaders });
+    // Auth via both endpoints
+    console.log('[FISKALY] Authenticating...');
+    const [beAuthResp, mwAuthResp] = await Promise.all([
+      fetch(`${FISKALY_BE}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      }),
+      fetch(`${FISKALY_MW}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
+      }),
+    ]);
+
+    if (!beAuthResp.ok || !mwAuthResp.ok) {
+      return new Response(JSON.stringify({ error: 'Auth failed' }), { status: 500, headers: corsHeaders });
     }
+
     const { access_token: beToken } = await beAuthResp.json() as any;
-
-    // Step 2: Auth via MIDDLEWARE (for all other operations)
-    console.log('[FISKALY] Auth via middleware...');
-    const mwAuthResp = await fetch(`${FISKALY_MW}/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
-    });
-    if (!mwAuthResp.ok) {
-      const err = await mwAuthResp.text();
-      return new Response(JSON.stringify({ error: 'MW auth failed', details: err }), { status: 500, headers: corsHeaders });
-    }
     const { access_token: mwToken } = await mwAuthResp.json() as any;
-    console.log('[FISKALY] Both auths OK');
+    console.log('[FISKALY] Auth OK');
 
-    // Step 3: Create NEW TSS via BACKEND (only backend returns admin_puk)
+    // List all TSS to find unused ones to disable
+    console.log('[FISKALY] Listing all TSS...');
+    const listResp = await fetch(`${FISKALY_BE}/tss`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${beToken}` },
+    });
+    const listData = await listResp.json() as any;
+    const allTss = listData.data || [];
+    console.log('[FISKALY] Found', allTss.length, 'TSS');
+
+    // Disable TSS that are UNINITIALIZED or CREATED (not needed)
+    for (const tss of allTss) {
+      if (tss.state === 'UNINITIALIZED' || tss.state === 'CREATED') {
+        console.log('[FISKALY] Disabling unused TSS:', tss._id, 'state:', tss.state);
+        
+        if (tss.state === 'UNINITIALIZED') {
+          // Need admin auth to disable - try changing PIN first if we have PUK
+          // For UNINITIALIZED without PUK, we use middleware to disable
+          const disableResp = await fetch(`${FISKALY_MW}/tss/${tss._id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${mwToken}`,
+            },
+            body: JSON.stringify({ state: 'DISABLED' }),
+          });
+          console.log('[FISKALY] Disable result:', disableResp.status);
+        }
+      }
+    }
+
+    // Now create a new TSS via BACKEND
     const newTssId = crypto.randomUUID();
-    console.log('[FISKALY] Creating TSS:', newTssId);
+    console.log('[FISKALY] Creating new TSS:', newTssId);
     const createResp = await fetch(`${FISKALY_BE}/tss/${newTssId}`, {
       method: 'PUT',
       headers: {
@@ -83,13 +110,13 @@ Deno.serve(async (req) => {
     }
     const tssData = JSON.parse(createText);
     const adminPuk = tssData.admin_puk;
-    console.log('[FISKALY] PUK available:', !!adminPuk);
+    console.log('[FISKALY] PUK:', !!adminPuk);
     if (!adminPuk) {
-      return new Response(JSON.stringify({ error: 'No PUK returned' }), { status: 500, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: 'No PUK' }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 4: Deploy TSS (CREATED → UNINITIALIZED) via MIDDLEWARE
-    console.log('[FISKALY] Deploying TSS...');
+    // Deploy TSS via MIDDLEWARE
+    console.log('[FISKALY] Deploying...');
     const deployResp = await fetch(`${FISKALY_MW}/tss/${newTssId}`, {
       method: 'PATCH',
       headers: {
@@ -104,8 +131,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Deploy failed', details: err }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 5: Set admin PIN using PUK via MIDDLEWARE
-    console.log('[FISKALY] Setting admin PIN with PUK...');
+    // Set admin PIN with PUK via MIDDLEWARE
+    console.log('[FISKALY] Setting PIN...');
     const pinResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/admin`, {
       method: 'PATCH',
       headers: {
@@ -114,13 +141,9 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({ admin_puk: adminPuk, new_admin_pin: ADMIN_PIN }),
     });
-    console.log('[FISKALY] Set PIN:', pinResp.status);
-    if (!pinResp.ok) {
-      const err = await pinResp.text();
-      console.log('[FISKALY] PIN error:', err);
-    }
+    console.log('[FISKALY] PIN:', pinResp.status);
 
-    // Step 6: Admin auth via MIDDLEWARE
+    // Admin auth via MIDDLEWARE
     console.log('[FISKALY] Admin auth...');
     const adminAuthResp = await fetch(`${FISKALY_MW}/auth`, {
       method: 'POST',
@@ -140,8 +163,8 @@ Deno.serve(async (req) => {
     }
     const { access_token: adminToken } = await adminAuthResp.json() as any;
 
-    // Step 7: Initialize TSS via MIDDLEWARE with admin token
-    console.log('[FISKALY] Initializing TSS...');
+    // Initialize via MIDDLEWARE with admin token
+    console.log('[FISKALY] Initializing...');
     const initResp = await fetch(`${FISKALY_MW}/tss/${newTssId}`, {
       method: 'PATCH',
       headers: {
@@ -156,7 +179,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Init failed', details: err }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 8: Register client via MIDDLEWARE
+    // Register client via MIDDLEWARE
     const clientId = crypto.randomUUID();
     console.log('[FISKALY] Registering client:', clientId);
     const clientResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/client/${clientId}`, {
