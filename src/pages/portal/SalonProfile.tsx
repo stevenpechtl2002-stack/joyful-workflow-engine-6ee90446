@@ -40,6 +40,8 @@ const SalonProfile = () => {
     facebook_url: '',
     logo_url: '',
     cover_image_url: '',
+    cancellation_hours: 24,
+    buffer_minutes: 0,
   });
 
   useEffect(() => {
