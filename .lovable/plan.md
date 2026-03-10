@@ -1,38 +1,66 @@
 
 
-## Plan: Admin Dashboard modernisieren mit Statistiken und Diagrammen
+## Plan: Kassenbuch Transaktionsdetail-Dialog mit Abschluss-Workflow
 
-### Was fehlt
-Das Dashboard hat bereits KPI-Karten und Tabellen, aber **keine Diagramme/Charts**. `recharts` ist installiert aber wird nicht genutzt. Es fehlt eine visuelle Übersicht über Trends.
+### Ablauf
+1. Klick auf Transaktionszeile → Detail-Dialog öffnet sich
+2. Dialog zeigt Transaktionsinfos (Nr., Zeit, Kunde, Betrag, Zahlungsart)
+3. **Wenn noch nicht abgeschlossen**: Großer "ABSCHLIESSEN" Button → ruft TSE-Signatur auf
+4. **Erst nach Abschluss**: "Rückerstattung" und "Belegkopie" Buttons werden sichtbar
+5. "Stornieren" Button wird aus der Tabellenzeile entfernt und in den Dialog verschoben
 
-### Änderungen an `src/pages/admin/AdminDashboard.tsx`
+### Datenbank-Migration
 
-**1. Charts-Sektion zwischen KPI-Karten und Tabs einfügen:**
-- **Registrierungen pro Monat** (BarChart) — aggregiert aus `customers.created_at`
-- **Umsatz-Trend** (AreaChart) — aggregiert aus `transactions` + `reservations.price_paid` nach Monat
-- **Reservierungen pro Woche** (LineChart) — aus `reservations` + `storefront_bookings` der letzten 8 Wochen
-- **Kundenverteilung nach Kategorie** (PieChart) — aus `customers.category`
+Neue Spalten auf `transactions`-Tabelle:
+- `status` (text, default `'open'`): `'open'`, `'completed'`, `'refunded'`
+- `tse_transaction_id` (text, nullable)
+- `tse_signature` (text, nullable)  
+- `tse_timestamp` (timestamptz, nullable)
 
-**2. Neuer Tab "Registrierungen":**
-- Chronologische Liste aller Kunden-Registrierungen mit Datum, Name, E-Mail, Kategorie, Plan, Status
-- Sortiert nach `created_at` (neueste zuerst)
+### Edge Function: `pos-checkout` erweitern
 
-**3. Kundenprofile im Detail-Dialog erweitern:**
-- API-Key anzeigen (mit Sichtbarkeit-Toggle)
-- Webhook-URL pro Kunde
-- Voice Agent Status des Kunden
-- Stripe Abo-Status des Kunden (wenn vorhanden)
+Zusätzlich zum bestehenden Reservierungs-Flow einen neuen Modus für direkte Transaktionen hinzufügen:
+- Akzeptiert `transaction_id` als Alternative zu `reservation_id`
+- Signiert über fiskaly TSE
+- Setzt `status = 'completed'` auf der Transaktion
 
-**4. Visuelle Verbesserungen:**
-- Charts in 2x2 Grid mit Card-Wrappern
-- Responsive Layout für mobile Ansicht
-- Farblich abgestimmte Chart-Farben passend zum Theme
+### UI: `KassenbuchView.tsx`
 
-### Technische Details
-- Import von `BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer` aus `recharts`
-- Aggregationslogik mit `useMemo` für Chart-Daten aus den bereits geladenen Daten (kein neuer DB-Call nötig)
-- Registrierungen-Tab nutzt dieselben `enrichedCustomers`, sortiert nach Datum
+- `Transaction` Interface erweitern um `status`, `tse_*` Felder, `reservation_id`
+- Trash-Button aus Tabellenzeile entfernen
+- Zeilen klickbar machen → `selectedTransaction` State
+- Neuer Detail-Dialog:
+
+```text
+┌──────────────────────────────────────┐
+│  Transaktionsdetails              ✕  │
+│                                      │
+│  TX-20260310-001                     │
+│  10.03.2026 09:28                    │
+│  Kunde: Max Mustermann              │
+│  Zahlungsart: Bar                    │
+│  Betrag: 35,00 €                     │
+│                                      │
+│  ┌──────────────────────────────┐    │
+│  │      ✅ ABSCHLIESSEN         │    │  ← nur wenn status='open'
+│  └──────────────────────────────┘    │
+│                                      │
+│  --- nach Abschluss: ---             │
+│  TSE Signatur: abc123...             │
+│  ┌────────────┐  ┌────────────┐      │
+│  │Rückerstattung│ │ Belegkopie │      │  ← nur wenn status='completed'
+│  └────────────┘  └────────────┘      │
+│  ┌──────────────────────────────┐    │
+│  │       🗑️ Stornieren          │    │
+│  └──────────────────────────────┘    │
+└──────────────────────────────────────┘
+```
 
 ### Dateien
-- `src/pages/admin/AdminDashboard.tsx` — Charts hinzufügen, Registrierungen-Tab, Detail-Dialog erweitern
+
+| Datei | Aktion |
+|---|---|
+| Migration SQL | `status`, `tse_*` Spalten auf `transactions` |
+| `supabase/functions/pos-checkout/index.ts` | Transaction-Modus hinzufügen |
+| `src/components/zenbook/KassenbuchView.tsx` | Detail-Dialog + klickbare Zeilen |
 
