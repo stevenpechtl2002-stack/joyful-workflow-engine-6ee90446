@@ -23,6 +23,8 @@ interface SalonInfo {
   facebook_url?: string | null;
   logo_url?: string | null;
   cover_image_url?: string | null;
+  cancellation_hours?: number;
+  buffer_minutes?: number;
 }
 
 interface Product {
