@@ -67,7 +67,7 @@ const sourceLabels: Record<string, string> = {
 const StaffCalendarView: React.FC<Props> = ({
   reservations, staffMembers, shifts, exceptions, products,
   selectedDate, setSelectedDate,
-  onCreateReservation, onUpdateReservation, onDeleteReservation
+  onCreateReservation, onUpdateReservation, onDeleteReservation, onNavigate
 }) => {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [calendarMode, setCalendarMode] = useState<'calendar' | 'availability'>('calendar');
