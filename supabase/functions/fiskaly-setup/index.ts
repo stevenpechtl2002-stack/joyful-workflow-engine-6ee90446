@@ -1,10 +1,25 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { fetch as undiciFetch } from "npm:undici@6";
+import { Agent, fetch as undiciFetch } from "npm:undici@6";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Create agent that skips TLS verification for fiskaly (their cert isn't in Deno's trust store)
+const agent = new Agent({
+  connect: {
+    rejectUnauthorized: false,
+  },
+});
+
+async function fiskalyFetch(url: string, options: any = {}) {
+  const resp = await undiciFetch(url, {
+    ...options,
+    dispatcher: agent,
+  });
+  return resp;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -38,8 +53,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Fiskaly credentials not configured' }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 1: Authenticate with fiskaly (using undici to bypass TLS issues)
-    const authResponse = await undiciFetch('https://kassensichv2.fiskaly.com/api/v2/auth', {
+    // Step 1: Authenticate with fiskaly
+    const authResponse = await fiskalyFetch('https://kassensichv2.fiskaly.com/api/v2/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret }),
@@ -50,14 +65,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Fiskaly auth failed', details: errText }), { status: 500, headers: corsHeaders });
     }
 
-    const authData = await authResponse.json();
+    const authData = await authResponse.json() as any;
     const accessToken = authData.access_token;
 
     // Step 2: Generate client ID
     const clientId = crypto.randomUUID();
 
     // Step 3: Register client under TSS
-    const clientResponse = await undiciFetch(
+    const clientResponse = await fiskalyFetch(
       `https://kassensichv2.fiskaly.com/api/v2/tss/${tssId}/client/${clientId}`,
       {
         method: 'PUT',
