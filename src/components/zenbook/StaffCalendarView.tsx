@@ -275,7 +275,7 @@ const StaffCalendarView: React.FC<Props> = ({
   });
 
   // Render a single column of reservations
-  const renderColumn = (staffId: string | null, date: Date) => {
+  const renderColumn = (staffId: string | null, date: Date, widthOverride?: number) => {
     const ds = format(date, 'yyyy-MM-dd');
     const colReservations = reservations.filter((r) =>
     r.date === ds &&
@@ -283,13 +283,15 @@ const StaffCalendarView: React.FC<Props> = ({
     staffId === null ? !r.staff_member_id : r.staff_member_id === staffId)
     );
 
+    const colWidth = widthOverride || columnWidth;
+
     return (
       <div
         key={`${staffId || 'unassigned'}-${ds}`}
         className={`relative border-r border-border last:border-r-0 transition-colors ${
         dragOverStaff === (staffId || '__unassigned') ? 'bg-primary/5' : ''}`
         }
-        style={{ width: columnWidth, minWidth: columnWidth }}
+        style={{ width: colWidth, minWidth: colWidth }}
         onDrop={(e) => handleDrop(e, staffId || '')}
         onDragOver={(e) => handleDragOver(e, staffId || '__unassigned')}
         onDragLeave={handleDragLeave}>
@@ -524,19 +526,57 @@ const StaffCalendarView: React.FC<Props> = ({
             )}
               </> :
 
-          weekDays.map((day) =>
-          <div key={day.toString()}
-          className={`flex-1 flex flex-col justify-center text-center border-r border-border last:border-r-0 min-w-[100px] py-2 bg-card ${
-          isSameDay(day, new Date()) ? 'bg-primary/5' : ''}`
-          }>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                    {format(day, 'EEE', { locale: de })}
-                  </p>
-                  <p className={`text-lg font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-foreground'}`}>
-                    {format(day, 'd')}
-                  </p>
-                </div>
-          )
+          <>
+            {/* Week view: two-row header - day names on top, staff per day below */}
+            <div className="flex flex-col">
+              <div className="flex">
+                {weekDays.map((day) => {
+                  const weekColWidth = Math.max(columnWidth * 0.6, 80);
+                  const totalDayWidth = weekColWidth * (activeStaff.length + 1);
+                  return (
+                    <div key={day.toString()}
+                      className={`border-r border-border last:border-r-0 text-center py-1.5 ${
+                        isSameDay(day, new Date()) ? 'bg-primary/5' : 'bg-card'}`}
+                      style={{ width: totalDayWidth, minWidth: totalDayWidth }}>
+                      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                        {format(day, 'EEE', { locale: de })}
+                      </p>
+                      <p className={`text-sm font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-foreground'}`}>
+                        {format(day, 'd')}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex border-t border-border">
+                {weekDays.map((day) => {
+                  const weekColWidth = Math.max(columnWidth * 0.6, 80);
+                  return (
+                    <React.Fragment key={`staff-${day.toString()}`}>
+                      <div className="flex items-center justify-center border-r border-border/50 bg-muted/30"
+                        style={{ width: weekColWidth, minWidth: weekColWidth, height: 28 }}>
+                        <User className="w-3 h-3 text-muted-foreground" />
+                      </div>
+                      {activeStaff.map((staff, idx) => (
+                        <div key={staff.id}
+                          className={`flex items-center justify-center gap-1 bg-card ${
+                            idx === activeStaff.length - 1 ? 'border-r border-border' : 'border-r border-border/30'}`}
+                          style={{ width: weekColWidth, minWidth: weekColWidth, height: 28 }}>
+                          <div className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black text-white"
+                            style={{ backgroundColor: staff.color }}>
+                            {staff.name.charAt(0)}
+                          </div>
+                          {weekColWidth > 90 && (
+                            <span className="text-[9px] font-bold text-foreground truncate max-w-[50px]">{staff.name}</span>
+                          )}
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          </>
           }
           </div>
 
@@ -561,7 +601,15 @@ const StaffCalendarView: React.FC<Props> = ({
                   {activeStaff.map((staff) => renderColumn(staff.id, selectedDate))}
                 </> :
 
-            weekDays.map((day) => renderColumn(null, day))
+            weekDays.map((day) => {
+              const weekColWidth = Math.max(columnWidth * 0.6, 80);
+              return (
+                <React.Fragment key={`week-col-${day.toString()}`}>
+                  {renderColumn(null, day, weekColWidth)}
+                  {activeStaff.map((staff) => renderColumn(staff.id, day, weekColWidth))}
+                </React.Fragment>
+              );
+            })
             }
             </div>
           </div>

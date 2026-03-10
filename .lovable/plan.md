@@ -1,33 +1,38 @@
 
 
-## Plan: Kalenderraster mit Mitarbeiter-Slots in der Wochenansicht
+## Plan: Admin Dashboard modernisieren mit Statistiken und Diagrammen
 
-### Problem
-Die aktuelle Wochenansicht zeigt nur eine Spalte pro Tag ohne Mitarbeiter-Zuordnung. Der Nutzer möchte (wie in Treatwell) pro Tag die Mitarbeiter-Spalten sehen.
+### Was fehlt
+Das Dashboard hat bereits KPI-Karten und Tabellen, aber **keine Diagramme/Charts**. `recharts` ist installiert aber wird nicht genutzt. Es fehlt eine visuelle Übersicht über Trends.
 
-### Änderung in `src/components/zenbook/StaffCalendarView.tsx`
+### Änderungen an `src/pages/admin/AdminDashboard.tsx`
 
-**Toolbar**: Bleibt komplett unverändert.
+**1. Charts-Sektion zwischen KPI-Karten und Tabs einfügen:**
+- **Registrierungen pro Monat** (BarChart) — aggregiert aus `customers.created_at`
+- **Umsatz-Trend** (AreaChart) — aggregiert aus `transactions` + `reservations.price_paid` nach Monat
+- **Reservierungen pro Woche** (LineChart) — aus `reservations` + `storefront_bookings` der letzten 8 Wochen
+- **Kundenverteilung nach Kategorie** (PieChart) — aus `customers.category`
 
-**Wochenansicht-Grid umbauen**:
+**2. Neuer Tab "Registrierungen":**
+- Chronologische Liste aller Kunden-Registrierungen mit Datum, Name, E-Mail, Kategorie, Plan, Status
+- Sortiert nach `created_at` (neueste zuerst)
 
-1. **Header**: Statt einer einzelnen Spalte pro Tag wird ein gruppiertes Layout erstellt:
-   - Obere Zeile: Tagesname + Datum als Gruppenüberschrift (colspan über alle Staff-Spalten)
-   - Untere Zeile: Mitarbeiter-Namen innerhalb jedes Tages
+**3. Kundenprofile im Detail-Dialog erweitern:**
+- API-Key anzeigen (mit Sichtbarkeit-Toggle)
+- Webhook-URL pro Kunde
+- Voice Agent Status des Kunden
+- Stripe Abo-Status des Kunden (wenn vorhanden)
 
-```text
-|  Zeit  |     Montag 10.     |     Dienstag 11.    |  ...
-|        | Anna | Max | Lisa  | Anna | Max | Lisa   |  ...
-|--------|------|-----|-------|------|-----|--------|------
-| 08:00  |      |     |       |      |     |        |
-| 08:30  |      |     |       |      |     |        |
-```
+**4. Visuelle Verbesserungen:**
+- Charts in 2x2 Grid mit Card-Wrappern
+- Responsive Layout für mobile Ansicht
+- Farblich abgestimmte Chart-Farben passend zum Theme
 
-2. **Grid-Spalten**: Für jeden Tag werden alle aktiven Mitarbeiter als Spalten gerendert (mit `renderColumn(staffId, day)`) -- gleiche Logik wie in der Tagesansicht.
+### Technische Details
+- Import von `BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer` aus `recharts`
+- Aggregationslogik mit `useMemo` für Chart-Daten aus den bereits geladenen Daten (kein neuer DB-Call nötig)
+- Registrierungen-Tab nutzt dieselben `enrichedCustomers`, sortiert nach Datum
 
-3. **Spaltenbreite**: In der Wochenansicht werden die Spalten schmaler (z.B. `columnWidth * 0.6`), damit mehr Inhalt sichtbar ist. Mitarbeiter-Namen werden auf den ersten Buchstaben + Farb-Indikator gekürzt.
-
-4. **Sticky Header**: Tag-Gruppierung und Mitarbeiter-Namen bleiben beim Scrollen oben fixiert (sticky top).
-
-### Keine Datenbankänderungen erforderlich.
+### Dateien
+- `src/pages/admin/AdminDashboard.tsx` — Charts hinzufügen, Registrierungen-Tab, Detail-Dialog erweitern
 
