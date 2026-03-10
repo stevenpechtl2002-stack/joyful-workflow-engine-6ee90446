@@ -451,6 +451,26 @@ const StaffCalendarView: React.FC<Props> = ({
                   <ImageIcon className="w-4 h-4" /> Treatwell Import
                 </button>
 
+                <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
+                  <button onClick={() => setCalendarMode('calendar')}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black transition-all ${
+                  calendarMode === 'calendar' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`
+                  }>
+                    <CalendarDays className="w-3.5 h-3.5" /> KALENDER
+                  </button>
+                  <button onClick={() => setCalendarMode('availability')}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black transition-all ${
+                  calendarMode === 'availability' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`
+                  }>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> FREIE SLOTS
+                  </button>
+                </div>
+                <StaffManagementDialog trigger={
+                  <button className="flex items-center gap-2 px-3 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
+                    <Users className="w-3.5 h-3.5" /> DIENSTPLAN
+                  </button>
+                } />
+
                 <button onClick={() => {
                 setEditingId(null);
                 setFormInitial({ date: dateStr, time: '09:00', end_time: '10:00' });
