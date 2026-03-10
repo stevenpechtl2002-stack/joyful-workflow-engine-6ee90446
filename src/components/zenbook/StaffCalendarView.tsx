@@ -275,7 +275,7 @@ const StaffCalendarView: React.FC<Props> = ({
   });
 
   // Render a single column of reservations
-  const renderColumn = (staffId: string | null, date: Date) => {
+  const renderColumn = (staffId: string | null, date: Date, widthOverride?: number) => {
     const ds = format(date, 'yyyy-MM-dd');
     const colReservations = reservations.filter((r) =>
     r.date === ds &&
@@ -283,13 +283,15 @@ const StaffCalendarView: React.FC<Props> = ({
     staffId === null ? !r.staff_member_id : r.staff_member_id === staffId)
     );
 
+    const colWidth = widthOverride || columnWidth;
+
     return (
       <div
         key={`${staffId || 'unassigned'}-${ds}`}
         className={`relative border-r border-border last:border-r-0 transition-colors ${
         dragOverStaff === (staffId || '__unassigned') ? 'bg-primary/5' : ''}`
         }
-        style={{ width: columnWidth, minWidth: columnWidth }}
+        style={{ width: colWidth, minWidth: colWidth }}
         onDrop={(e) => handleDrop(e, staffId || '')}
         onDragOver={(e) => handleDragOver(e, staffId || '__unassigned')}
         onDragLeave={handleDragLeave}>
