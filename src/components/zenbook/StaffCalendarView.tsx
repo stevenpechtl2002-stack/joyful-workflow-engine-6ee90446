@@ -367,19 +367,19 @@ const StaffCalendarView: React.FC<Props> = ({
 
         {/* Bottom row: Mode toggles + actions */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setViewMode(viewMode === 'day' ? 'week' : 'day')}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl font-black text-[10px] transition-all ${
-              viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-muted hover:bg-card border border-border text-muted-foreground hover:text-foreground shadow-sm'}`}>
-              <LayoutGrid className="w-3.5 h-3.5" /> WOCHENKALENDER
-            </button>
-            {onNavigate && (
-              <button onClick={() => onNavigate('staff')}
-                className="flex items-center gap-2 px-3 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
-                <Users className="w-3.5 h-3.5" /> PERSONAL
-              </button>
-            )}
-          </div>
+          
+
+
+
+
+
+
+
+
+
+
+
+          
 
           <div className="flex items-center gap-3">
             <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
@@ -397,7 +397,7 @@ const StaffCalendarView: React.FC<Props> = ({
               </button>
             </div>
             <StaffManagementDialog trigger={
-              <button className="flex items-center gap-2 px-3 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
+            <button className="flex items-center gap-2 px-3 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
                 <Users className="w-3.5 h-3.5" /> DIENSTPLAN
               </button>
             } />
@@ -535,17 +535,17 @@ const StaffCalendarView: React.FC<Props> = ({
                   const totalDayWidth = weekColWidth * (activeStaff.length + 1);
                   return (
                     <div key={day.toString()}
-                      className={`border-r border-border last:border-r-0 text-center py-1.5 ${
-                        isSameDay(day, new Date()) ? 'bg-primary/5' : 'bg-card'}`}
-                      style={{ width: totalDayWidth, minWidth: totalDayWidth }}>
+                    className={`border-r border-border last:border-r-0 text-center py-1.5 ${
+                    isSameDay(day, new Date()) ? 'bg-primary/5' : 'bg-card'}`}
+                    style={{ width: totalDayWidth, minWidth: totalDayWidth }}>
                       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                         {format(day, 'EEE', { locale: de })}
                       </p>
                       <p className={`text-sm font-black ${isSameDay(day, new Date()) ? 'text-primary' : 'text-foreground'}`}>
                         {format(day, 'd')}
                       </p>
-                    </div>
-                  );
+                    </div>);
+
                 })}
               </div>
               <div className="flex border-t border-border">
@@ -554,25 +554,25 @@ const StaffCalendarView: React.FC<Props> = ({
                   return (
                     <React.Fragment key={`staff-${day.toString()}`}>
                       <div className="flex items-center justify-center border-r border-border/50 bg-muted/30"
-                        style={{ width: weekColWidth, minWidth: weekColWidth, height: 28 }}>
+                      style={{ width: weekColWidth, minWidth: weekColWidth, height: 28 }}>
                         <User className="w-3 h-3 text-muted-foreground" />
                       </div>
-                      {activeStaff.map((staff, idx) => (
-                        <div key={staff.id}
-                          className={`flex items-center justify-center gap-1 bg-card ${
-                            idx === activeStaff.length - 1 ? 'border-r border-border' : 'border-r border-border/30'}`}
-                          style={{ width: weekColWidth, minWidth: weekColWidth, height: 28 }}>
+                      {activeStaff.map((staff, idx) =>
+                      <div key={staff.id}
+                      className={`flex items-center justify-center gap-1 bg-card ${
+                      idx === activeStaff.length - 1 ? 'border-r border-border' : 'border-r border-border/30'}`}
+                      style={{ width: weekColWidth, minWidth: weekColWidth, height: 28 }}>
                           <div className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[8px] font-black text-white"
-                            style={{ backgroundColor: staff.color }}>
+                        style={{ backgroundColor: staff.color }}>
                             {staff.name.charAt(0)}
                           </div>
-                          {weekColWidth > 90 && (
-                            <span className="text-[9px] font-bold text-foreground truncate max-w-[50px]">{staff.name}</span>
-                          )}
+                          {weekColWidth > 90 &&
+                        <span className="text-[9px] font-bold text-foreground truncate max-w-[50px]">{staff.name}</span>
+                        }
                         </div>
-                      ))}
-                    </React.Fragment>
-                  );
+                      )}
+                    </React.Fragment>);
+
                 })}
               </div>
             </div>
@@ -607,8 +607,8 @@ const StaffCalendarView: React.FC<Props> = ({
                 <React.Fragment key={`week-col-${day.toString()}`}>
                   {renderColumn(null, day, weekColWidth)}
                   {activeStaff.map((staff) => renderColumn(staff.id, day, weekColWidth))}
-                </React.Fragment>
-              );
+                </React.Fragment>);
+
             })
             }
             </div>
