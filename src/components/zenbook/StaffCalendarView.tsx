@@ -5,12 +5,14 @@ import {
 import { de } from 'date-fns/locale';
 import {
   Plus, ChevronLeft, ChevronRight, LayoutGrid, CalendarDays, Clock,
-  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon } from
+  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon, CreditCard, Banknote, Globe, Loader2 } from
 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Reservation } from '@/hooks/useReservations';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { StaffMember } from '@/hooks/useStaffMembers';
 import { StaffShift } from '@/hooks/useStaffShifts';
 import { ShiftException } from '@/hooks/useShiftExceptions';
@@ -62,6 +64,123 @@ const sourceLabels: Record<string, string> = {
   website: 'Website',
   phone: 'Telefon',
   n8n: 'n8n'
+};
+
+// POS Checkout Section Component
+const PosCheckoutSection: React.FC<{
+  reservation: Reservation;
+  onCompleted: () => void;
+}> = ({ reservation, onCompleted }) => {
+  const [selectedPayment, setSelectedPayment] = useState<'online' | 'card' | 'cash'>(
+    reservation.source === 'website' ? 'online' : 'cash'
+  );
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const paymentOptions = [
+    { value: 'online' as const, label: 'Online', icon: Globe, desc: 'Bereits bezahlt' },
+    { value: 'card' as const, label: 'Karte', icon: CreditCard, desc: 'Terminal' },
+    { value: 'cash' as const, label: 'Bar', icon: Banknote, desc: 'Kasse' },
+  ];
+
+  const handleCheckout = async () => {
+    setIsProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pos-checkout', {
+        body: {
+          reservation_id: reservation.id,
+          payment_method: selectedPayment,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('Termin abgeschlossen', {
+        description: data?.tse_signature
+          ? 'TSE-Signatur erstellt'
+          : 'Transaktion gespeichert',
+      });
+      onCompleted();
+    } catch (err: any) {
+      toast.error('Fehler beim Abschließen', {
+        description: err.message || 'Bitte erneut versuchen',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (reservation.status === 'completed') {
+    const paymentLabels: Record<string, string> = {
+      online: 'Online bezahlt',
+      card: 'Kartenzahlung',
+      cash: 'Barzahlung',
+    };
+    return (
+      <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1.5">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <span className="text-sm font-bold text-emerald-600">Abgeschlossen</span>
+        </div>
+        {reservation.payment_method && (
+          <p className="text-xs text-muted-foreground">
+            {paymentLabels[reservation.payment_method] || reservation.payment_method}
+          </p>
+        )}
+        {reservation.tse_signature && (
+          <p className="text-[10px] text-muted-foreground font-mono truncate">
+            TSE: {reservation.tse_signature}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (reservation.status === 'cancelled') return null;
+
+  return (
+    <div className="mt-4 pt-4 border-t border-border space-y-3">
+      <p className="text-xs font-bold text-foreground uppercase tracking-wider">Zahlungsart wählen</p>
+      <div className="grid grid-cols-3 gap-2">
+        {paymentOptions.map((opt) => {
+          const Icon = opt.icon;
+          const isSelected = selectedPayment === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => setSelectedPayment(opt.value)}
+              className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                isSelected
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-xs font-bold">{opt.label}</span>
+              <span className="text-[9px]">{opt.desc}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button
+        onClick={handleCheckout}
+        disabled={isProcessing}
+        className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Wird abgeschlossen...
+          </>
+        ) : (
+          <>
+            <CheckCircle2 className="w-4 h-4" />
+            ABSCHLIESSEN
+          </>
+        )}
+      </button>
+    </div>
+  );
 };
 
 const StaffCalendarView: React.FC<Props> = ({
@@ -424,8 +543,6 @@ const StaffCalendarView: React.FC<Props> = ({
 
 
 
-          
-
           <div className="flex items-center gap-3">
             <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
               <button onClick={() => setCalendarMode('calendar')}
@@ -745,6 +862,14 @@ const StaffCalendarView: React.FC<Props> = ({
             <p className="text-xs text-muted-foreground bg-muted rounded-lg p-2 mt-2">{detailReservation.notes}</p>
             }
             </div>
+
+            {/* POS Checkout Section */}
+            <PosCheckoutSection
+              reservation={detailReservation}
+              onCompleted={() => {
+                setDetailReservation(null);
+              }}
+            />
 
             <div className="flex gap-2 mt-5">
               <button onClick={() => {
