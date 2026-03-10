@@ -9,7 +9,7 @@ const FISKALY_AUTH_URL = 'https://kassensichv-middleware.fiskaly.com/api/v2/auth
 const FISKALY_TSS_BASE = 'https://kassensichv-middleware.fiskaly.com/api/v2/tss';
 
 // Default admin PIN for TSE setup (KassenSichV requirement)
-const ADMIN_PIN = '12345';
+const ADMIN_PIN = '112877';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
