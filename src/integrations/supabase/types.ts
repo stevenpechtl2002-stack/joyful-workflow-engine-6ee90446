@@ -709,6 +709,8 @@ export type Database = {
           id: string
           notes: string | null
           party_size: number
+          payment_method: string | null
+          payment_status: string
           price_paid: number | null
           product_id: string | null
           reservation_date: string
@@ -716,6 +718,9 @@ export type Database = {
           source: string
           staff_member_id: string | null
           status: string
+          tse_signature: string | null
+          tse_timestamp: string | null
+          tse_transaction_id: string | null
           updated_at: string
           user_id: string
         }
@@ -728,6 +733,8 @@ export type Database = {
           id?: string
           notes?: string | null
           party_size?: number
+          payment_method?: string | null
+          payment_status?: string
           price_paid?: number | null
           product_id?: string | null
           reservation_date: string
@@ -735,6 +742,9 @@ export type Database = {
           source?: string
           staff_member_id?: string | null
           status?: string
+          tse_signature?: string | null
+          tse_timestamp?: string | null
+          tse_transaction_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -747,6 +757,8 @@ export type Database = {
           id?: string
           notes?: string | null
           party_size?: number
+          payment_method?: string | null
+          payment_status?: string
           price_paid?: number | null
           product_id?: string | null
           reservation_date?: string
@@ -754,6 +766,9 @@ export type Database = {
           source?: string
           staff_member_id?: string | null
           status?: string
+          tse_signature?: string | null
+          tse_timestamp?: string | null
+          tse_transaction_id?: string | null
           updated_at?: string
           user_id?: string
         }
