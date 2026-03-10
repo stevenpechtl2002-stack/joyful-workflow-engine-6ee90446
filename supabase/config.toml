@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.create-storefront-checkout]
 verify_jwt = false
+
+[functions.pos-checkout]
+verify_jwt = false
