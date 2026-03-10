@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ChevronLeft, ChevronRight, Plus, Banknote, CreditCard, Smartphone, Globe, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { ChevronLeft, ChevronRight, Plus, Banknote, CreditCard, Smartphone, Globe, CheckCircle2, RotateCcw, Printer, Trash2, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,6 +28,11 @@ interface Transaction {
   transaction_time: string;
   notes: string | null;
   staff_member_id: string | null;
+  reservation_id: string | null;
+  status: string;
+  tse_transaction_id: string | null;
+  tse_signature: string | null;
+  tse_timestamp: string | null;
 }
 
 const paymentMethodLabels: Record<string, string> = {
@@ -54,6 +59,9 @@ const KassenbuchView = () => {
   const [loading, setLoading] = useState(true);
   const [showNewSale, setShowNewSale] = useState(false);
   const [newSale, setNewSale] = useState({ customer_name: '', amount: '', payment_method: 'bar', notes: '' });
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -113,15 +121,101 @@ const KassenbuchView = () => {
     }
   };
 
-  const handleDeleteTransaction = async (id: string) => {
-    if (!user) return;
-    const { error } = await supabase.from('transactions').delete().eq('id', id).eq('user_id', user.id);
+  const handleCheckout = async () => {
+    if (!selectedTransaction || !user) return;
+    setCheckoutLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error('Nicht eingeloggt');
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pos-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ transaction_id: selectedTransaction.id }),
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Fehler beim Abschluss');
+
+      toast({ title: 'Transaktion abgeschlossen', description: result.tse_signature ? 'TSE-Signatur erstellt' : 'Ohne TSE abgeschlossen' });
+      
+      // Update local state
+      setSelectedTransaction({
+        ...selectedTransaction,
+        status: 'completed',
+        tse_transaction_id: result.tse_transaction_id,
+        tse_signature: result.tse_signature,
+        tse_timestamp: result.tse_timestamp,
+      });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: 'Fehler', description: err.message, variant: 'destructive' });
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  const handleDeleteTransaction = async () => {
+    if (!selectedTransaction || !user) return;
+    const { error } = await supabase.from('transactions').delete().eq('id', selectedTransaction.id).eq('user_id', user.id);
     if (error) {
       toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Transaktion storniert' });
+      setSelectedTransaction(null);
+      setShowDeleteConfirm(false);
       fetchData();
     }
+  };
+
+  const handleRefund = async () => {
+    if (!selectedTransaction || !user) return;
+    const { error } = await supabase.from('transactions')
+      .update({ status: 'refunded' })
+      .eq('id', selectedTransaction.id)
+      .eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Rückerstattung erfasst' });
+      setSelectedTransaction({ ...selectedTransaction, status: 'refunded' });
+      fetchData();
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    if (!selectedTransaction) return;
+    const receiptContent = `
+BELEG
+================================
+${selectedTransaction.transaction_number}
+Datum: ${selectedTransaction.transaction_date} ${selectedTransaction.transaction_time?.substring(0, 5)}
+Kunde: ${selectedTransaction.customer_name}
+--------------------------------
+Betrag: ${Number(selectedTransaction.amount).toFixed(2)} €
+Zahlungsart: ${paymentMethodLabels[selectedTransaction.payment_method] || selectedTransaction.payment_method}
+--------------------------------
+${selectedTransaction.tse_signature ? `TSE: ${selectedTransaction.tse_signature.substring(0, 30)}...` : 'Ohne TSE'}
+================================
+    `.trim();
+    const w = window.open('', '_blank', 'width=300,height=500');
+    if (w) {
+      w.document.write(`<pre style="font-family:monospace;font-size:12px;padding:20px;">${receiptContent}</pre>`);
+      w.document.close();
+      w.print();
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    if (status === 'completed') return <Badge className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">Abgeschlossen</Badge>;
+    if (status === 'refunded') return <Badge variant="destructive">Erstattet</Badge>;
+    return <Badge variant="outline" className="border-amber-500/50 text-amber-700">Offen</Badge>;
   };
 
   return (
@@ -170,23 +264,26 @@ const KassenbuchView = () => {
                   <TableRow>
                     <TableHead>Zeit</TableHead>
                     <TableHead>Trans.-Nr.</TableHead>
-                    <TableHead>Typ</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Kunde</TableHead>
                     <TableHead className="text-right">Gesamt</TableHead>
                     <TableHead>Zahlung</TableHead>
                     <TableHead className="text-right">Betrag</TableHead>
-                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions.length === 0 ? (
-                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">Keine Transaktionen für diesen Tag</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Keine Transaktionen für diesen Tag</TableCell></TableRow>
                   ) : (
                     transactions.map(tx => (
-                      <TableRow key={tx.id}>
+                      <TableRow 
+                        key={tx.id} 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => setSelectedTransaction(tx)}
+                      >
                         <TableCell className="font-mono text-sm">{tx.transaction_time?.substring(0, 5)}</TableCell>
                         <TableCell className="font-mono text-sm">{tx.transaction_number}</TableCell>
-                        <TableCell><Badge variant="default" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">VERKAUF</Badge></TableCell>
+                        <TableCell>{statusBadge(tx.status || 'open')}</TableCell>
                         <TableCell>{tx.customer_name}</TableCell>
                         <TableCell className="text-right font-semibold">{Number(tx.amount).toFixed(2)} €</TableCell>
                         <TableCell>
@@ -196,23 +293,6 @@ const KassenbuchView = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">{Number(tx.payment_amount).toFixed(2)} €</TableCell>
-                        <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Transaktion stornieren?</AlertDialogTitle>
-                                <AlertDialogDescription>Transaktion {tx.transaction_number} ({Number(tx.amount).toFixed(2)} €) wird unwiderruflich gelöscht.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteTransaction(tx.id)} className="bg-destructive text-destructive-foreground">Stornieren</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -245,6 +325,153 @@ const KassenbuchView = () => {
           </Card>
         </div>
       </div>
+
+      {/* Transaction Detail Dialog */}
+      <Dialog open={!!selectedTransaction} onOpenChange={(open) => { if (!open) setSelectedTransaction(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Transaktionsdetails
+            </DialogTitle>
+          </DialogHeader>
+          {selectedTransaction && (
+            <div className="space-y-4">
+              {/* Transaction Info */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-sm text-muted-foreground">{selectedTransaction.transaction_number}</span>
+                  {statusBadge(selectedTransaction.status || 'open')}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedTransaction.transaction_date} · {selectedTransaction.transaction_time?.substring(0, 5)}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Customer */}
+              <div>
+                <span className="text-sm text-muted-foreground">Kunde</span>
+                <p className="font-semibold">{selectedTransaction.customer_name}</p>
+              </div>
+
+              {/* Payment */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="text-sm text-muted-foreground">Zahlungsart</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    {paymentMethodIcons[selectedTransaction.payment_method]}
+                    <span>{paymentMethodLabels[selectedTransaction.payment_method] || selectedTransaction.payment_method}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm text-muted-foreground">Betrag</span>
+                  <p className="text-2xl font-bold">{Number(selectedTransaction.amount).toFixed(2)} €</p>
+                </div>
+              </div>
+
+              {selectedTransaction.notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <span className="text-sm text-muted-foreground">Notizen</span>
+                    <p className="text-sm mt-1">{selectedTransaction.notes}</p>
+                  </div>
+                </>
+              )}
+
+              <Separator />
+
+              {/* ABSCHLIESSEN - only when open */}
+              {(!selectedTransaction.status || selectedTransaction.status === 'open') && (
+                <Button
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+                  size="lg"
+                >
+                  {checkoutLoading ? (
+                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Wird abgeschlossen...</>
+                  ) : (
+                    <><CheckCircle2 className="w-5 h-5 mr-2" />ABSCHLIESSEN</>
+                  )}
+                </Button>
+              )}
+
+              {/* TSE Info + Actions - only after completion */}
+              {selectedTransaction.status === 'completed' && (
+                <div className="space-y-3">
+                  {/* TSE Signature */}
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Shield className="w-4 h-4 text-emerald-600" />
+                      TSE-Signatur
+                    </div>
+                    {selectedTransaction.tse_signature ? (
+                      <p className="font-mono text-xs text-muted-foreground break-all">{selectedTransaction.tse_signature}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Ohne TSE abgeschlossen</p>
+                    )}
+                    {selectedTransaction.tse_timestamp && (
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(selectedTransaction.tse_timestamp), 'dd.MM.yyyy HH:mm:ss')}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Rückerstattung + Belegkopie */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" onClick={handleRefund} className="gap-2">
+                      <RotateCcw className="w-4 h-4" />
+                      Rückerstattung
+                    </Button>
+                    <Button variant="outline" onClick={handlePrintReceipt} className="gap-2">
+                      <Printer className="w-4 h-4" />
+                      Belegkopie
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {selectedTransaction.status === 'refunded' && (
+                <div className="bg-destructive/10 rounded-lg p-3 text-center">
+                  <p className="text-sm font-medium text-destructive">Diese Transaktion wurde erstattet</p>
+                </div>
+              )}
+
+              {/* Stornieren - always available */}
+              {selectedTransaction.status !== 'refunded' && (
+                <Button
+                  variant="ghost"
+                  className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Stornieren
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transaktion stornieren?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Transaktion {selectedTransaction?.transaction_number} ({Number(selectedTransaction?.amount || 0).toFixed(2)} €) wird unwiderruflich gelöscht.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTransaction} className="bg-destructive text-destructive-foreground">
+              Stornieren
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
