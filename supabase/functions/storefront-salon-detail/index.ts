@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Fetch salon info by id or slug
     let salonQuery = supabase
       .from("customers")
-      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, slug");
+      .select("id, company_name, email, city, address, postal_code, category, description, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, slug, cancellation_hours, buffer_minutes");
     
     if (salon_id) {
       salonQuery = salonQuery.eq("id", salon_id);
