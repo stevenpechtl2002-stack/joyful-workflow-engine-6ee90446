@@ -167,6 +167,8 @@ Deno.serve(async (req) => {
         facebook_url: salon.facebook_url,
         logo_url: salon.logo_url,
         cover_image_url: salon.cover_image_url,
+        cancellation_hours: salon.cancellation_hours ?? 24,
+        buffer_minutes: salon.buffer_minutes ?? 0,
       },
       products: products || [],
       staff: (staff || []).map(s => ({ id: s.id, name: s.name, color: s.color })),
