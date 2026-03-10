@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
         product_id: product_id || null,
         booking_date,
         booking_time,
-        end_time: end_time || null,
+        end_time: adjustedEndTime || null,
         customer_name,
         customer_phone: customer_phone || null,
         customer_email: customer_email || null,
