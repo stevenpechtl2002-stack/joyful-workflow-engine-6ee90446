@@ -8,11 +8,13 @@ import {
   Code,
   ShieldCheck,
   RefreshCw,
-  Activity
+  Activity,
+  Receipt
 } from 'lucide-react';
 import { storageService } from '@/services/storageService';
 import { ApiKeyManagement } from './ApiKeyManagement';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   onSimulateIncoming: (payload: any) => void;
