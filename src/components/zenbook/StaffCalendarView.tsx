@@ -361,26 +361,6 @@ const StaffCalendarView: React.FC<Props> = ({
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="mb-2 px-4 pt-2 space-y-2">
-        {/* Top row: Date centered */}
-        <div className="flex items-center justify-center gap-4">
-          <div className="flex gap-1 bg-muted p-1 rounded-2xl border border-border shadow-sm">
-            <button onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'day' ? -1 : -7))}
-              className="p-2 hover:bg-card hover:shadow-sm rounded-xl text-muted-foreground transition-all">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button onClick={() => setSelectedDate(new Date())}
-              className="px-4 py-2 text-[11px] font-black text-primary hover:bg-card hover:shadow-sm rounded-xl transition-all">
-              Heute
-            </button>
-            <button onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'day' ? 1 : 7))}
-              className="p-2 hover:bg-card hover:shadow-sm rounded-xl text-muted-foreground transition-all">
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <h3 className="text-3xl font-black text-foreground tracking-tighter">
-            {format(selectedDate, 'EEEE, d. MMMM', { locale: de })}
-          </h3>
-        </div>
 
         {/* Bottom row: Mode toggles + actions */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
