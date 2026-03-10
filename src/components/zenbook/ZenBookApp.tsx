@@ -39,7 +39,8 @@ import {
   startOfDay,
   parseISO,
   addMonths,
-  subMonths } from
+  subMonths,
+  addDays } from
 'date-fns';
 import { de } from 'date-fns/locale';
 import { ViewType, Appointment, AppointmentStatus, Staff, Service, UserRole } from '@/types';
