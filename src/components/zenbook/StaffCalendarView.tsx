@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
-  format, isSameDay, addDays, startOfWeek, endOfWeek, eachDayOfInterval, getDay
-} from 'date-fns';
+  format, isSameDay, addDays, startOfWeek, endOfWeek, eachDayOfInterval, getDay } from
+'date-fns';
 import { de } from 'date-fns/locale';
 import {
   Plus, ChevronLeft, ChevronRight, LayoutGrid, CalendarDays, Clock,
-  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon
-} from 'lucide-react';
+  Settings2, Minus, User, Phone, Mail, Tag, Trash2, Ban, CheckCircle2, Users, CalendarCheck, Sparkles, ImageIcon } from
+'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +44,7 @@ const statusColors: Record<string, string> = {
   confirmed: 'bg-primary',
   completed: 'bg-emerald-500',
   cancelled: 'bg-muted-foreground',
-  no_show: 'bg-destructive',
+  no_show: 'bg-destructive'
 };
 
 const statusLabels: Record<string, string> = {
@@ -52,7 +52,7 @@ const statusLabels: Record<string, string> = {
   confirmed: 'Bestätigt',
   completed: 'Abgeschlossen',
   cancelled: 'Storniert',
-  no_show: 'Nicht erschienen',
+  no_show: 'Nicht erschienen'
 };
 
 const sourceLabels: Record<string, string> = {
@@ -60,13 +60,13 @@ const sourceLabels: Record<string, string> = {
   voice_agent: 'KI Voice',
   website: 'Website',
   phone: 'Telefon',
-  n8n: 'n8n',
+  n8n: 'n8n'
 };
 
 const StaffCalendarView: React.FC<Props> = ({
   reservations, staffMembers, shifts, exceptions, products,
   selectedDate, setSelectedDate,
-  onCreateReservation, onUpdateReservation, onDeleteReservation,
+  onCreateReservation, onUpdateReservation, onDeleteReservation
 }) => {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [calendarMode, setCalendarMode] = useState<'calendar' | 'availability'>('calendar');
@@ -83,19 +83,19 @@ const StaffCalendarView: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const activeStaff = useMemo(() =>
-    staffMembers.filter(s => s.is_active).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-    [staffMembers]
+  staffMembers.filter((s) => s.is_active).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+  [staffMembers]
   );
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   // Generate time slots
   const timeSlots = useMemo(() => {
-    const slots: { hour: number; minute: number; label: string }[] = [];
+    const slots: {hour: number;minute: number;label: string;}[] = [];
     const slotsPerHour = 60 / timeInterval;
     for (let i = 0; i < (END_HOUR - START_HOUR) * slotsPerHour; i++) {
       const hour = START_HOUR + Math.floor(i / slotsPerHour);
-      const minute = (i % slotsPerHour) * timeInterval;
+      const minute = i % slotsPerHour * timeInterval;
       slots.push({ hour, minute, label: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}` });
     }
     return slots;
@@ -111,14 +111,14 @@ const StaffCalendarView: React.FC<Props> = ({
     const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
 
     // Check exceptions first
-    const dayExceptions = exceptions.filter(e => e.staff_member_id === staffId && e.exception_date === dateString);
+    const dayExceptions = exceptions.filter((e) => e.staff_member_id === staffId && e.exception_date === dateString);
     for (const ex of dayExceptions) {
       if (!ex.start_time || !ex.end_time) return false; // full day off
       if (timeStr >= ex.start_time && timeStr < ex.end_time) return false;
     }
 
     // Check shift
-    const shift = shifts.find(s => s.staff_member_id === staffId && s.day_of_week === dayOfWeek);
+    const shift = shifts.find((s) => s.staff_member_id === staffId && s.day_of_week === dayOfWeek);
     if (!shift || !shift.is_working) return false;
     return timeStr >= shift.start_time && timeStr < shift.end_time;
   }, [shifts, exceptions]);
@@ -126,7 +126,7 @@ const StaffCalendarView: React.FC<Props> = ({
   // Get reservations for a date
   const getReservationsForDate = useCallback((date: Date) => {
     const ds = format(date, 'yyyy-MM-dd');
-    return reservations.filter(r => r.date === ds && r.status !== 'cancelled');
+    return reservations.filter((r) => r.date === ds && r.status !== 'cancelled');
   }, [reservations]);
 
   // Position calculation
@@ -155,7 +155,7 @@ const StaffCalendarView: React.FC<Props> = ({
       date: format(date, 'yyyy-MM-dd'),
       time: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
       end_time: `${(hour + 1).toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
-      staff_member_id: staffId,
+      staff_member_id: staffId
     });
     setFormOpen(true);
   };
@@ -180,7 +180,7 @@ const StaffCalendarView: React.FC<Props> = ({
       staff_member_id: r.staff_member_id || '',
       product_id: r.product_id || '',
       notes: r.notes || '',
-      status: r.status || 'confirmed',
+      status: r.status || 'confirmed'
     });
     setDetailReservation(null);
     setFormOpen(true);
@@ -200,7 +200,7 @@ const StaffCalendarView: React.FC<Props> = ({
           staff_member_id: data.staff_member_id || null,
           product_id: data.product_id || null,
           notes: data.notes || null,
-          status: data.status,
+          status: data.status
         });
       } else {
         await onCreateReservation({
@@ -214,7 +214,7 @@ const StaffCalendarView: React.FC<Props> = ({
           product_id: data.product_id || null,
           notes: data.notes || null,
           status: 'confirmed',
-          source: 'manual',
+          source: 'manual'
         });
       }
       setFormOpen(false);
@@ -254,45 +254,45 @@ const StaffCalendarView: React.FC<Props> = ({
   // Get product name
   const getProductName = (productId: string | null) => {
     if (!productId) return null;
-    return products.find(p => p.id === productId)?.name || null;
+    return products.find((p) => p.id === productId)?.name || null;
   };
 
   const getStaffName = (staffId: string | null) => {
     if (!staffId) return 'Nicht zugewiesen';
-    return staffMembers.find(s => s.id === staffId)?.name || 'Unbekannt';
+    return staffMembers.find((s) => s.id === staffId)?.name || 'Unbekannt';
   };
 
   const getStaffColor = (staffId: string | null) => {
     if (!staffId) return '#94a3b8';
-    return staffMembers.find(s => s.id === staffId)?.color || '#3B82F6';
+    return staffMembers.find((s) => s.id === staffId)?.color || '#3B82F6';
   };
 
   // Week view days
   const weekDays = eachDayOfInterval({
     start: startOfWeek(selectedDate, { locale: de }),
-    end: endOfWeek(selectedDate, { locale: de }),
+    end: endOfWeek(selectedDate, { locale: de })
   });
 
   // Render a single column of reservations
   const renderColumn = (staffId: string | null, date: Date) => {
     const ds = format(date, 'yyyy-MM-dd');
-    const colReservations = reservations.filter(r =>
-      r.date === ds &&
-      r.status !== 'cancelled' &&
-      (staffId === null ? !r.staff_member_id : r.staff_member_id === staffId)
+    const colReservations = reservations.filter((r) =>
+    r.date === ds &&
+    r.status !== 'cancelled' && (
+    staffId === null ? !r.staff_member_id : r.staff_member_id === staffId)
     );
 
     return (
       <div
         key={`${staffId || 'unassigned'}-${ds}`}
         className={`relative border-r border-border last:border-r-0 transition-colors ${
-          dragOverStaff === (staffId || '__unassigned') ? 'bg-primary/5' : ''
-        }`}
+        dragOverStaff === (staffId || '__unassigned') ? 'bg-primary/5' : ''}`
+        }
         style={{ width: columnWidth, minWidth: columnWidth }}
-        onDrop={e => handleDrop(e, staffId || '')}
-        onDragOver={e => handleDragOver(e, staffId || '__unassigned')}
-        onDragLeave={handleDragLeave}
-      >
+        onDrop={(e) => handleDrop(e, staffId || '')}
+        onDragOver={(e) => handleDragOver(e, staffId || '__unassigned')}
+        onDragLeave={handleDragLeave}>
+        
         {/* Time slot grid lines */}
         {timeSlots.map((slot) => {
           const isWorking = staffId ? isStaffWorkingAt(staffId, date, slot.hour, slot.minute) : true;
@@ -301,19 +301,19 @@ const StaffCalendarView: React.FC<Props> = ({
               key={`${slot.hour}-${slot.minute}`}
               onClick={() => handleSlotClick(staffId || '', slot.hour, slot.minute, date)}
               className={`border-b cursor-pointer group flex items-start justify-center pt-1 transition-colors ${
-                slot.minute === 0 ? 'border-border/60' : 'border-border/20'
-              } ${isWorking ? 'hover:bg-muted/40' : 'bg-muted/30'}`}
-              style={{ height: `${slotHeight}px` }}
-            >
-              {isWorking && (
-                <Plus className="w-3 h-3 text-muted-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              )}
-            </div>
-          );
+              slot.minute === 0 ? 'border-border/60' : 'border-border/20'} ${
+              isWorking ? 'hover:bg-muted/40' : 'bg-muted/30'}`}
+              style={{ height: `${slotHeight}px` }}>
+              
+              {isWorking &&
+              <Plus className="w-3 h-3 text-muted-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              }
+            </div>);
+
         })}
 
         {/* Reservation blocks */}
-        {colReservations.map(r => {
+        {colReservations.map((r) => {
           const top = calcTop(r.time);
           const height = calcHeight(r.time, r.end_time);
           const color = getStaffColor(r.staff_member_id);
@@ -323,18 +323,18 @@ const StaffCalendarView: React.FC<Props> = ({
             <div
               key={r.id}
               draggable
-              onDragStart={e => handleDragStart(e, r.id)}
-              onClick={e => { e.stopPropagation(); handleReservationClick(r); }}
+              onDragStart={(e) => handleDragStart(e, r.id)}
+              onClick={(e) => {e.stopPropagation();handleReservationClick(r);}}
               className={`absolute left-1 right-1 rounded-xl px-2.5 py-1.5 shadow-sm cursor-pointer z-10 overflow-hidden transition-all hover:shadow-md active:scale-[0.98] ${
-                draggingId === r.id ? 'opacity-40' : ''
-              }`}
+              draggingId === r.id ? 'opacity-40' : ''}`
+              }
               style={{
                 top: `${top + 2}px`,
                 height: `${Math.max(height - 4, 22)}px`,
                 backgroundColor: `${color}18`,
-                borderLeft: `4px solid ${color}`,
-              }}
-            >
+                borderLeft: `4px solid ${color}`
+              }}>
+              
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="text-[9px] font-bold text-muted-foreground">
                   {r.time?.substring(0, 5)}
@@ -342,19 +342,19 @@ const StaffCalendarView: React.FC<Props> = ({
                 <span className={`w-1.5 h-1.5 rounded-full ${statusColors[r.status || 'pending']}`} />
               </div>
               <p className="font-bold text-xs text-foreground truncate leading-tight">{r.customer_name}</p>
-              {height > 40 && productName && (
-                <p className="text-[9px] font-semibold text-muted-foreground truncate mt-0.5">{productName}</p>
-              )}
-              {height > 55 && r.source && r.source !== 'manual' && (
-                <Badge variant="secondary" className="text-[8px] px-1 py-0 mt-0.5 h-3.5">
+              {height > 40 && productName &&
+              <p className="text-[9px] font-semibold text-muted-foreground truncate mt-0.5">{productName}</p>
+              }
+              {height > 55 && r.source && r.source !== 'manual' &&
+              <Badge variant="secondary" className="text-[8px] px-1 py-0 mt-0.5 h-3.5">
                   {sourceLabels[r.source] || r.source}
                 </Badge>
-              )}
-            </div>
-          );
+              }
+            </div>);
+
         })}
-      </div>
-    );
+      </div>);
+
   };
 
   return (
@@ -367,42 +367,42 @@ const StaffCalendarView: React.FC<Props> = ({
           <div className="flex items-center gap-3">
             <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
               <button onClick={() => setCalendarMode('calendar')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
-                  calendarMode === 'calendar' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                }`}>
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
+              calendarMode === 'calendar' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`
+              }>
                 <CalendarDays className="w-3.5 h-3.5" /> KALENDER
               </button>
               <button onClick={() => setCalendarMode('availability')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
-                  calendarMode === 'availability' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                }`}>
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all ${
+              calendarMode === 'availability' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}`
+              }>
                 <CheckCircle2 className="w-3.5 h-3.5" /> FREIE SLOTS
               </button>
             </div>
             <StaffManagementDialog trigger={
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-muted hover:bg-card rounded-xl border border-border shadow-sm text-muted-foreground hover:text-foreground font-black text-[10px] transition-all">
                 <Users className="w-3.5 h-3.5" /> DIENSTPLAN
               </button>
             } />
           </div>
 
           <div className="flex items-center gap-3">
-            {calendarMode === 'calendar' && (
-              <>
-                <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-sm">
-                  <button onClick={() => setViewMode('day')}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
-                      viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                    }`}>
-                    <LayoutGrid className="w-3.5 h-3.5" /> TAG
-                  </button>
-                  <button onClick={() => setViewMode('week')}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[10px] font-black transition-all ${
-                      viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'
-                    }`}>
-                    <CalendarDays className="w-3.5 h-3.5" /> WOCHE
-                  </button>
-                </div>
+            {calendarMode === 'calendar' &&
+            <>
+                
+
+
+
+
+
+
+
+
+
+
+
+
+              
 
                 <Popover>
                   <PopoverTrigger asChild>
@@ -424,7 +424,7 @@ const StaffCalendarView: React.FC<Props> = ({
                           <button onClick={() => setRowHeight(Math.max(40, rowHeight - 10))} className="p-1.5 bg-muted rounded-lg">
                             <Minus className="w-3 h-3 text-muted-foreground" />
                           </button>
-                          <Slider value={[rowHeight]} onValueChange={v => setRowHeight(v[0])} min={40} max={160} step={10} className="flex-1" />
+                          <Slider value={[rowHeight]} onValueChange={(v) => setRowHeight(v[0])} min={40} max={160} step={10} className="flex-1" />
                           <button onClick={() => setRowHeight(Math.min(160, rowHeight + 10))} className="p-1.5 bg-muted rounded-lg">
                             <Plus className="w-3 h-3 text-muted-foreground" />
                           </button>
@@ -433,16 +433,16 @@ const StaffCalendarView: React.FC<Props> = ({
                       <div className="space-y-2">
                         <label className="zen-label">Intervall</label>
                         <div className="grid grid-cols-3 gap-2">
-                          {TIME_INTERVALS.map(interval => (
-                            <button key={interval} onClick={() => setTimeInterval(interval)}
-                              className={`py-2 rounded-xl text-xs font-black transition-all ${
-                                timeInterval === interval
-                                  ? 'bg-primary text-primary-foreground shadow-lg'
-                                  : 'bg-muted text-muted-foreground hover:bg-card border border-border'
-                              }`}>
+                          {TIME_INTERVALS.map((interval) =>
+                        <button key={interval} onClick={() => setTimeInterval(interval)}
+                        className={`py-2 rounded-xl text-xs font-black transition-all ${
+                        timeInterval === interval ?
+                        'bg-primary text-primary-foreground shadow-lg' :
+                        'bg-muted text-muted-foreground hover:bg-card border border-border'}`
+                        }>
                               {interval}m
                             </button>
-                          ))}
+                        )}
                         </div>
                       </div>
                     </div>
@@ -455,7 +455,7 @@ const StaffCalendarView: React.FC<Props> = ({
                         <button onClick={() => setColumnWidth(Math.max(80, columnWidth - 10))} className="p-1.5 bg-muted rounded-lg">
                           <Minus className="w-3 h-3 text-muted-foreground" />
                         </button>
-                        <Slider value={[columnWidth]} onValueChange={v => setColumnWidth(v[0])} min={80} max={300} step={10} className="flex-1" />
+                        <Slider value={[columnWidth]} onValueChange={(v) => setColumnWidth(v[0])} min={80} max={300} step={10} className="flex-1" />
                         <button onClick={() => setColumnWidth(Math.min(300, columnWidth + 10))} className="p-1.5 bg-muted rounded-lg">
                           <Plus className="w-3 h-3 text-muted-foreground" />
                         </button>
@@ -465,42 +465,42 @@ const StaffCalendarView: React.FC<Props> = ({
                 </Popover>
 
                 {/* Treatwell Import button */}
-                <button 
-                  onClick={() => setIsSmartImportOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all"
-                >
+                <button
+                onClick={() => setIsSmartImportOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all">
+                
                   <ImageIcon className="w-4 h-4" /> Treatwell Import
                 </button>
 
                 <button onClick={() => {
-                  setEditingId(null);
-                  setFormInitial({ date: dateStr, time: '09:00', end_time: '10:00' });
-                  setFormOpen(true);
-                }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all">
+                setEditingId(null);
+                setFormInitial({ date: dateStr, time: '09:00', end_time: '10:00' });
+                setFormOpen(true);
+              }} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-xs shadow-lg hover:opacity-90 transition-all">
                   <Plus className="w-4 h-4" /> Termin
                 </button>
               </>
-            )}
+            }
           </div>
         </div>
       </div>
 
       {/* Availability View or Calendar Grid */}
-      {calendarMode === 'availability' ? (
-        <AvailabilityView />
-      ) : (
+      {calendarMode === 'availability' ?
+      <AvailabilityView /> :
+
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto flex flex-col bg-card border-t border-border"
-      >
+        className="flex-1 overflow-auto flex flex-col bg-card border-t border-border">
+        
           {/* Header Row */}
           <div className="flex border-b border-border bg-card sticky top-0 z-20" style={{ minHeight: '56px' }}>
             <div className="w-16 border-r border-border shrink-0 flex items-center justify-center sticky left-0 z-30 bg-card">
               <Clock className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
 
-            {viewMode === 'day' ? (
-              <>
+            {viewMode === 'day' ?
+          <>
                 {/* Unassigned column */}
                 <div className="px-3 flex items-center gap-2 border-r border-border bg-muted/30" style={{ width: columnWidth, minWidth: columnWidth }}>
                   <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
@@ -508,28 +508,28 @@ const StaffCalendarView: React.FC<Props> = ({
                   </div>
                   <span className="text-xs font-bold text-muted-foreground truncate">Offen</span>
                 </div>
-                {activeStaff.map(staff => (
-                  <div key={staff.id} className="px-3 flex items-center gap-2 border-r border-border last:border-r-0 bg-card" style={{ width: columnWidth, minWidth: columnWidth }}>
+                {activeStaff.map((staff) =>
+            <div key={staff.id} className="px-3 flex items-center gap-2 border-r border-border last:border-r-0 bg-card" style={{ width: columnWidth, minWidth: columnWidth }}>
                     <div className="w-7 h-7 rounded-lg overflow-hidden border border-border shrink-0"
-                      style={{ backgroundColor: `${staff.color}20` }}>
-                      {staff.avatar_url ? (
-                        <img src={staff.avatar_url} className="w-full h-full object-cover" alt={staff.name} />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] font-black" style={{ color: staff.color }}>
+              style={{ backgroundColor: `${staff.color}20` }}>
+                      {staff.avatar_url ?
+                <img src={staff.avatar_url} className="w-full h-full object-cover" alt={staff.name} /> :
+
+                <div className="w-full h-full flex items-center justify-center text-[10px] font-black" style={{ color: staff.color }}>
                           {staff.name.charAt(0)}
                         </div>
-                      )}
+                }
                     </div>
                     <span className="text-xs font-bold text-foreground truncate">{staff.name}</span>
                   </div>
-                ))}
-              </>
-            ) : (
-              weekDays.map(day => (
-                <div key={day.toString()}
-                  className={`flex-1 flex flex-col justify-center text-center border-r border-border last:border-r-0 min-w-[100px] py-2 bg-card ${
-                    isSameDay(day, new Date()) ? 'bg-primary/5' : ''
-                  }`}>
+            )}
+              </> :
+
+          weekDays.map((day) =>
+          <div key={day.toString()}
+          className={`flex-1 flex flex-col justify-center text-center border-r border-border last:border-r-0 min-w-[100px] py-2 bg-card ${
+          isSameDay(day, new Date()) ? 'bg-primary/5' : ''}`
+          }>
                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                     {format(day, 'EEE', { locale: de })}
                   </p>
@@ -537,8 +537,8 @@ const StaffCalendarView: React.FC<Props> = ({
                     {format(day, 'd')}
                   </p>
                 </div>
-              ))
-            )}
+          )
+          }
           </div>
 
           {/* Scrollable Grid */}
@@ -546,52 +546,52 @@ const StaffCalendarView: React.FC<Props> = ({
             <div className="flex min-w-max" style={{ minHeight: `${totalHeight}px` }}>
               {/* Time column */}
               <div className="w-16 border-r border-border bg-card shrink-0 sticky left-0 z-20">
-                {timeSlots.map(slot => (
-                  <div key={`${slot.hour}-${slot.minute}`}
-                    className="px-2 text-[9px] font-bold text-muted-foreground text-right pr-3 flex items-start pt-1"
-                    style={{ height: `${slotHeight}px` }}>
+                {timeSlots.map((slot) =>
+              <div key={`${slot.hour}-${slot.minute}`}
+              className="px-2 text-[9px] font-bold text-muted-foreground text-right pr-3 flex items-start pt-1"
+              style={{ height: `${slotHeight}px` }}>
                     {slot.minute === 0 || timeInterval < 60 ? slot.label : ''}
                   </div>
-                ))}
+              )}
               </div>
 
               {/* Columns */}
-              {viewMode === 'day' ? (
-                <>
+              {viewMode === 'day' ?
+            <>
                   {renderColumn(null, selectedDate)}
-                  {activeStaff.map(staff => renderColumn(staff.id, selectedDate))}
-                </>
-              ) : (
-                weekDays.map(day => renderColumn(null, day))
-              )}
+                  {activeStaff.map((staff) => renderColumn(staff.id, selectedDate))}
+                </> :
+
+            weekDays.map((day) => renderColumn(null, day))
+            }
             </div>
           </div>
         </div>
-      )}
+      }
 
       {/* Reservation Form */}
-      {formOpen && (
-        <ReservationForm
-          onSubmit={handleFormSubmit}
-          onClose={() => { setFormOpen(false); setEditingId(null); }}
-          onDelete={editingId ? async () => {
-            await onDeleteReservation(editingId);
-            setFormOpen(false);
-            setEditingId(null);
-          } : undefined}
-          staffMembers={staffMembers}
-          products={products}
-          initialData={formInitial}
-          isEdit={!!editingId}
-        />
-      )}
+      {formOpen &&
+      <ReservationForm
+        onSubmit={handleFormSubmit}
+        onClose={() => {setFormOpen(false);setEditingId(null);}}
+        onDelete={editingId ? async () => {
+          await onDeleteReservation(editingId);
+          setFormOpen(false);
+          setEditingId(null);
+        } : undefined}
+        staffMembers={staffMembers}
+        products={products}
+        initialData={formInitial}
+        isEdit={!!editingId} />
+
+      }
 
       {/* Detail Dialog */}
-      {detailReservation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/20 backdrop-blur-sm p-4 animate-in fade-in"
-          onClick={() => setDetailReservation(null)}>
+      {detailReservation &&
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/20 backdrop-blur-sm p-4 animate-in fade-in"
+      onClick={() => setDetailReservation(null)}>
           <div className="bg-card rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-border"
-            onClick={e => e.stopPropagation()}>
+        onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h4 className="text-lg font-black text-foreground">{detailReservation.customer_name}</h4>
@@ -599,11 +599,11 @@ const StaffCalendarView: React.FC<Props> = ({
                   <Badge variant="secondary" className="text-[9px]">
                     {statusLabels[detailReservation.status || 'pending']}
                   </Badge>
-                  {detailReservation.source && (
-                    <Badge variant="outline" className="text-[9px]">
+                  {detailReservation.source &&
+                <Badge variant="outline" className="text-[9px]">
                       {sourceLabels[detailReservation.source] || detailReservation.source}
                     </Badge>
-                  )}
+                }
                 </div>
               </div>
               <button onClick={() => setDetailReservation(null)} className="text-muted-foreground hover:text-foreground">
@@ -628,48 +628,48 @@ const StaffCalendarView: React.FC<Props> = ({
                 <span className="font-semibold">{getStaffName(detailReservation.staff_member_id)}</span>
               </div>
 
-              {detailReservation.product_id && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+              {detailReservation.product_id &&
+            <div className="flex items-center gap-2 text-muted-foreground">
                   <Tag className="w-3.5 h-3.5" />
                   <span className="font-semibold">{getProductName(detailReservation.product_id)}</span>
                 </div>
-              )}
+            }
 
-              {detailReservation.customer_phone && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+              {detailReservation.customer_phone &&
+            <div className="flex items-center gap-2 text-muted-foreground">
                   <Phone className="w-3.5 h-3.5" />
                   <span>{detailReservation.customer_phone}</span>
                 </div>
-              )}
+            }
 
-              {detailReservation.customer_email && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+              {detailReservation.customer_email &&
+            <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="w-3.5 h-3.5" />
                   <span>{detailReservation.customer_email}</span>
                 </div>
-              )}
+            }
 
-              {detailReservation.notes && (
-                <p className="text-xs text-muted-foreground bg-muted rounded-lg p-2 mt-2">{detailReservation.notes}</p>
-              )}
+              {detailReservation.notes &&
+            <p className="text-xs text-muted-foreground bg-muted rounded-lg p-2 mt-2">{detailReservation.notes}</p>
+            }
             </div>
 
             <div className="flex gap-2 mt-5">
               <button onClick={() => {
-                handleEditFromDetail();
-              }} className="flex-1 zen-button-secondary text-xs py-2.5">
+              handleEditFromDetail();
+            }} className="flex-1 zen-button-secondary text-xs py-2.5">
                 Bearbeiten
               </button>
               <button onClick={async () => {
-                await onDeleteReservation(detailReservation.id);
-                setDetailReservation(null);
-              }} className="px-3 py-2.5 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all">
+              await onDeleteReservation(detailReservation.id);
+              setDetailReservation(null);
+            }} className="px-3 py-2.5 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-all">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
-      )}
+      }
 
       {/* Smart Text Import Dialog */}
       <SmartTextImport
@@ -678,10 +678,10 @@ const StaffCalendarView: React.FC<Props> = ({
         onSuccess={() => {
           setIsSmartImportOpen(false);
         }}
-        defaultDate={selectedDate}
-      />
-    </div>
-  );
+        defaultDate={selectedDate} />
+      
+    </div>);
+
 };
 
 export default StaffCalendarView;
