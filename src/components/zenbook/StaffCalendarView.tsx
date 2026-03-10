@@ -37,6 +37,7 @@ interface Props {
   onCreateReservation: (data: any) => Promise<any>;
   onUpdateReservation: (id: string, data: any) => Promise<any>;
   onDeleteReservation: (id: string) => Promise<void>;
+  onNavigate?: (view: string) => void;
 }
 
 const statusColors: Record<string, string> = {
