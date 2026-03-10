@@ -1,21 +1,38 @@
 
 
-## Plan: Fiskaly Client automatisch per Edge Function erstellen
+## Plan: Admin Dashboard modernisieren mit Statistiken und Diagrammen
 
-Da PowerShell Probleme macht, baue ich eine Backend-Funktion, die den fiskaly Client automatisch erstellt. So musst du nichts in der Kommandozeile machen.
+### Was fehlt
+Das Dashboard hat bereits KPI-Karten und Tabellen, aber **keine Diagramme/Charts**. `recharts` ist installiert aber wird nicht genutzt. Es fehlt eine visuelle Übersicht über Trends.
 
-### Schritt 1: Secrets speichern
-Die zwei Werte, die du gerade geteilt hast (API Key und API Secret), plus deine TSS-ID als Backend-Secrets hinterlegen.
+### Änderungen an `src/pages/admin/AdminDashboard.tsx`
 
-### Schritt 2: Edge Function `fiskaly-setup` erstellen
-Eine neue Backend-Funktion, die:
-1. Sich bei fiskaly authentifiziert (mit deinem API Key + Secret)
-2. Automatisch einen Client unter deiner TSS erstellt
-3. Die Client-ID zurückgibt
+**1. Charts-Sektion zwischen KPI-Karten und Tabs einfügen:**
+- **Registrierungen pro Monat** (BarChart) — aggregiert aus `customers.created_at`
+- **Umsatz-Trend** (AreaChart) — aggregiert aus `transactions` + `reservations.price_paid` nach Monat
+- **Reservierungen pro Woche** (LineChart) — aus `reservations` + `storefront_bookings` der letzten 8 Wochen
+- **Kundenverteilung nach Kategorie** (PieChart) — aus `customers.category`
 
-### Schritt 3: Setup-Button in den Einstellungen
-Einen einfachen Button in der App, mit dem du die fiskaly-Einrichtung per Klick abschliessen kannst. Die generierte Client-ID wird dann ebenfalls als Secret gespeichert.
+**2. Neuer Tab "Registrierungen":**
+- Chronologische Liste aller Kunden-Registrierungen mit Datum, Name, E-Mail, Kategorie, Plan, Status
+- Sortiert nach `created_at` (neueste zuerst)
 
-### Voraussetzung
-Du musst mir noch deine **TSS-ID** mitteilen, damit ich alle drei Werte speichern kann.
+**3. Kundenprofile im Detail-Dialog erweitern:**
+- API-Key anzeigen (mit Sichtbarkeit-Toggle)
+- Webhook-URL pro Kunde
+- Voice Agent Status des Kunden
+- Stripe Abo-Status des Kunden (wenn vorhanden)
+
+**4. Visuelle Verbesserungen:**
+- Charts in 2x2 Grid mit Card-Wrappern
+- Responsive Layout für mobile Ansicht
+- Farblich abgestimmte Chart-Farben passend zum Theme
+
+### Technische Details
+- Import von `BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer` aus `recharts`
+- Aggregationslogik mit `useMemo` für Chart-Daten aus den bereits geladenen Daten (kein neuer DB-Call nötig)
+- Registrierungen-Tab nutzt dieselben `enrichedCustomers`, sortiert nach Datum
+
+### Dateien
+- `src/pages/admin/AdminDashboard.tsx` — Charts hinzufügen, Registrierungen-Tab, Detail-Dialog erweitern
 
