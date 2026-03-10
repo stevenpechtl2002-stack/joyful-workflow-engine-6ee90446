@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import SalonImageManager from '@/components/portal/SalonImageManager';
 import {
-  Store, Camera, Save, Loader2, MapPin, Phone, Globe, Instagram, Facebook, ExternalLink, Upload, X
+  Store, Camera, Save, Loader2, MapPin, Phone, Globe, Instagram, Facebook, ExternalLink, Upload, X, Clock, Shield
 } from 'lucide-react';
 
 const CATEGORIES = ['Friseur', 'Barbershop', 'Kosmetik', 'Nagelstudio', 'Massage', 'Spa & Wellness', 'Tattoo', 'Sonstiges'];
