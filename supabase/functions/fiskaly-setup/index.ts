@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Fiskaly credentials not configured' }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 1: Auth via backend (for TSS creation)
+    // Step 1: Auth via BACKEND (for TSS creation only)
     console.log('[FISKALY] Auth via backend...');
     const beAuthResp = await fetch(`${FISKALY_BE}/auth`, {
       method: 'POST',
@@ -51,47 +51,7 @@ Deno.serve(async (req) => {
     }
     const { access_token: beToken } = await beAuthResp.json() as any;
 
-    // Step 2: Create a NEW TSS via backend (returns admin_puk!)
-    const newTssId = crypto.randomUUID();
-    console.log('[FISKALY] Creating new TSS:', newTssId);
-    const createTssResp = await fetch(`${FISKALY_BE}/tss/${newTssId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${beToken}`,
-      },
-      body: JSON.stringify({ description: 'ZenBook KassenSichV TSE' }),
-    });
-    const createTssText = await createTssResp.text();
-    console.log('[FISKALY] Create TSS:', createTssResp.status);
-    if (!createTssResp.ok) {
-      return new Response(JSON.stringify({ error: 'Create TSS failed', details: createTssText }), { status: 500, headers: corsHeaders });
-    }
-    const tssData = JSON.parse(createTssText);
-    const adminPuk = tssData.admin_puk;
-    console.log('[FISKALY] TSS created! PUK available:', !!adminPuk);
-
-    if (!adminPuk) {
-      return new Response(JSON.stringify({ error: 'No admin PUK returned from TSS creation' }), { status: 500, headers: corsHeaders });
-    }
-
-    // Step 3: Deploy TSS to UNINITIALIZED via backend
-    console.log('[FISKALY] Deploying TSS...');
-    const deployResp = await fetch(`${FISKALY_BE}/tss/${newTssId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${beToken}`,
-      },
-      body: JSON.stringify({ state: 'UNINITIALIZED' }),
-    });
-    const deployText = await deployResp.text();
-    console.log('[FISKALY] Deploy:', deployResp.status);
-    if (!deployResp.ok) {
-      return new Response(JSON.stringify({ error: 'Deploy failed', details: deployText }), { status: 500, headers: corsHeaders });
-    }
-
-    // Step 4: Auth via middleware
+    // Step 2: Auth via MIDDLEWARE (for all other operations)
     console.log('[FISKALY] Auth via middleware...');
     const mwAuthResp = await fetch(`${FISKALY_MW}/auth`, {
       method: 'POST',
@@ -103,10 +63,50 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'MW auth failed', details: err }), { status: 500, headers: corsHeaders });
     }
     const { access_token: mwToken } = await mwAuthResp.json() as any;
+    console.log('[FISKALY] Both auths OK');
 
-    // Step 5: Change admin PIN using PUK via middleware
+    // Step 3: Create NEW TSS via BACKEND (only backend returns admin_puk)
+    const newTssId = crypto.randomUUID();
+    console.log('[FISKALY] Creating TSS:', newTssId);
+    const createResp = await fetch(`${FISKALY_BE}/tss/${newTssId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${beToken}`,
+      },
+      body: JSON.stringify({ description: 'ZenBook KassenSichV TSE' }),
+    });
+    const createText = await createResp.text();
+    console.log('[FISKALY] Create TSS:', createResp.status);
+    if (!createResp.ok) {
+      return new Response(JSON.stringify({ error: 'Create TSS failed', details: createText }), { status: 500, headers: corsHeaders });
+    }
+    const tssData = JSON.parse(createText);
+    const adminPuk = tssData.admin_puk;
+    console.log('[FISKALY] PUK available:', !!adminPuk);
+    if (!adminPuk) {
+      return new Response(JSON.stringify({ error: 'No PUK returned' }), { status: 500, headers: corsHeaders });
+    }
+
+    // Step 4: Deploy TSS (CREATED → UNINITIALIZED) via MIDDLEWARE
+    console.log('[FISKALY] Deploying TSS...');
+    const deployResp = await fetch(`${FISKALY_MW}/tss/${newTssId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mwToken}`,
+      },
+      body: JSON.stringify({ state: 'UNINITIALIZED' }),
+    });
+    console.log('[FISKALY] Deploy:', deployResp.status);
+    if (!deployResp.ok) {
+      const err = await deployResp.text();
+      return new Response(JSON.stringify({ error: 'Deploy failed', details: err }), { status: 500, headers: corsHeaders });
+    }
+
+    // Step 5: Set admin PIN using PUK via MIDDLEWARE
     console.log('[FISKALY] Setting admin PIN with PUK...');
-    const changePinResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/admin`, {
+    const pinResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/admin`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -114,10 +114,13 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({ admin_puk: adminPuk, new_admin_pin: ADMIN_PIN }),
     });
-    const changePinText = await changePinResp.text();
-    console.log('[FISKALY] Set PIN:', changePinResp.status, changePinText);
+    console.log('[FISKALY] Set PIN:', pinResp.status);
+    if (!pinResp.ok) {
+      const err = await pinResp.text();
+      console.log('[FISKALY] PIN error:', err);
+    }
 
-    // Step 6: Admin auth via middleware
+    // Step 6: Admin auth via MIDDLEWARE
     console.log('[FISKALY] Admin auth...');
     const adminAuthResp = await fetch(`${FISKALY_MW}/auth`, {
       method: 'POST',
@@ -130,14 +133,14 @@ Deno.serve(async (req) => {
         admin_pin: ADMIN_PIN,
       }),
     });
-    const adminAuthText = await adminAuthResp.text();
     console.log('[FISKALY] Admin auth:', adminAuthResp.status);
     if (!adminAuthResp.ok) {
-      return new Response(JSON.stringify({ error: 'Admin auth failed', details: adminAuthText }), { status: 500, headers: corsHeaders });
+      const err = await adminAuthResp.text();
+      return new Response(JSON.stringify({ error: 'Admin auth failed', details: err }), { status: 500, headers: corsHeaders });
     }
-    const { access_token: adminToken } = JSON.parse(adminAuthText);
+    const { access_token: adminToken } = await adminAuthResp.json() as any;
 
-    // Step 7: Initialize TSS via middleware with admin token
+    // Step 7: Initialize TSS via MIDDLEWARE with admin token
     console.log('[FISKALY] Initializing TSS...');
     const initResp = await fetch(`${FISKALY_MW}/tss/${newTssId}`, {
       method: 'PATCH',
@@ -147,13 +150,13 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({ state: 'INITIALIZED' }),
     });
-    const initText = await initResp.text();
     console.log('[FISKALY] Init:', initResp.status);
     if (!initResp.ok) {
-      return new Response(JSON.stringify({ error: 'TSS init failed', details: initText }), { status: 500, headers: corsHeaders });
+      const err = await initResp.text();
+      return new Response(JSON.stringify({ error: 'Init failed', details: err }), { status: 500, headers: corsHeaders });
     }
 
-    // Step 8: Register client via middleware
+    // Step 8: Register client via MIDDLEWARE
     const clientId = crypto.randomUUID();
     console.log('[FISKALY] Registering client:', clientId);
     const clientResp = await fetch(`${FISKALY_MW}/tss/${newTssId}/client/${clientId}`, {
@@ -166,8 +169,7 @@ Deno.serve(async (req) => {
     });
     if (!clientResp.ok) {
       const err = await clientResp.text();
-      console.log('[FISKALY] Client reg failed:', err);
-      return new Response(JSON.stringify({ error: 'Client registration failed', details: err }), { status: 500, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: 'Client reg failed', details: err }), { status: 500, headers: corsHeaders });
     }
 
     const clientData = await clientResp.json();
