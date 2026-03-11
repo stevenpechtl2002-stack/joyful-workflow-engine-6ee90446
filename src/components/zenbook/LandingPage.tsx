@@ -488,6 +488,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
 
       <section className="py-16 px-6 lg:px-12 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <svg className="absolute top-8 -left-8 w-40 h-40 opacity-[0.04]" viewBox="0 0 300 300"><path d="M50 280 L150 30 L280 260 Q280 290 250 290 L80 290 Q50 290 50 260Z" fill="#C4A35A" /></svg>
+          <svg className="absolute -bottom-8 right-[12%] w-36 h-36 opacity-[0.04]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#BE185D" /></svg>
+        </div>
         <motion.div className="absolute top-12 left-[4%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/10 to-[#D8B4FE]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -20, 0], rotate: [0, 7, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-24 right-[7%] w-16 h-16 rounded-full bg-gradient-to-br from-[#8B7FC7]/12 to-[#D8B4FE]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
         <div className="max-w-7xl mx-auto relative z-10">
