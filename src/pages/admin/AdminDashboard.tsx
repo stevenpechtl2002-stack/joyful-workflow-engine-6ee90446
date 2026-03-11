@@ -1301,7 +1301,65 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* TSE Daten */}
+              <div className="mt-4 space-y-3 border-t border-border/50 pt-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <FileCheck className="w-4 h-4" /> TSE / Kassendaten
+                </p>
+                {customerTseTransactions.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {customerTseTransactions.map((t, i) => (
+                      <div key={i} className="p-3 rounded-lg bg-secondary/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{t.customer_name} — {Number(t.amount).toFixed(2)}€</span>
+                          <Badge variant="outline" className="text-[10px]">{t.transaction_type} / {t.payment_method}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-muted-foreground">Beleg-Nr.</p>
+                            <p className="font-mono">{t.transaction_number || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Datum</p>
+                            <p>{t.transaction_date} {t.transaction_time?.slice(0, 5)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">TSE Transaction-ID</p>
+                            <p className="font-mono text-[11px] break-all">{t.tse_transaction_id || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">TSE Zeitstempel</p>
+                            <p className="text-[11px]">{t.tse_timestamp ? format(new Date(t.tse_timestamp), 'dd.MM.yyyy HH:mm:ss', { locale: de }) : '-'}</p>
+                          </div>
+                        </div>
+                        {t.tse_signature && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">TSE Signatur</p>
+                            <div className="flex items-center gap-1">
+                              <p className="font-mono text-[10px] break-all text-foreground/70 flex-1">{t.tse_signature}</p>
+                              <Button variant="ghost" size="sm" className="shrink-0 h-6 w-6 p-0" onClick={() => copyToClipboard(t.tse_signature!, 'TSE Signatur')}>
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Keine TSE-signierten Transaktionen vorhanden</p>
+                )}
+                <div className="flex gap-3 text-xs">
+                  <div className="p-2 rounded bg-secondary/30 flex-1 text-center">
+                    <p className="text-muted-foreground">TSE Transaktionen</p>
+                    <p className="font-bold text-lg">{customerTseTransactions.length}</p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/30 flex-1 text-center">
+                    <p className="text-muted-foreground">Gesamt Transaktionen</p>
+                    <p className="font-bold text-lg">{transactions.filter(t => t.user_id === selectedCustomer.id).length}</p>
+                  </div>
+                </div>
+              </div>
               {selectedCustomer.description && (
                 <div className="mt-4">
                   <p className="text-xs text-muted-foreground mb-1">Beschreibung</p>
