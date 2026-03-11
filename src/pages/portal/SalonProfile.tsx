@@ -110,6 +110,7 @@ const SalonProfile = () => {
         slug: slug || null,
         cancellation_hours: formData.cancellation_hours,
         buffer_minutes: formData.buffer_minutes,
+        printer_ip: formData.printer_ip || null,
       } as any)
       .eq('id', user.id);
     setSaving(false);
