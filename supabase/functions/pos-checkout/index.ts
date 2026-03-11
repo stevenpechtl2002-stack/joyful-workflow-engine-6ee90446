@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const tse = await signWithTSE(transaction.payment_method, Number(transaction.amount));
+      const tse = await signWithTSE(transaction.payment_method, Number(transaction.amount), customerTssId, customerClientId);
       console.log("[POS-CHECKOUT] TSE result:", { tseTransactionId: tse.tseTransactionId, hasSig: !!tse.tseSignature });
 
       const { error: updateError } = await supabase
