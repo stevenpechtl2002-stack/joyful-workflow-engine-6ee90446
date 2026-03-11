@@ -6,32 +6,49 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const FISKALY_MW = "https://kassensichv-middleware.fiskaly.com/api/v2";
+
 async function signWithTSE(paymentMethod: string, amount: number) {
   const fiskalyApiKey = Deno.env.get("FISKALY_API_KEY");
   const fiskalyApiSecret = Deno.env.get("FISKALY_API_SECRET");
+  const tssId = Deno.env.get("FISKALY_TSS_ID");
+  const clientId = Deno.env.get("FISKALY_CLIENT_ID");
 
   if (!fiskalyApiKey || !fiskalyApiSecret) {
-    console.log("Fiskaly keys not configured - skipping TSE signing");
+    console.log("[POS-CHECKOUT] Fiskaly keys not configured - skipping TSE signing");
+    return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
+  }
+
+  if (!tssId || !clientId) {
+    console.error("[POS-CHECKOUT] FISKALY_TSS_ID or FISKALY_CLIENT_ID not configured");
     return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
   }
 
   try {
-    const authRes = await fetch("https://kassensichv2.fiskaly.com/api/v2/auth", {
+    // Authenticate via middleware
+    console.log("[POS-CHECKOUT] Authenticating with fiskaly...");
+    const authRes = await fetch(`${FISKALY_MW}/auth`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ api_key: fiskalyApiKey, api_secret: fiskalyApiSecret }),
     });
 
-    if (!authRes.ok) return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
+    if (!authRes.ok) {
+      const errText = await authRes.text();
+      console.error("[POS-CHECKOUT] Auth failed:", authRes.status, errText);
+      return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
+    }
 
     const { access_token } = await authRes.json();
+    console.log("[POS-CHECKOUT] Auth OK");
+
     const txId = crypto.randomUUID();
     const amountCents = Math.round(amount * 100);
-    const tssId = Deno.env.get("FISKALY_TSS_ID") || "default";
-    const clientId = Deno.env.get("FISKALY_CLIENT_ID") || "default";
 
+    // Start transaction
+    console.log("[POS-CHECKOUT] Starting TX:", txId, "TSS:", tssId, "Client:", clientId);
     const startRes = await fetch(
-      `https://kassensichv2.fiskaly.com/api/v2/tss/${tssId}/tx/${txId}?tx_revision=1`,
+      `${FISKALY_MW}/tss/${tssId}/tx/${txId}?tx_revision=1`,
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
@@ -39,10 +56,16 @@ async function signWithTSE(paymentMethod: string, amount: number) {
       }
     );
 
-    if (!startRes.ok) return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
+    if (!startRes.ok) {
+      const errText = await startRes.text();
+      console.error("[POS-CHECKOUT] TX start failed:", startRes.status, errText);
+      return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
+    }
+    console.log("[POS-CHECKOUT] TX started OK");
 
+    // Finish transaction
     const finishRes = await fetch(
-      `https://kassensichv2.fiskaly.com/api/v2/tss/${tssId}/tx/${txId}?tx_revision=2`,
+      `${FISKALY_MW}/tss/${tssId}/tx/${txId}?tx_revision=2`,
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
@@ -67,14 +90,18 @@ async function signWithTSE(paymentMethod: string, amount: number) {
 
     if (finishRes.ok) {
       const txData = await finishRes.json();
+      console.log("[POS-CHECKOUT] TX finished OK, signature:", txData.signature?.value?.substring(0, 30) || "N/A");
       return {
         tseTransactionId: txId,
         tseSignature: txData.signature?.value || txData.log?.operation || "signed",
         tseTimestamp: new Date().toISOString(),
       };
+    } else {
+      const errText = await finishRes.text();
+      console.error("[POS-CHECKOUT] TX finish failed:", finishRes.status, errText);
     }
   } catch (tseErr) {
-    console.error("TSE signing failed (non-blocking):", tseErr);
+    console.error("[POS-CHECKOUT] TSE signing error:", tseErr);
   }
 
   return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
@@ -99,17 +126,17 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     const body = await req.json();
     const { reservation_id, transaction_id, payment_method } = body;
+    console.log("[POS-CHECKOUT] Request:", { reservation_id, transaction_id, payment_method, userId });
 
     // MODE 1: Transaction checkout (from Kassenbuch)
     if (transaction_id) {
@@ -136,6 +163,7 @@ Deno.serve(async (req) => {
       }
 
       const tse = await signWithTSE(transaction.payment_method, Number(transaction.amount));
+      console.log("[POS-CHECKOUT] TSE result:", { tseTransactionId: tse.tseTransactionId, hasSig: !!tse.tseSignature });
 
       const { error: updateError } = await supabase
         .from("transactions")
@@ -195,6 +223,7 @@ Deno.serve(async (req) => {
     }
 
     const tse = await signWithTSE(payment_method, Number(reservation.price_paid) || 0);
+    console.log("[POS-CHECKOUT] TSE result:", { tseTransactionId: tse.tseTransactionId, hasSig: !!tse.tseSignature });
 
     const { error: updateError } = await supabase
       .from("reservations")
@@ -240,7 +269,7 @@ Deno.serve(async (req) => {
       tse_timestamp: tse.tseTimestamp,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
-    console.error("pos-checkout error:", err);
+    console.error("[POS-CHECKOUT] Error:", err);
     return new Response(
       JSON.stringify({ error: err.message || "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
