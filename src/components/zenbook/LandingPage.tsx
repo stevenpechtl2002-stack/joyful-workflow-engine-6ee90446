@@ -589,9 +589,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       {/* Salon-Partner Sektion */}
       <section className="py-24 px-6 lg:px-12 bg-gradient-to-br from-primary/5 via-accent/5 to-background relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="absolute -bottom-16 -right-16 w-64 h-64 opacity-[0.04]" viewBox="0 0 300 300"><path d="M50 280 L150 30 L280 260 Q280 290 250 290 L80 290 Q50 290 50 260Z" fill="#8B7355" /></svg>
-          <svg className="absolute -top-10 left-[5%] w-40 h-40 opacity-[0.04]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#C4A35A" /></svg>
-          <svg className="absolute top-1/2 right-[25%] w-24 h-24 opacity-[0.04]" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#BE185D" /></svg>
+          <svg className="absolute -bottom-16 -right-16 w-64 h-64 opacity-[0.12]" viewBox="0 0 300 300"><path d="M50 280 L150 30 L280 260 Q280 290 250 290 L80 290 Q50 290 50 260Z" fill="#8B7355" /></svg>
+          <svg className="absolute -top-10 left-[5%] w-40 h-40 opacity-[0.11]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#C4A35A" /></svg>
+          <svg className="absolute top-1/2 right-[25%] w-24 h-24 opacity-[0.13]" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#BE185D" /></svg>
         </div>
         <motion.div className="absolute top-20 right-[5%] w-26 h-26 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -22, 0], rotate: [0, 8, 0], scale: [1, 1.04, 1] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-14 left-[6%] w-18 h-18 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 16, 0], rotate: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
