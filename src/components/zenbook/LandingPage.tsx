@@ -447,6 +447,11 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 6. USP Section */}
       <section className="py-20 px-6 lg:px-12 bg-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <svg className="absolute -top-14 right-[20%] w-44 h-44 opacity-[0.04]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#F43F5E" /></svg>
+          <svg className="absolute bottom-4 left-[10%] w-16 h-16 opacity-[0.05]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#9F7AEA" /></svg>
+          <svg className="absolute top-1/2 -right-8 w-72 h-36 opacity-[0.03]" viewBox="0 0 400 200"><rect x="0" y="80" width="400" height="25" rx="12" fill="#8B7355" transform="rotate(-10 200 100)" /></svg>
+        </div>
         <motion.div className="absolute top-16 right-[6%] w-22 h-22 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/10 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -16, 0], rotate: [0, -5, 0], scale: [1, 1.03, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
         <motion.div className="absolute bottom-20 left-[10%] w-18 h-18 rounded-full bg-gradient-to-br from-[#D8B4FE]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 12, 0], rotate: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
         <div className="max-w-7xl mx-auto relative z-10">
