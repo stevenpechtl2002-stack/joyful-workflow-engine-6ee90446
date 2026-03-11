@@ -1,25 +1,11 @@
+## Treatwell Gap Analysis — Implementierungsstatus
 
+### ✅ Erledigt
+1. **E-Mail-Trigger in Buchungs-Functions** — `storefront-book` und `create-storefront-checkout` enqueuen jetzt Bestätigungs-E-Mails und erstellen Salon-Benachrichtigungen
+2. **Kunden-Selbststornierung** — Edge Function `storefront-cancel` + UI-Seite `/storefront/cancel/:bookingId` mit Fristprüfung gegen `cancellation_hours`
+3. **Geolocation-Spalten** — `latitude`/`longitude` zur `customers`-Tabelle hinzugefügt mit Index
 
-## Plan: Drucker-IP Feld im Salon-Profil hinzufügen
-
-### Was wird gemacht
-Ein neues Feld `printer_ip` in der `customers`-Tabelle und im Salon-Profil (Buchungseinstellungen-Karte), damit Salon-Betreiber die IP-Adresse ihres WLAN-Bondruckers hinterlegen können. Diese IP wird später beim POS-Abschluss genutzt, um die Kassenlade per ESC/POS-Befehl zu öffnen.
-
-### Schritte
-
-1. **DB-Migration**: Neue Spalte `printer_ip TEXT` zur `customers`-Tabelle hinzufügen
-
-2. **SalonProfile.tsx anpassen**:
-   - `printer_ip` zu `formData` State und Select-Query hinzufügen
-   - `printer_ip` in `handleSave` Update aufnehmen
-   - Neues Eingabefeld mit Printer-Icon in der "Buchungseinstellungen"-Karte einfügen (unterhalb der Pufferzeit)
-   - Hilfetext: "IP-Adresse deines WLAN-Bondruckers (z.B. 192.168.1.100) — wird zum Öffnen der Kassenlade verwendet"
-
-3. **KassenbuchView.tsx** (optional, gleicher Schritt): Beim "ABSCHLIESSEN" die `printer_ip` aus der DB laden und einen `fetch()`-Request an den Drucker senden, um die Kassenlade zu öffnen
-
-### Technische Details
-- Spalte: `ALTER TABLE customers ADD COLUMN printer_ip TEXT;`
-- Icon: `Printer` aus lucide-react
-- Platzhalter: `192.168.1.100`
-- Keine neuen RLS-Policies nötig — bestehende `customers`-Policies decken das ab
-
+### 🔲 Noch offen
+- **Transaktionale E-Mail-Templates** — Templates müssen via `scaffold_transactional_email` erstellt werden (DNS-Verifizierung für `notify.www.zentime.io` muss erst abgeschlossen sein)
+- **Standortbasierte Sortierung** — `list-salons` Edge Function um Distanz-Sortierung erweitern
+- **Buchungshistorie im Kundenprofil** — Service-Name und Salon-Details ergänzen

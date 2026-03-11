@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import SalonImageManager from '@/components/portal/SalonImageManager';
 import {
-  Store, Camera, Save, Loader2, MapPin, Phone, Globe, Instagram, Facebook, ExternalLink, Upload, X, Clock, Shield
+  Store, Camera, Save, Loader2, MapPin, Phone, Globe, Instagram, Facebook, ExternalLink, Upload, X, Clock, Shield, Printer
 } from 'lucide-react';
 
 const CATEGORIES = ['Friseur', 'Barbershop', 'Kosmetik', 'Nagelstudio', 'Massage', 'Spa & Wellness', 'Tattoo', 'Sonstiges'];
@@ -42,6 +42,7 @@ const SalonProfile = () => {
     cover_image_url: '',
     cancellation_hours: 24,
     buffer_minutes: 0,
+    printer_ip: '',
   });
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const SalonProfile = () => {
     const load = async () => {
       const { data } = await supabase
         .from('customers')
-        .select('company_name, category, description, address, postal_code, city, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, published, cancellation_hours, buffer_minutes')
+        .select('company_name, category, description, address, postal_code, city, phone, website_url, instagram_url, facebook_url, logo_url, cover_image_url, published, cancellation_hours, buffer_minutes, printer_ip')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -68,6 +69,7 @@ const SalonProfile = () => {
           cover_image_url: (data as any).cover_image_url || '',
           cancellation_hours: (data as any).cancellation_hours ?? 24,
           buffer_minutes: (data as any).buffer_minutes ?? 0,
+          printer_ip: (data as any).printer_ip || '',
         });
         setPublished((data as any).published || false);
       }
@@ -108,6 +110,7 @@ const SalonProfile = () => {
         slug: slug || null,
         cancellation_hours: formData.cancellation_hours,
         buffer_minutes: formData.buffer_minutes,
+        printer_ip: formData.printer_ip || null,
       } as any)
       .eq('id', user.id);
     setSaving(false);
@@ -418,6 +421,20 @@ const SalonProfile = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">Automatische Pause zwischen Buchungen</p>
                 </div>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Bondrucker IP-Adresse</Label>
+                <div className="relative">
+                  <Printer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={formData.printer_ip}
+                    onChange={e => setFormData(prev => ({ ...prev, printer_ip: e.target.value }))}
+                    placeholder="192.168.1.100"
+                    className="pl-10 bg-secondary/50"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">IP-Adresse deines WLAN-Bondruckers (z.B. 192.168.1.100) — wird zum Öffnen der Kassenlade verwendet</p>
               </div>
             </CardContent>
           </Card>
