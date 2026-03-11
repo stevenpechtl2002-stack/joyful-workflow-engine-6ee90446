@@ -446,6 +446,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         <FloatingShape type="circle" className="w-56 h-56 text-[#F43F5E]/6 top-10 right-[8%]" duration={10} />
         <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/8 bottom-16 left-[12%]" duration={9} delay={1} />
         <FloatingShape type="circle" className="w-24 h-24 text-[#9F7AEA]/5 top-1/2 left-[5%]" duration={12} delay={2} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">Warum ZenTime?</h2>
