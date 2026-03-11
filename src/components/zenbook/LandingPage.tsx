@@ -259,38 +259,66 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         </div>
       </motion.section>
 
-      {/* 4. Treatment Categories - Horizontal Scroll */}
-      <section className="lg:px-12 px-[24px] rounded-none shadow-sm mx-0 py-[40px]">
-        <div className="max-w-7xl mx-auto">
+      {/* 4. Treatment Categories - Premium Grid */}
+      <section className="lg:px-12 px-6 py-16 relative overflow-hidden">
+        {/* Subtle ambient glow */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto relative">
           <AnimatedSection>
-            <h2 className="text-2xl md:text-3xl font-black text-foreground mb-8">Beliebte Behandlungen</h2>
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent mb-3 flex items-center gap-2">
+                  <span className="w-8 h-px bg-accent" />
+                  Kategorien
+                </p>
+                <h2 className="text-3xl md:text-4xl font-black text-foreground leading-tight">
+                  Beliebte<br />Behandlungen
+                </h2>
+              </div>
+              <motion.a
+                href="/storefront"
+                className="hidden md:flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary transition-colors group"
+                whileHover={{ x: 4 }}>
+                Alle anzeigen
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </motion.a>
+            </div>
           </AnimatedSection>
-          <motion.div
-            className="flex gap-4 overflow-x-auto no-scrollbar pb-4 cursor-grab active:cursor-grabbing"
-            drag="x"
-            dragConstraints={{ left: -600, right: 0 }}>
 
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {treatmentCategories.map((cat, i) =>
             <motion.div
               key={cat.label}
-              className={`flex-shrink-0 w-40 p-5 rounded-2xl bg-gradient-to-br ${cat.color} border border-border/30 cursor-pointer`}
-              initial={{ opacity: 0, y: 20 }}
+              className="group relative cursor-pointer rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden"
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              whileHover={{
-                y: -8,
-                rotateY: 5,
-                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)'
-              }}
-              style={{ perspective: 800 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06, duration: 0.5 }}
+              whileHover={{ y: -6, scale: 1.02 }}
               onClick={() => window.location.href = '/storefront'}>
 
-                <div className="text-primary mb-3">{cat.icon}</div>
-                <p className="font-black text-foreground text-sm mb-1">{cat.label}</p>
-                <p className="text-xs text-muted-foreground font-medium">{cat.count} Salons</p>
+                {/* Gradient overlay on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                
+                {/* Glow line at top */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className="relative p-6 flex flex-col items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-border/30 flex items-center justify-center text-primary group-hover:text-accent group-hover:border-accent/30 group-hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.3)] transition-all duration-500">
+                    {cat.icon}
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground text-sm tracking-wide mb-1">{cat.label}</p>
+                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${cat.count === 'Neu' ? 'text-accent' : 'text-muted-foreground/60'}`}>
+                      {cat.count === 'Neu' ? '● Live' : '○ Coming soon'}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             )}
-          </motion.div>
+          </div>
         </div>
       </section>
 
