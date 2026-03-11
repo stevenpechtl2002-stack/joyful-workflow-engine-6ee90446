@@ -574,10 +574,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* Salon-Partner Sektion */}
       <section className="py-24 px-6 lg:px-12 bg-gradient-to-br from-primary/5 via-accent/5 to-background relative overflow-hidden">
-        <FloatingShape type="circle" className="w-48 h-48 text-[#C4A35A]/8 top-10 -right-10" duration={10} />
-        <FloatingShape type="triangle" className="w-24 h-24 text-[#F43F5E]/7 bottom-20 left-[8%]" duration={9} delay={1.5} />
-        <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7355]/5 top-1/2 right-[20%]" duration={11} delay={0.5} />
-        <FloatingShape type="circle" className="w-28 h-28 text-[#9F7AEA]/6 -bottom-10 right-[40%]" duration={12} delay={2} />
+        <FloatingShape type="circle" className="w-48 h-48 text-[#C4B5FD]/8 top-10 -right-10" duration={10} />
+        <FloatingShape type="triangle" className="w-24 h-24 text-[#8B7FC7]/7 bottom-20 left-[8%]" duration={9} delay={1.5} />
+        <FloatingShape type="stripe" className="w-80 h-40 text-[#D8B4FE]/5 top-1/2 right-[20%]" duration={11} delay={0.5} />
+        <FloatingShape type="circle" className="w-28 h-28 text-[#8B7FC7]/6 -bottom-10 right-[40%]" duration={12} delay={2} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
