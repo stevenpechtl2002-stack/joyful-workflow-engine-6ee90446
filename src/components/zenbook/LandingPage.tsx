@@ -578,6 +578,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         <FloatingShape type="triangle" className="w-24 h-24 text-[#F43F5E]/7 bottom-20 left-[8%]" duration={9} delay={1.5} />
         <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7355]/5 top-1/2 right-[20%]" duration={11} delay={0.5} />
         <FloatingShape type="circle" className="w-28 h-28 text-[#9F7AEA]/6 -bottom-10 right-[40%]" duration={12} delay={2} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-accent mb-3">Für Salons</p>
