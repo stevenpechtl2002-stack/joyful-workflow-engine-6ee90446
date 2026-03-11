@@ -213,8 +213,11 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           animate={{ y: [0, 25, 0], rotate: [0, 12, 0] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
 
+        {/* Floating SVG Decorations */}
+        <FloatingShape type="circle" className="w-48 h-48 text-[#F43F5E]/8 -bottom-10 left-[10%]" duration={10} delay={0.5} />
+        <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/10 top-16 right-[30%]" duration={9} delay={1.5} />
+        <FloatingShape type="stripe" className="w-72 h-36 text-[#8B7355]/6 bottom-10 right-[5%]" duration={12} delay={2} />
 
-        <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-2xl">
             <motion.p
               initial={{ opacity: 0, y: 20 }}
