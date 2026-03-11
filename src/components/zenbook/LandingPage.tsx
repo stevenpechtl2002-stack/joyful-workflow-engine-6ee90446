@@ -552,9 +552,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       {/* 10. CTA Section */}
       <section className="py-24 px-6 lg:px-12 bg-muted/30 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="absolute -top-12 left-[20%] w-52 h-52 opacity-[0.10]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#F43F5E" /></svg>
-          <svg className="absolute bottom-0 right-[15%] w-64 h-32 opacity-[0.10]" viewBox="0 0 400 200"><rect x="0" y="80" width="400" height="25" rx="12" fill="#C4A35A" transform="rotate(-8 200 100)" /><rect x="0" y="130" width="300" height="18" rx="9" fill="#8B7355" transform="rotate(-8 150 130)" /></svg>
-          <svg className="absolute top-1/3 -left-4 w-20 h-20 opacity-[0.15]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#9F7AEA" /></svg>
+          <svg className="absolute -top-12 left-[20%] w-52 h-52 opacity-[0.15]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#F43F5E" /></svg>
+          <svg className="absolute bottom-0 right-[15%] w-64 h-32 opacity-[0.15]" viewBox="0 0 400 200"><rect x="0" y="80" width="400" height="25" rx="12" fill="#F472B6" transform="rotate(-8 200 100)" /><rect x="0" y="130" width="300" height="18" rx="9" fill="#FB7185" transform="rotate(-8 150 130)" /></svg>
+          <svg className="absolute top-1/3 -left-4 w-20 h-20 opacity-[0.15]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#F43F5E" /></svg>
         </div>
         <motion.div className="absolute top-14 left-[12%] w-20 h-20 rounded-2xl bg-gradient-to-br from-[#D8B4FE]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -14, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-16 right-[8%] w-24 h-24 rounded-full bg-gradient-to-br from-[#8B7FC7]/10 to-[#D8B4FE]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 18, 0], rotate: [0, -7, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
