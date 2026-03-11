@@ -38,6 +38,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Impressum = lazy(() => import("./pages/Impressum"));
 const Datenschutz = lazy(() => import("./pages/Datenschutz"));
 const AGB = lazy(() => import("./pages/AGB"));
+const StorefrontCancel = lazy(() => import("./pages/StorefrontCancel"));
 
 const queryClient = new QueryClient();
 
