@@ -758,6 +758,36 @@ const AdminDashboard = () => {
                           </Button>
                         </div>
                       </div>
+                      {/* API Key Row */}
+                      <div className="mt-2 pt-2 border-t border-border/30 flex items-center gap-2">
+                        <Key className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">API-Key:</span>
+                        {customer.api_key ? (
+                          <>
+                            <code className="text-xs font-mono text-foreground/80">
+                              {visibleApiKeys.has(customer.id) ? customer.api_key : `${customer.api_key.substring(0, 8)}••••••••`}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={(e) => { e.stopPropagation(); toggleApiKeyVisibility(customer.id); }}
+                            >
+                              {visibleApiKeys.has(customer.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(customer.api_key!, 'API-Key'); }}
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">Nicht vorhanden</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                   {filteredCustomers.length === 0 && (
