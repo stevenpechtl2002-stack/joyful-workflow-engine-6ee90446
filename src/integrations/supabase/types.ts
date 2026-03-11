@@ -317,7 +317,9 @@ export type Database = {
           facebook_url: string | null
           id: string
           instagram_url: string | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           notes: string | null
           onboarding_step: number
           phone: string | null
@@ -346,7 +348,9 @@ export type Database = {
           facebook_url?: string | null
           id: string
           instagram_url?: string | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           notes?: string | null
           onboarding_step?: number
           phone?: string | null
@@ -375,7 +379,9 @@ export type Database = {
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           notes?: string | null
           onboarding_step?: number
           phone?: string | null
