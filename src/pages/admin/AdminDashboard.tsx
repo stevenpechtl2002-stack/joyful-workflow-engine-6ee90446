@@ -18,7 +18,7 @@ import {
   TrendingUp, Clock, Key, Copy, Eye, EyeOff, Link2,
   CreditCard, Bot, Globe, Building2, ChevronDown, ChevronUp,
   Mail, MapPin, Tag, BarChart3, UserX, Euro, ExternalLink,
-  UserPlus, Store, Power
+  UserPlus, Store, Power, FileCheck
 } from 'lucide-react';
 import { format, subWeeks, startOfWeek, endOfWeek, eachWeekOfInterval, eachMonthOfInterval, startOfMonth, subMonths, isWithinInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -140,7 +140,7 @@ const AdminDashboard = () => {
   const [storefrontBookings, setStorefrontBookings] = useState<any[]>([]);
   const [voiceAgentConfigs, setVoiceAgentConfigs] = useState<VoiceAgentConfig[]>([]);
   const [stripeSubscriptions, setStripeSubscriptions] = useState<StripeSubscription[]>([]);
-  const [transactions, setTransactions] = useState<{ user_id: string; amount: number; created_at?: string }[]>([]);
+  const [transactions, setTransactions] = useState<{ user_id: string; amount: number; created_at?: string; transaction_number?: string; transaction_type?: string; payment_method?: string; status?: string; customer_name?: string; tse_transaction_id?: string | null; tse_signature?: string | null; tse_timestamp?: string | null; transaction_date?: string; transaction_time?: string }[]>([]);
   const [contactCounts, setContactCounts] = useState<Record<string, number>>({});
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -194,7 +194,7 @@ const AdminDashboard = () => {
         supabase.from('call_logs').select('*').order('started_at', { ascending: false }).limit(100),
         supabase.from('reservations').select('id, user_id, customer_name, reservation_date, reservation_time, party_size, status, price_paid, source').order('reservation_date', { ascending: false }).limit(500),
         supabase.from('voice_agent_config').select('*').order('updated_at', { ascending: false }),
-        supabase.from('transactions').select('user_id, amount, created_at'),
+        supabase.from('transactions').select('user_id, amount, created_at, transaction_number, transaction_type, payment_method, status, customer_name, tse_transaction_id, tse_signature, tse_timestamp, transaction_date, transaction_time'),
         supabase.from('contacts').select('user_id'),
         supabase.from('profiles').select('id, full_name'),
         supabase.from('storefront_bookings').select('*').order('created_at', { ascending: false }).limit(500),
@@ -419,6 +419,13 @@ const AdminDashboard = () => {
     if (!selectedCustomer) return null;
     return stripeSubscriptions.find(s => s.customer_email === selectedCustomer.email) || null;
   }, [selectedCustomer, stripeSubscriptions]);
+
+  const customerTseTransactions = useMemo(() => {
+    if (!selectedCustomer) return [];
+    return transactions
+      .filter(t => t.user_id === selectedCustomer.id && (t.tse_transaction_id || t.tse_signature))
+      .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+  }, [selectedCustomer, transactions]);
 
   if (isLoading || dataLoading) {
     return (
@@ -1294,7 +1301,65 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* TSE Daten */}
+              <div className="mt-4 space-y-3 border-t border-border/50 pt-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <FileCheck className="w-4 h-4" /> TSE / Kassendaten
+                </p>
+                {customerTseTransactions.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {customerTseTransactions.map((t, i) => (
+                      <div key={i} className="p-3 rounded-lg bg-secondary/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{t.customer_name} — {Number(t.amount).toFixed(2)}€</span>
+                          <Badge variant="outline" className="text-[10px]">{t.transaction_type} / {t.payment_method}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-muted-foreground">Beleg-Nr.</p>
+                            <p className="font-mono">{t.transaction_number || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Datum</p>
+                            <p>{t.transaction_date} {t.transaction_time?.slice(0, 5)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">TSE Transaction-ID</p>
+                            <p className="font-mono text-[11px] break-all">{t.tse_transaction_id || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">TSE Zeitstempel</p>
+                            <p className="text-[11px]">{t.tse_timestamp ? format(new Date(t.tse_timestamp), 'dd.MM.yyyy HH:mm:ss', { locale: de }) : '-'}</p>
+                          </div>
+                        </div>
+                        {t.tse_signature && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">TSE Signatur</p>
+                            <div className="flex items-center gap-1">
+                              <p className="font-mono text-[10px] break-all text-foreground/70 flex-1">{t.tse_signature}</p>
+                              <Button variant="ghost" size="sm" className="shrink-0 h-6 w-6 p-0" onClick={() => copyToClipboard(t.tse_signature!, 'TSE Signatur')}>
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Keine TSE-signierten Transaktionen vorhanden</p>
+                )}
+                <div className="flex gap-3 text-xs">
+                  <div className="p-2 rounded bg-secondary/30 flex-1 text-center">
+                    <p className="text-muted-foreground">TSE Transaktionen</p>
+                    <p className="font-bold text-lg">{customerTseTransactions.length}</p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/30 flex-1 text-center">
+                    <p className="text-muted-foreground">Gesamt Transaktionen</p>
+                    <p className="font-bold text-lg">{transactions.filter(t => t.user_id === selectedCustomer.id).length}</p>
+                  </div>
+                </div>
+              </div>
               {selectedCustomer.description && (
                 <div className="mt-4">
                   <p className="text-xs text-muted-foreground mb-1">Beschreibung</p>
