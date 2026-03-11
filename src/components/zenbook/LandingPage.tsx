@@ -295,9 +295,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       {/* 4. Treatment Categories - Premium Grid */}
       <section className="lg:px-12 px-6 py-16 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="absolute -top-10 -right-10 w-48 h-48 opacity-[0.12]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#F43F5E" /></svg>
-          <svg className="absolute bottom-0 left-[15%] w-60 h-32 opacity-[0.10]" viewBox="0 0 400 200"><rect x="0" y="80" width="400" height="25" rx="12" fill="#C4A35A" transform="rotate(-10 200 100)" /></svg>
-          <svg className="absolute top-1/2 right-[5%] w-20 h-20 opacity-[0.14]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#9F7AEA" /></svg>
+          <svg className="absolute -top-10 -right-10 w-48 h-48 opacity-[0.15]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#FB7185" /></svg>
+          <svg className="absolute bottom-0 left-[15%] w-60 h-32 opacity-[0.15]" viewBox="0 0 400 200"><rect x="0" y="80" width="400" height="25" rx="12" fill="#F472B6" transform="rotate(-10 200 100)" /></svg>
+          <svg className="absolute top-1/2 right-[5%] w-20 h-20 opacity-[0.15]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#F43F5E" /></svg>
         </div>
         <motion.div className="absolute top-10 right-[10%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/10 to-[#D8B4FE]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -15, 0], rotate: [0, 4, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-16 left-[8%] w-16 h-16 rounded-full bg-gradient-to-br from-[#D8B4FE]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
