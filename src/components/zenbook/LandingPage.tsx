@@ -608,8 +608,6 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 11. Stats Section */}
       <section className="py-20 px-6 lg:px-12 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-36 h-36 text-[#C4B5FD]/7 top-8 right-[10%]" duration={10} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#D8B4FE]/6 bottom-8 left-[15%]" duration={9} delay={1} />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
