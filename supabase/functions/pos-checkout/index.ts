@@ -132,6 +132,21 @@ Deno.serve(async (req) => {
     }
     const userId = user.id;
 
+    // Fetch customer's fiskaly TSS/Client from DB
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: customerData } = await serviceClient
+      .from("customers")
+      .select("fiskaly_tss_id, fiskaly_client_id")
+      .eq("id", userId)
+      .single();
+
+    const customerTssId = customerData?.fiskaly_tss_id || null;
+    const customerClientId = customerData?.fiskaly_client_id || null;
+    console.log("[POS-CHECKOUT] Customer fiskaly:", { tss: customerTssId, client: customerClientId });
+
     const body = await req.json();
     const { reservation_id, transaction_id, payment_method } = body;
     console.log("[POS-CHECKOUT] Request:", { reservation_id, transaction_id, payment_method, userId });
