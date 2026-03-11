@@ -90,6 +90,9 @@ const Footer = () => {
             <Link to="/datenschutz" className="hover:text-white transition-colors">
               Datenschutz
             </Link>
+            <Link to="/admin" className="hover:text-white transition-colors opacity-50 hover:opacity-100">
+              Admin
+            </Link>
           </div>
 
           <div className="flex items-center gap-4">
