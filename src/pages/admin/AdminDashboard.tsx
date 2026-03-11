@@ -737,7 +737,7 @@ const AdminDashboard = () => {
                               </Badge>
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{customer.plan}</Badge>
                               {customer.category && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{customer.category}</Badge>
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{customer.category}</Badge>
                               )}
                               <Badge 
                                 variant={customer.published ? 'default' : 'outline'} 
@@ -745,7 +745,6 @@ const AdminDashboard = () => {
                               >
                                 {customer.published ? 'Store Live' : 'Store Offline'}
                               </Badge>
-                              )}
                             </div>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                               <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{customer.email}</span>
