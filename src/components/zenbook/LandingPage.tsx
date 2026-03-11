@@ -198,26 +198,13 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-background/20 to-transparent"></div>
         </div>
 
-        {/* Floating 3D Glass Elements */}
+        {/* Floating Glass Element */}
         <motion.div
-          className="absolute top-20 right-[15%] w-28 h-28 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute top-[30%] right-[12%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block z-20 pointer-events-none"
           animate={{ y: [0, -20, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          style={{ perspective: 800 }} />
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
 
-        <motion.div
-          className="absolute bottom-20 right-[25%] w-20 h-20 rounded-full bg-gradient-to-br from-[#D8B4FE]/20 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
-          animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
-
-        <motion.div
-          className="absolute top-40 right-[8%] w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
-          animate={{ y: [0, 25, 0], rotate: [0, 12, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
-
-        {/* Floating SVG Decorations */}
-        <FloatingShape type="circle" className="w-48 h-48 text-[#C4B5FD]/10 -bottom-10 left-[10%]" duration={10} delay={0.5} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#8B7FC7]/10 top-16 right-[30%]" duration={9} delay={1.5} />
+        <FloatingShape type="circle" className="w-40 h-40 text-[#C4B5FD]/10 bottom-[15%] left-[5%]" duration={10} delay={0.5} />
         
 
         <div className="max-w-7xl mx-auto relative z-10">
