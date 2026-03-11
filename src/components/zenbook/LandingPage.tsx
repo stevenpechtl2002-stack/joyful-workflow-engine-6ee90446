@@ -492,6 +492,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           <svg className="absolute top-[40%] right-[45%] w-24 h-24 opacity-[0.15]" viewBox="0 0 300 300"><path d="M50 280 L150 30 L280 260 Q280 290 250 290 L80 290 Q50 290 50 260Z" fill="#FB7185" /></svg>
         </div>
         <motion.div className="absolute top-[10%] right-[20%] w-16 h-16 rounded-full bg-gradient-to-br from-[#C4B5FD]/10 to-[#D8B4FE]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -20, 0], rotate: [0, 7, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.div className="absolute bottom-[30%] left-[8%] w-20 h-20 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/10 to-[#D8B4FE]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, 16, 0], rotate: [0, -6, 0], scale: [1, 1.04, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
+        <motion.div className="absolute top-[50%] right-[5%] w-10 h-10 rounded-full bg-gradient-to-br from-[#D8B4FE]/12 to-[#C4B5FD]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -14, 0], rotate: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 3 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
