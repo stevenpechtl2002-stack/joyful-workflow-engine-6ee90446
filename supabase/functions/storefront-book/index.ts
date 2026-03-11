@@ -98,6 +98,56 @@ Deno.serve(async (req) => {
       console.error("Error creating reservation:", resError);
     }
 
+    // Get salon name for emails
+    const { data: salonInfo } = await supabase
+      .from("customers")
+      .select("company_name")
+      .eq("id", salon_user_id)
+      .single();
+    const salonName = salonInfo?.company_name || "Salon";
+
+    // Get product name if available
+    let productName = "";
+    if (product_id) {
+      const { data: product } = await supabase
+        .from("products")
+        .select("name")
+        .eq("id", product_id)
+        .single();
+      productName = product?.name || "";
+    }
+
+    // Enqueue booking confirmation email to customer
+    if (customer_email) {
+      try {
+        await supabase.rpc("enqueue_email", {
+          queue_name: "transactional_emails",
+          payload: {
+            template: "booking-confirmation",
+            to: customer_email,
+            data: {
+              customer_name,
+              salon_name: salonName,
+              booking_date,
+              booking_time,
+              product_name: productName,
+              booking_id: booking.id,
+            },
+          },
+        });
+      } catch (e) {
+        console.error("Failed to enqueue confirmation email:", e);
+      }
+    }
+
+    // Notify salon owner about new booking
+    await supabase.from("notifications").insert({
+      user_id: salon_user_id,
+      title: "Neue Buchung",
+      message: `${customer_name} hat einen Termin am ${booking_date} um ${booking_time} gebucht.`,
+      type: "info",
+    });
+
     return new Response(JSON.stringify({ success: true, booking }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
