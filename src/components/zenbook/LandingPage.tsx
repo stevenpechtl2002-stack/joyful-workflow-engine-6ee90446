@@ -65,34 +65,34 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
 
   // Reusable floating SVG decoration component
-  const FloatingShape = ({ type, className, duration = 10, delay = 0 }: { type: 'circle' | 'triangle' | 'stripe'; className: string; duration?: number; delay?: number }) => {
+  const FloatingShape = ({ type, className, duration = 10, delay = 0 }: {type: 'circle' | 'triangle' | 'stripe';className: string;duration?: number;delay?: number;}) => {
     const shapes: Record<string, React.ReactNode> = {
-      circle: (
-        <svg viewBox="0 0 200 200" className="w-full h-full">
+      circle:
+      <svg viewBox="0 0 200 200" className="w-full h-full">
           <circle cx="100" cy="100" r="90" fill="currentColor" />
-        </svg>
-      ),
-      triangle: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
+        </svg>,
+
+      triangle:
+      <svg viewBox="0 0 100 100" className="w-full h-full">
           <polygon points="50,10 90,85 10,85" fill="currentColor" />
-        </svg>
-      ),
-      stripe: (
-        <svg viewBox="0 0 400 200" className="w-full h-full">
+        </svg>,
+
+      stripe:
+      <svg viewBox="0 0 400 200" className="w-full h-full">
           <rect x="0" y="60" width="400" height="30" rx="15" fill="currentColor" transform="rotate(-12 200 100)" />
           <rect x="0" y="120" width="300" height="20" rx="10" fill="currentColor" transform="rotate(-12 150 130)" />
         </svg>
-      ),
+
     };
     return (
       <motion.div
         className={`absolute pointer-events-none ${className}`}
         animate={{ y: [0, -15, 0], rotate: [0, 3, 0] }}
-        transition={{ duration, repeat: Infinity, ease: "easeInOut", delay }}
-      >
+        transition={{ duration, repeat: Infinity, ease: "easeInOut", delay }}>
+        
         {shapes[type]}
-      </motion.div>
-    );
+      </motion.div>);
+
   };
 
   const AnimatedSection = ({ children, className = '' }: {children: React.ReactNode;className?: string;}) => {
@@ -170,8 +170,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 const categoryMap: Record<string, string> = { 'Nägel': 'Nagelstudio', 'Männer': 'Barbershop' };
-                if (cat.label === 'Sale %') navigate('/storefront?filter=sale');
-                else navigate(`/storefront?category=${encodeURIComponent(categoryMap[cat.label] || cat.label)}`);
+                if (cat.label === 'Sale %') navigate('/storefront?filter=sale');else
+                navigate(`/storefront?category=${encodeURIComponent(categoryMap[cat.label] || cat.label)}`);
               }}>
 
                 {cat.icon}
@@ -342,10 +342,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
                 {/* Background image */}
                 <img
-                  src={cat.image}
-                  alt={cat.label}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+                src={cat.image}
+                alt={cat.label}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              
                 
                 {/* Color gradient overlay */}
                 <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient}`} />
@@ -623,27 +623,27 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { icon: <Users className="w-8 h-8" />, title: 'Neue Kunden gewinnen', desc: 'Werde online sichtbar und von neuen Kunden gefunden.' },
-              { icon: <Calendar className="w-8 h-8" />, title: 'Online-Buchungen 24/7', desc: 'Dein Kalender füllt sich automatisch – auch nachts.' },
-              { icon: <Zap className="w-8 h-8" />, title: 'Einfache Verwaltung', desc: 'Staff, Services & Termine in einem einzigen Tool.' },
-              { icon: <Shield className="w-8 h-8" />, title: 'Kostenlos starten', desc: 'Keine Grundgebühr, keine Vertragsbindung.' },
-            ].map((item, i) => (
-              <AnimatedSection key={item.title}>
+            { icon: <Users className="w-8 h-8" />, title: 'Neue Kunden gewinnen', desc: 'Werde online sichtbar und von neuen Kunden gefunden.' },
+            { icon: <Calendar className="w-8 h-8" />, title: 'Online-Buchungen 24/7', desc: 'Dein Kalender füllt sich automatisch – auch nachts.' },
+            { icon: <Zap className="w-8 h-8" />, title: 'Einfache Verwaltung', desc: 'Staff, Services & Termine in einem einzigen Tool.' },
+            { icon: <Shield className="w-8 h-8" />, title: 'Kostenlos starten', desc: 'Keine Grundgebühr, keine Vertragsbindung.' }].
+            map((item, i) =>
+            <AnimatedSection key={item.title}>
                 <motion.div
-                  className="glass-card rounded-2xl p-8 text-center h-full"
-                  whileHover={{ y: -8, rotateX: 2, rotateY: -1 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ perspective: 1000 }}>
+                className="glass-card rounded-2xl p-8 text-center h-full"
+                whileHover={{ y: -8, rotateX: 2, rotateY: -1 }}
+                transition={{ duration: 0.3 }}
+                style={{ perspective: 1000 }}>
                   <motion.div
-                    className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 text-primary"
-                    whileHover={{ scale: 1.1, rotate: 5 }}>
+                  className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 text-primary"
+                  whileHover={{ scale: 1.1, rotate: 5 }}>
                     {item.icon}
                   </motion.div>
                   <h3 className="text-lg font-black text-foreground mb-3">{item.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                 </motion.div>
               </AnimatedSection>
-            ))}
+            )}
           </div>
 
           <AnimatedSection className="text-center">
@@ -717,8 +717,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             <div>
               <h4 className="font-black text-white text-sm mb-4">Kunden-Hilfe</h4>
               <ul className="space-y-2.5">
-                {['Chat', 'Kontakt', 'FAQ', 'Stornierung'].map((item) =>
-                <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
+                {['Chat', 'Kontakt', 'FAQ', 'Stornierung'].map((item) => {}
+
                 )}
               </ul>
             </div>
