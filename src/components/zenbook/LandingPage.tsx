@@ -292,7 +292,6 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 4. Treatment Categories - Premium Grid */}
       <section className="lg:px-12 px-6 py-16 relative overflow-hidden">
-        <motion.div className="absolute -top-8 left-[8%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/12 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -16, 0], rotate: [0, 6, 0], scale: [1, 1.05, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
         <div className="absolute inset-0 pointer-events-none">
           <svg className="absolute top-[20%] right-[8%] w-28 h-28 opacity-[0.15]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#FB7185" /></svg>
           <svg className="absolute bottom-[10%] left-[40%] w-48 h-24 opacity-[0.15]" viewBox="0 0 400 200"><rect x="0" y="80" width="400" height="25" rx="12" fill="#F472B6" transform="rotate(-10 200 100)" /></svg>
