@@ -1270,6 +1270,29 @@ const AdminDashboard = () => {
                     </Badge>
                   )}
                 </div>
+                </div>
+
+                {/* Store Status Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-2">
+                    <Store className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Storefront / Marktplatz</p>
+                      <p className="text-sm">
+                        {selectedCustomer.published ? 'Store ist live und sichtbar' : 'Store ist offline und nicht sichtbar'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={selectedCustomer.published ? 'destructive' : 'default'}
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => togglePublished(selectedCustomer.id, selectedCustomer.published)}
+                  >
+                    <Power className="w-3.5 h-3.5" />
+                    {selectedCustomer.published ? 'Deaktivieren' : 'Aktivieren'}
+                  </Button>
+                </div>
               </div>
 
               {/* Description */}
