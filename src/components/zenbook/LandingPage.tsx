@@ -604,6 +604,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         </div>
         <motion.div className="absolute top-20 right-[5%] w-26 h-26 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -22, 0], rotate: [0, 8, 0], scale: [1, 1.04, 1] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-14 left-[6%] w-18 h-18 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 16, 0], rotate: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
+        <motion.div className="absolute top-1/2 left-[25%] w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/10 to-[#D8B4FE]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -18, 0], rotate: [0, -4, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
+        <motion.div className="absolute top-10 left-[55%] w-10 h-10 rounded-full bg-gradient-to-br from-[#8B7FC7]/10 to-[#C4B5FD]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 14, 0], rotate: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 3 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
