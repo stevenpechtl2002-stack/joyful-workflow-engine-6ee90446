@@ -422,6 +422,20 @@ const SalonProfile = () => {
                   <p className="text-xs text-muted-foreground">Automatische Pause zwischen Buchungen</p>
                 </div>
               </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Bondrucker IP-Adresse</Label>
+                <div className="relative">
+                  <Printer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={formData.printer_ip}
+                    onChange={e => setFormData(prev => ({ ...prev, printer_ip: e.target.value }))}
+                    placeholder="192.168.1.100"
+                    className="pl-10 bg-secondary/50"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">IP-Adresse deines WLAN-Bondruckers (z.B. 192.168.1.100) — wird zum Öffnen der Kassenlade verwendet</p>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
