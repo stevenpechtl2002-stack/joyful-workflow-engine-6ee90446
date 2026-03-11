@@ -44,6 +44,7 @@ interface Customer {
   postal_code: string | null;
   website_url: string | null;
   slug: string | null;
+  published: boolean;
 }
 
 interface CustomerWithApiKey extends Customer {
