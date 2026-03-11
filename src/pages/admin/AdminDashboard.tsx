@@ -18,7 +18,7 @@ import {
   TrendingUp, Clock, Key, Copy, Eye, EyeOff, Link2,
   CreditCard, Bot, Globe, Building2, ChevronDown, ChevronUp,
   Mail, MapPin, Tag, BarChart3, UserX, Euro, ExternalLink,
-  UserPlus
+  UserPlus, Store, Power
 } from 'lucide-react';
 import { format, subWeeks, startOfWeek, endOfWeek, eachWeekOfInterval, eachMonthOfInterval, startOfMonth, subMonths, isWithinInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -44,6 +44,7 @@ interface Customer {
   postal_code: string | null;
   website_url: string | null;
   slug: string | null;
+  published: boolean;
 }
 
 interface CustomerWithApiKey extends Customer {
@@ -340,6 +341,20 @@ const AdminDashboard = () => {
     } else {
       setCustomers(customers.map(c => c.id === selectedCustomer.id ? { ...c, notes: editNotes, plan: editPlan } : c));
       toast({ title: 'Gespeichert', description: 'Kundendetails wurden aktualisiert' });
+    }
+  };
+
+  const togglePublished = async (customerId: string, currentPublished: boolean) => {
+    const newPublished = !currentPublished;
+    const { error } = await supabase.from('customers').update({ published: newPublished }).eq('id', customerId);
+    if (error) {
+      toast({ title: 'Fehler', description: 'Store-Status konnte nicht geändert werden', variant: 'destructive' });
+    } else {
+      setCustomers(customers.map(c => c.id === customerId ? { ...c, published: newPublished } : c));
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer(prev => prev ? { ...prev, published: newPublished } : null);
+      }
+      toast({ title: 'Erfolg', description: newPublished ? 'Store ist jetzt live' : 'Store wurde deaktiviert' });
     }
   };
 
@@ -724,6 +739,12 @@ const AdminDashboard = () => {
                               {customer.category && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{customer.category}</Badge>
                               )}
+                              <Badge 
+                                variant={customer.published ? 'default' : 'outline'} 
+                                className={`text-[10px] px-1.5 py-0 ${customer.published ? 'bg-emerald-500' : ''}`}
+                              >
+                                {customer.published ? 'Store Live' : 'Store Offline'}
+                              </Badge>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                               <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{customer.email}</span>
@@ -1248,6 +1269,28 @@ const AdminDashboard = () => {
                       {formatSubscriptionStatus(selectedSubscription.status).label}
                     </Badge>
                   )}
+                </div>
+
+                {/* Store Status Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-2">
+                    <Store className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Storefront / Marktplatz</p>
+                      <p className="text-sm">
+                        {selectedCustomer.published ? 'Store ist live und sichtbar' : 'Store ist offline und nicht sichtbar'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={selectedCustomer.published ? 'destructive' : 'default'}
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => togglePublished(selectedCustomer.id, selectedCustomer.published)}
+                  >
+                    <Power className="w-3.5 h-3.5" />
+                    {selectedCustomer.published ? 'Deaktivieren' : 'Aktivieren'}
+                  </Button>
                 </div>
               </div>
 
