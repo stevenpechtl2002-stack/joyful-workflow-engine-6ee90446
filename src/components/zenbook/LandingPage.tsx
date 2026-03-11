@@ -371,9 +371,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 5. Featured Salons */}
       <section className="px-6 lg:px-12 py-0 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-40 h-40 text-[#C4A35A]/8 -top-10 left-[5%]" duration={10} />
-        <FloatingShape type="triangle" className="w-28 h-28 text-[#EC4899]/7 bottom-20 right-[10%]" duration={8} delay={1.5} />
-        <FloatingShape type="stripe" className="w-64 h-32 text-[#8B7355]/5 top-1/2 -left-10" duration={11} delay={0.5} />
+        <FloatingShape type="circle" className="w-40 h-40 text-[#C4B5FD]/8 -top-10 left-[5%]" duration={10} />
+        <FloatingShape type="triangle" className="w-28 h-28 text-[#D8B4FE]/7 bottom-20 right-[10%]" duration={8} delay={1.5} />
+        <FloatingShape type="stripe" className="w-64 h-32 text-[#8B7FC7]/5 top-1/2 -left-10" duration={11} delay={0.5} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
