@@ -474,6 +474,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
 
       <section className="py-16 px-6 lg:px-12 relative overflow-hidden">
+        <motion.div className="absolute top-12 left-[4%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/10 to-[#D8B4FE]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -20, 0], rotate: [0, 7, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.div className="absolute bottom-24 right-[7%] w-16 h-16 rounded-full bg-gradient-to-br from-[#8B7FC7]/12 to-[#D8B4FE]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
