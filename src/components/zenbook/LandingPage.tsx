@@ -537,7 +537,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         <div className="absolute inset-0 pointer-events-none">
           <svg className="absolute top-[40%] right-[30%] w-20 h-20 opacity-[0.15]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#F43F5E" /></svg>
         </div>
-        <motion.div className="absolute bottom-[20%] right-[8%] w-18 h-18 rounded-2xl bg-gradient-to-br from-[#D8B4FE]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-20 pointer-events-none" animate={{ y: [0, -14, 0], rotate: [0, 5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.div className="absolute bottom-[20%] right-[8%] w-18 h-18 rounded-2xl bg-gradient-to-br from-[#D8B4FE]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -14, 0], rotate: [0, 5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <AnimatedSection>
             <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-6">
