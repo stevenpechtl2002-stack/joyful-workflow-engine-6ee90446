@@ -287,33 +287,45 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             </div>
           </AnimatedSection>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {treatmentCategories.map((cat, i) =>
             <motion.div
               key={cat.label}
-              className="group relative cursor-pointer rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              className={`group relative cursor-pointer rounded-3xl overflow-hidden h-52 shadow-lg ${cat.glow} hover:shadow-2xl transition-shadow duration-500`}
+              initial={{ opacity: 0, y: 30, rotateX: 5 }}
+              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.06, duration: 0.5 }}
-              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ delay: i * 0.07, duration: 0.6, type: 'spring' }}
+              whileHover={{ y: -10, scale: 1.03 }}
+              style={{ perspective: 1000 }}
               onClick={() => window.location.href = '/storefront'}>
 
-                {/* Gradient overlay on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                {/* Background image */}
+                <img
+                  src={cat.image}
+                  alt={cat.label}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
                 
-                {/* Glow line at top */}
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Color gradient overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient}`} />
+                
+                {/* Shimmer effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
-                <div className="relative p-6 flex flex-col items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-border/30 flex items-center justify-center text-primary group-hover:text-accent group-hover:border-accent/30 group-hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.3)] transition-all duration-500">
-                    {cat.icon}
+                {/* Content */}
+                <div className="relative h-full p-5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-lg">
+                      {cat.icon}
+                    </div>
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full backdrop-blur-md ${cat.count === 'Neu' ? 'bg-white/25 text-white border border-white/30' : 'bg-black/20 text-white/70 border border-white/10'}`}>
+                      {cat.count === 'Neu' ? '● Live' : 'Bald'}
+                    </span>
                   </div>
                   <div>
-                    <p className="font-bold text-foreground text-sm tracking-wide mb-1">{cat.label}</p>
-                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${cat.count === 'Neu' ? 'text-accent' : 'text-muted-foreground/60'}`}>
-                      {cat.count === 'Neu' ? '● Live' : '○ Coming soon'}
-                    </p>
+                    <p className="font-black text-white text-lg tracking-wide drop-shadow-lg">{cat.label}</p>
+                    <p className="text-white/70 text-xs font-medium mt-0.5">Entdecken →</p>
                   </div>
                 </div>
               </motion.div>
