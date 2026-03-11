@@ -61,6 +61,7 @@ const App = () => (
               <Route path="/storefront" element={<Storefront />} />
               <Route path="/login" element={<UnifiedAuth />} />
               <Route path="/storefront/profile" element={<CustomerProfile />} />
+              <Route path="/storefront/cancel/:bookingId" element={<StorefrontCancel />} />
               <Route path="/storefront/:salonId" element={<SalonDetail />} />
               <Route path="/success" element={<CheckoutSuccess />} />
               <Route path="/checkout-success" element={<CheckoutSuccess />} />
