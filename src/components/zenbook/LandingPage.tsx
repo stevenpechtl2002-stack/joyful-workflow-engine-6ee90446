@@ -376,6 +376,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         </div>
         <motion.div className="absolute top-[40%] right-[6%] w-18 h-18 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -18, 0], rotate: [0, 6, 0], scale: [1, 1.04, 1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-[15%] left-[4%] w-12 h-12 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, 14, 0], rotate: [0, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
+        <motion.div className="absolute top-[20%] left-[10%] w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/10 to-[#D8B4FE]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -12, 0], rotate: [0, -8, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2.5 }} />
+        <motion.div className="absolute bottom-[45%] right-[3%] w-10 h-10 rounded-full bg-gradient-to-br from-[#C4B5FD]/10 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, 20, 0], rotate: [0, 12, 0] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
