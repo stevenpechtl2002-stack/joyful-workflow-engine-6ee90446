@@ -62,6 +62,37 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
   { icon: <Shield className="w-8 h-8" />, title: 'Top-bewertete Salons', desc: 'Nur geprüfte Salons mit echten Bewertungen.' }];
 
 
+  // Reusable floating SVG decoration component
+  const FloatingShape = ({ type, className, duration = 10, delay = 0 }: { type: 'circle' | 'triangle' | 'stripe'; className: string; duration?: number; delay?: number }) => {
+    const shapes: Record<string, React.ReactNode> = {
+      circle: (
+        <svg viewBox="0 0 200 200" className="w-full h-full">
+          <circle cx="100" cy="100" r="90" fill="currentColor" />
+        </svg>
+      ),
+      triangle: (
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <polygon points="50,10 90,85 10,85" fill="currentColor" />
+        </svg>
+      ),
+      stripe: (
+        <svg viewBox="0 0 400 200" className="w-full h-full">
+          <rect x="0" y="60" width="400" height="30" rx="15" fill="currentColor" transform="rotate(-12 200 100)" />
+          <rect x="0" y="120" width="300" height="20" rx="10" fill="currentColor" transform="rotate(-12 150 130)" />
+        </svg>
+      ),
+    };
+    return (
+      <motion.div
+        className={`absolute pointer-events-none ${className}`}
+        animate={{ y: [0, -15, 0], rotate: [0, 3, 0] }}
+        transition={{ duration, repeat: Infinity, ease: "easeInOut", delay }}
+      >
+        {shapes[type]}
+      </motion.div>
+    );
+  };
+
   const AnimatedSection = ({ children, className = '' }: {children: React.ReactNode;className?: string;}) => {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-80px" });
