@@ -443,9 +443,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 6. USP Section */}
       <section className="py-20 px-6 lg:px-12 bg-primary-foreground relative overflow-hidden">
-        <FloatingShape type="circle" className="w-56 h-56 text-[#F43F5E]/6 top-10 right-[8%]" duration={10} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/8 bottom-16 left-[12%]" duration={9} delay={1} />
-        <FloatingShape type="circle" className="w-24 h-24 text-[#9F7AEA]/5 top-1/2 left-[5%]" duration={12} delay={2} />
+        <FloatingShape type="circle" className="w-56 h-56 text-[#D8B4FE]/6 top-10 right-[8%]" duration={10} />
+        <FloatingShape type="triangle" className="w-20 h-20 text-[#8B7FC7]/8 bottom-16 left-[12%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-24 h-24 text-[#C4B5FD]/5 top-1/2 left-[5%]" duration={12} delay={2} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
