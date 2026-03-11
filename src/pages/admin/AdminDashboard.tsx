@@ -140,7 +140,7 @@ const AdminDashboard = () => {
   const [storefrontBookings, setStorefrontBookings] = useState<any[]>([]);
   const [voiceAgentConfigs, setVoiceAgentConfigs] = useState<VoiceAgentConfig[]>([]);
   const [stripeSubscriptions, setStripeSubscriptions] = useState<StripeSubscription[]>([]);
-  const [transactions, setTransactions] = useState<{ user_id: string; amount: number; created_at?: string }[]>([]);
+  const [transactions, setTransactions] = useState<{ user_id: string; amount: number; created_at?: string; transaction_number?: string; transaction_type?: string; payment_method?: string; status?: string; customer_name?: string; tse_transaction_id?: string | null; tse_signature?: string | null; tse_timestamp?: string | null; transaction_date?: string; transaction_time?: string }[]>([]);
   const [contactCounts, setContactCounts] = useState<Record<string, number>>({});
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
