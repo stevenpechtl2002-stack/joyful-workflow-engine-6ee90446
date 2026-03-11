@@ -158,6 +158,14 @@ Deno.serve(async (req) => {
       price_paid: priceCents / 100,
     });
 
+    // Notify salon owner about pending booking
+    await supabase.from("notifications").insert({
+      user_id: salon_user_id,
+      title: "Neue Online-Buchung",
+      message: `${customer_name} hat einen Termin am ${booking_date} um ${booking_time} online gebucht (Zahlung ausstehend).`,
+      type: "info",
+    });
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
