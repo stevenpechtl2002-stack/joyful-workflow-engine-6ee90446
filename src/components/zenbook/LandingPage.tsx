@@ -218,6 +218,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/10 top-16 right-[30%]" duration={9} delay={1.5} />
         <FloatingShape type="stripe" className="w-72 h-36 text-[#8B7355]/6 bottom-10 right-[5%]" duration={12} delay={2} />
 
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-2xl">
             <motion.p
               initial={{ opacity: 0, y: 20 }}
