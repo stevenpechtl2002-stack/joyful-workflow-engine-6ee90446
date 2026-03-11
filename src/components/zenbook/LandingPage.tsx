@@ -565,6 +565,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* Salon-Partner Sektion */}
       <section className="py-24 px-6 lg:px-12 bg-gradient-to-br from-primary/5 via-accent/5 to-background relative overflow-hidden">
+        <motion.div className="absolute top-20 right-[5%] w-26 h-26 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -22, 0], rotate: [0, 8, 0], scale: [1, 1.04, 1] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.div className="absolute bottom-14 left-[6%] w-18 h-18 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 16, 0], rotate: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
