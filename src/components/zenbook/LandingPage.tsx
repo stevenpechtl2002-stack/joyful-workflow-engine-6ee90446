@@ -198,25 +198,25 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
         {/* Floating 3D Glass Elements */}
         <motion.div
-          className="absolute top-20 right-[15%] w-28 h-28 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute top-20 right-[15%] w-28 h-28 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
           animate={{ y: [0, -20, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           style={{ perspective: 800 }} />
 
         <motion.div
-          className="absolute bottom-20 right-[25%] w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-primary/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute bottom-20 right-[25%] w-20 h-20 rounded-full bg-gradient-to-br from-[#D8B4FE]/20 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
           animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
 
         <motion.div
-          className="absolute top-40 right-[8%] w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(var(--zen-emerald))]/15 to-primary/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute top-40 right-[8%] w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
           animate={{ y: [0, 25, 0], rotate: [0, 12, 0] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
 
         {/* Floating SVG Decorations */}
-        <FloatingShape type="circle" className="w-48 h-48 text-[#F43F5E]/8 -bottom-10 left-[10%]" duration={10} delay={0.5} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/10 top-16 right-[30%]" duration={9} delay={1.5} />
-        <FloatingShape type="stripe" className="w-72 h-36 text-[#8B7355]/6 bottom-10 right-[5%]" duration={12} delay={2} />
+        <FloatingShape type="circle" className="w-48 h-48 text-[#C4B5FD]/10 -bottom-10 left-[10%]" duration={10} delay={0.5} />
+        <FloatingShape type="triangle" className="w-20 h-20 text-[#8B7FC7]/10 top-16 right-[30%]" duration={9} delay={1.5} />
+        <FloatingShape type="stripe" className="w-72 h-36 text-[#D8B4FE]/8 bottom-10 right-[5%]" duration={12} delay={2} />
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-2xl">
@@ -295,10 +295,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       {/* 4. Treatment Categories - Premium Grid */}
       <section className="lg:px-12 px-6 py-16 relative overflow-hidden">
         {/* Floating SVG Decorations */}
-        <FloatingShape type="circle" className="w-64 h-64 text-[#C4A35A]/8 -top-20 -left-20" duration={11} />
-        <FloatingShape type="triangle" className="w-24 h-24 text-[#F43F5E]/8 bottom-10 right-[15%]" duration={9} delay={1} />
-        <FloatingShape type="circle" className="w-32 h-32 text-[#9F7AEA]/6 top-1/3 right-[5%]" duration={10} delay={2} />
-        <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7355]/5 bottom-0 left-[20%]" duration={12} delay={0.5} />
+        <FloatingShape type="circle" className="w-64 h-64 text-[#C4B5FD]/8 -top-20 -left-20" duration={11} />
+        <FloatingShape type="triangle" className="w-24 h-24 text-[#8B7FC7]/8 bottom-10 right-[15%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-32 h-32 text-[#D8B4FE]/6 top-1/3 right-[5%]" duration={10} delay={2} />
+        <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7FC7]/5 bottom-0 left-[20%]" duration={12} delay={0.5} />
         
         <div className="max-w-7xl mx-auto relative">
           <AnimatedSection>
@@ -371,9 +371,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 5. Featured Salons */}
       <section className="px-6 lg:px-12 py-0 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-40 h-40 text-[#C4A35A]/8 -top-10 left-[5%]" duration={10} />
-        <FloatingShape type="triangle" className="w-28 h-28 text-[#EC4899]/7 bottom-20 right-[10%]" duration={8} delay={1.5} />
-        <FloatingShape type="stripe" className="w-64 h-32 text-[#8B7355]/5 top-1/2 -left-10" duration={11} delay={0.5} />
+        <FloatingShape type="circle" className="w-40 h-40 text-[#C4B5FD]/8 -top-10 left-[5%]" duration={10} />
+        <FloatingShape type="triangle" className="w-28 h-28 text-[#D8B4FE]/7 bottom-20 right-[10%]" duration={8} delay={1.5} />
+        <FloatingShape type="stripe" className="w-64 h-32 text-[#8B7FC7]/5 top-1/2 -left-10" duration={11} delay={0.5} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
@@ -443,9 +443,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 6. USP Section */}
       <section className="py-20 px-6 lg:px-12 bg-primary-foreground relative overflow-hidden">
-        <FloatingShape type="circle" className="w-56 h-56 text-[#F43F5E]/6 top-10 right-[8%]" duration={10} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/8 bottom-16 left-[12%]" duration={9} delay={1} />
-        <FloatingShape type="circle" className="w-24 h-24 text-[#9F7AEA]/5 top-1/2 left-[5%]" duration={12} delay={2} />
+        <FloatingShape type="circle" className="w-56 h-56 text-[#D8B4FE]/6 top-10 right-[8%]" duration={10} />
+        <FloatingShape type="triangle" className="w-20 h-20 text-[#8B7FC7]/8 bottom-16 left-[12%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-24 h-24 text-[#C4B5FD]/5 top-1/2 left-[5%]" duration={12} delay={2} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
@@ -480,9 +480,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
 
       <section className="py-16 px-6 lg:px-12 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-44 h-44 text-[#C4A35A]/7 top-20 right-[12%]" duration={11} />
-        <FloatingShape type="stripe" className="w-72 h-36 text-[#F43F5E]/5 bottom-10 left-[8%]" duration={10} delay={1} />
-        <FloatingShape type="triangle" className="w-16 h-16 text-[#EC4899]/8 top-1/3 left-[3%]" duration={9} delay={2} />
+        <FloatingShape type="circle" className="w-44 h-44 text-[#C4B5FD]/7 top-20 right-[12%]" duration={11} />
+        <FloatingShape type="stripe" className="w-72 h-36 text-[#8B7FC7]/5 bottom-10 left-[8%]" duration={10} delay={1} />
+        <FloatingShape type="triangle" className="w-16 h-16 text-[#D8B4FE]/8 top-1/3 left-[3%]" duration={9} delay={2} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
@@ -540,10 +540,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 10. CTA Section */}
       <section className="py-24 px-6 lg:px-12 bg-muted/30 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-52 h-52 text-[#F43F5E]/7 -top-16 right-[15%]" duration={10} />
-        <FloatingShape type="triangle" className="w-28 h-28 text-[#C4A35A]/8 bottom-10 left-[10%]" duration={9} delay={1} />
-        <FloatingShape type="circle" className="w-20 h-20 text-[#EC4899]/6 top-1/3 -left-5" duration={11} delay={2} />
-        <FloatingShape type="stripe" className="w-60 h-30 text-[#8B7355]/5 bottom-0 right-[5%]" duration={12} delay={0.5} />
+        <FloatingShape type="circle" className="w-52 h-52 text-[#D8B4FE]/7 -top-16 right-[15%]" duration={10} />
+        <FloatingShape type="triangle" className="w-28 h-28 text-[#8B7FC7]/8 bottom-10 left-[10%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-20 h-20 text-[#C4B5FD]/6 top-1/3 -left-5" duration={11} delay={2} />
+        <FloatingShape type="stripe" className="w-60 h-30 text-[#8B7FC7]/5 bottom-0 right-[5%]" duration={12} delay={0.5} />
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <AnimatedSection>
             <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-6">
@@ -574,10 +574,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* Salon-Partner Sektion */}
       <section className="py-24 px-6 lg:px-12 bg-gradient-to-br from-primary/5 via-accent/5 to-background relative overflow-hidden">
-        <FloatingShape type="circle" className="w-48 h-48 text-[#C4A35A]/8 top-10 -right-10" duration={10} />
-        <FloatingShape type="triangle" className="w-24 h-24 text-[#F43F5E]/7 bottom-20 left-[8%]" duration={9} delay={1.5} />
-        <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7355]/5 top-1/2 right-[20%]" duration={11} delay={0.5} />
-        <FloatingShape type="circle" className="w-28 h-28 text-[#9F7AEA]/6 -bottom-10 right-[40%]" duration={12} delay={2} />
+        <FloatingShape type="circle" className="w-48 h-48 text-[#C4B5FD]/8 top-10 -right-10" duration={10} />
+        <FloatingShape type="triangle" className="w-24 h-24 text-[#8B7FC7]/7 bottom-20 left-[8%]" duration={9} delay={1.5} />
+        <FloatingShape type="stripe" className="w-80 h-40 text-[#D8B4FE]/5 top-1/2 right-[20%]" duration={11} delay={0.5} />
+        <FloatingShape type="circle" className="w-28 h-28 text-[#8B7FC7]/6 -bottom-10 right-[40%]" duration={12} delay={2} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
@@ -630,8 +630,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 11. Stats Section */}
       <section className="py-20 px-6 lg:px-12 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-36 h-36 text-[#C4A35A]/7 top-8 right-[10%]" duration={10} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#F43F5E]/6 bottom-8 left-[15%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-36 h-36 text-[#C4B5FD]/7 top-8 right-[10%]" duration={10} />
+        <FloatingShape type="triangle" className="w-20 h-20 text-[#D8B4FE]/6 bottom-8 left-[15%]" duration={9} delay={1} />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
