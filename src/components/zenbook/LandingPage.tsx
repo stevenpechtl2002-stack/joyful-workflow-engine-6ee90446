@@ -650,6 +650,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           <svg className="absolute top-[50%] left-[70%] w-20 h-20 opacity-[0.15]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#FB7185" /></svg>
         </div>
         <motion.div className="absolute top-[30%] left-[3%] w-14 h-14 rounded-full bg-gradient-to-br from-[#C4B5FD]/10 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -12, 0], rotate: [0, 4, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+        <motion.div className="absolute top-[60%] right-[5%] w-18 h-18 rounded-2xl bg-gradient-to-br from-[#D8B4FE]/10 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -18, 0], rotate: [0, -7, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
+        <motion.div className="absolute bottom-[20%] left-[15%] w-10 h-10 rounded-full bg-gradient-to-br from-[#8B7FC7]/12 to-[#D8B4FE]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, 16, 0], rotate: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
