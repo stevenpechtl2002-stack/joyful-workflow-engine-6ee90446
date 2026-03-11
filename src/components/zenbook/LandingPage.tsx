@@ -41,14 +41,14 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
   const navigate = useNavigate();
 
   const treatmentCategories = [
-  { icon: <Scissors className="w-8 h-8" />, label: 'Friseur', count: 'Neu', color: 'from-primary/20 to-primary/5' },
-  { icon: <Palette className="w-8 h-8" />, label: 'Nagelstudio', count: 'Neu', color: 'from-accent/20 to-accent/5' },
-  { icon: <Flower2 className="w-8 h-8" />, label: 'Kosmetik', count: 'Neu', color: 'from-[hsl(var(--zen-emerald))]/20 to-[hsl(var(--zen-emerald))]/5' },
-  { icon: <HandMetal className="w-8 h-8" />, label: 'Massage', count: 'Bald', color: 'from-primary/15 to-accent/10' },
-  { icon: <Sparkles className="w-8 h-8" />, label: 'Waxing', count: 'Bald', color: 'from-accent/15 to-primary/10' },
-  { icon: <Heart className="w-8 h-8" />, label: 'Wellness', count: 'Bald', color: 'from-[hsl(var(--zen-emerald))]/15 to-primary/10' },
-  { icon: <Star className="w-8 h-8" />, label: 'Microblading', count: 'Bald', color: 'from-primary/20 to-accent/15' },
-  { icon: <UserCircle className="w-8 h-8" />, label: 'Barbershop', count: 'Neu', color: 'from-foreground/10 to-foreground/5' }];
+  { icon: <Scissors className="w-7 h-7" />, label: 'Friseur', count: 'Neu', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop', gradient: 'from-violet-500/90 to-indigo-600/90', glow: 'shadow-violet-500/30' },
+  { icon: <Palette className="w-7 h-7" />, label: 'Nagelstudio', count: 'Neu', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop', gradient: 'from-pink-500/90 to-rose-600/90', glow: 'shadow-pink-500/30' },
+  { icon: <Flower2 className="w-7 h-7" />, label: 'Kosmetik', count: 'Neu', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop', gradient: 'from-emerald-500/90 to-teal-600/90', glow: 'shadow-emerald-500/30' },
+  { icon: <HandMetal className="w-7 h-7" />, label: 'Massage', count: 'Bald', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop', gradient: 'from-amber-500/90 to-orange-600/90', glow: 'shadow-amber-500/30' },
+  { icon: <Sparkles className="w-7 h-7" />, label: 'Waxing', count: 'Bald', image: 'https://images.unsplash.com/photo-1519824145371-296894a0daa9?w=400&h=300&fit=crop', gradient: 'from-fuchsia-500/90 to-purple-600/90', glow: 'shadow-fuchsia-500/30' },
+  { icon: <Heart className="w-7 h-7" />, label: 'Wellness', count: 'Bald', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6e?w=400&h=300&fit=crop', gradient: 'from-cyan-500/90 to-blue-600/90', glow: 'shadow-cyan-500/30' },
+  { icon: <Star className="w-7 h-7" />, label: 'Microblading', count: 'Bald', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop', gradient: 'from-rose-500/90 to-pink-600/90', glow: 'shadow-rose-500/30' },
+  { icon: <UserCircle className="w-7 h-7" />, label: 'Barbershop', count: 'Neu', image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&h=300&fit=crop', gradient: 'from-slate-600/90 to-zinc-800/90', glow: 'shadow-slate-500/30' }];
 
 
   const featuredSalons = [
@@ -287,33 +287,45 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             </div>
           </AnimatedSection>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {treatmentCategories.map((cat, i) =>
             <motion.div
               key={cat.label}
-              className="group relative cursor-pointer rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              className={`group relative cursor-pointer rounded-3xl overflow-hidden h-52 shadow-lg ${cat.glow} hover:shadow-2xl transition-shadow duration-500`}
+              initial={{ opacity: 0, y: 30, rotateX: 5 }}
+              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.06, duration: 0.5 }}
-              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ delay: i * 0.07, duration: 0.6, type: 'spring' }}
+              whileHover={{ y: -10, scale: 1.03 }}
+              style={{ perspective: 1000 }}
               onClick={() => window.location.href = '/storefront'}>
 
-                {/* Gradient overlay on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                {/* Background image */}
+                <img
+                  src={cat.image}
+                  alt={cat.label}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
                 
-                {/* Glow line at top */}
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Color gradient overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient}`} />
+                
+                {/* Shimmer effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
-                <div className="relative p-6 flex flex-col items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-border/30 flex items-center justify-center text-primary group-hover:text-accent group-hover:border-accent/30 group-hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.3)] transition-all duration-500">
-                    {cat.icon}
+                {/* Content */}
+                <div className="relative h-full p-5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-lg">
+                      {cat.icon}
+                    </div>
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full backdrop-blur-md ${cat.count === 'Neu' ? 'bg-white/25 text-white border border-white/30' : 'bg-black/20 text-white/70 border border-white/10'}`}>
+                      {cat.count === 'Neu' ? '● Live' : 'Bald'}
+                    </span>
                   </div>
                   <div>
-                    <p className="font-bold text-foreground text-sm tracking-wide mb-1">{cat.label}</p>
-                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${cat.count === 'Neu' ? 'text-accent' : 'text-muted-foreground/60'}`}>
-                      {cat.count === 'Neu' ? '● Live' : '○ Coming soon'}
-                    </p>
+                    <p className="font-black text-white text-lg tracking-wide drop-shadow-lg">{cat.label}</p>
+                    <p className="text-white/70 text-xs font-medium mt-0.5">Entdecken →</p>
                   </div>
                 </div>
               </motion.div>
