@@ -69,6 +69,7 @@ const SalonProfile = () => {
           cover_image_url: (data as any).cover_image_url || '',
           cancellation_hours: (data as any).cancellation_hours ?? 24,
           buffer_minutes: (data as any).buffer_minutes ?? 0,
+          printer_ip: (data as any).printer_ip || '',
         });
         setPublished((data as any).published || false);
       }
