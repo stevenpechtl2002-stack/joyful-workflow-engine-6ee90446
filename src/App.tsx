@@ -17,6 +17,7 @@ const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
 
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
 const Dashboard = lazy(() => import("./pages/portal/Dashboard"));
 
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/checkout-success" element={<CheckoutSuccess />} />
               <Route path="/portal/auth" element={<Navigate to="/login" replace />} />
               
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/sales" element={<SalesDashboard />} />
               <Route path="/portal" element={<Dashboard />} />
