@@ -438,6 +438,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 6. USP Section */}
       <section className="py-20 px-6 lg:px-12 bg-primary-foreground relative overflow-hidden">
+        <motion.div className="absolute top-16 right-[6%] w-22 h-22 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/10 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -16, 0], rotate: [0, -5, 0], scale: [1, 1.03, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+        <motion.div className="absolute bottom-20 left-[10%] w-18 h-18 rounded-full bg-gradient-to-br from-[#D8B4FE]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 12, 0], rotate: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="text-center mb-14">
