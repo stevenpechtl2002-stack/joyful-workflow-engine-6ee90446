@@ -8,11 +8,9 @@ const corsHeaders = {
 
 const FISKALY_MW = "https://kassensichv-middleware.fiskaly.com/api/v2";
 
-async function signWithTSE(paymentMethod: string, amount: number) {
+async function signWithTSE(paymentMethod: string, amount: number, tssId: string | null, clientId: string | null) {
   const fiskalyApiKey = Deno.env.get("FISKALY_API_KEY");
   const fiskalyApiSecret = Deno.env.get("FISKALY_API_SECRET");
-  const tssId = Deno.env.get("FISKALY_TSS_ID");
-  const clientId = Deno.env.get("FISKALY_CLIENT_ID");
 
   if (!fiskalyApiKey || !fiskalyApiSecret) {
     console.log("[POS-CHECKOUT] Fiskaly keys not configured - skipping TSE signing");
@@ -20,7 +18,7 @@ async function signWithTSE(paymentMethod: string, amount: number) {
   }
 
   if (!tssId || !clientId) {
-    console.error("[POS-CHECKOUT] FISKALY_TSS_ID or FISKALY_CLIENT_ID not configured");
+    console.error("[POS-CHECKOUT] No TSS/Client for this customer - run fiskaly-setup first");
     return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
   }
 
@@ -134,6 +132,21 @@ Deno.serve(async (req) => {
     }
     const userId = user.id;
 
+    // Fetch customer's fiskaly TSS/Client from DB
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: customerData } = await serviceClient
+      .from("customers")
+      .select("fiskaly_tss_id, fiskaly_client_id")
+      .eq("id", userId)
+      .single();
+
+    const customerTssId = customerData?.fiskaly_tss_id || null;
+    const customerClientId = customerData?.fiskaly_client_id || null;
+    console.log("[POS-CHECKOUT] Customer fiskaly:", { tss: customerTssId, client: customerClientId });
+
     const body = await req.json();
     const { reservation_id, transaction_id, payment_method } = body;
     console.log("[POS-CHECKOUT] Request:", { reservation_id, transaction_id, payment_method, userId });
@@ -162,7 +175,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const tse = await signWithTSE(transaction.payment_method, Number(transaction.amount));
+      const tse = await signWithTSE(transaction.payment_method, Number(transaction.amount), customerTssId, customerClientId);
       console.log("[POS-CHECKOUT] TSE result:", { tseTransactionId: tse.tseTransactionId, hasSig: !!tse.tseSignature });
 
       const { error: updateError } = await supabase
@@ -222,7 +235,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const tse = await signWithTSE(payment_method, Number(reservation.price_paid) || 0);
+    const tse = await signWithTSE(payment_method, Number(reservation.price_paid) || 0, customerTssId, customerClientId);
     console.log("[POS-CHECKOUT] TSE result:", { tseTransactionId: tse.tseTransactionId, hasSig: !!tse.tseSignature });
 
     const { error: updateError } = await supabase
@@ -240,13 +253,8 @@ Deno.serve(async (req) => {
 
     if (updateError) throw updateError;
 
-    const serviceAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
     const paymentMethodMap: Record<string, string> = { online: "online", card: "karte_ec", cash: "bar" };
-    await serviceAdmin.from("transactions").insert({
+    await serviceClient.from("transactions").insert({
       user_id: userId,
       reservation_id,
       customer_name: reservation.customer_name,
