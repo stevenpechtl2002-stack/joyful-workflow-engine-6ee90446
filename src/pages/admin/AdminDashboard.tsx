@@ -194,7 +194,7 @@ const AdminDashboard = () => {
         supabase.from('call_logs').select('*').order('started_at', { ascending: false }).limit(100),
         supabase.from('reservations').select('id, user_id, customer_name, reservation_date, reservation_time, party_size, status, price_paid, source').order('reservation_date', { ascending: false }).limit(500),
         supabase.from('voice_agent_config').select('*').order('updated_at', { ascending: false }),
-        supabase.from('transactions').select('user_id, amount, created_at'),
+        supabase.from('transactions').select('user_id, amount, created_at, transaction_number, transaction_type, payment_method, status, customer_name, tse_transaction_id, tse_signature, tse_timestamp, transaction_date, transaction_time'),
         supabase.from('contacts').select('user_id'),
         supabase.from('profiles').select('id, full_name'),
         supabase.from('storefront_bookings').select('*').order('created_at', { ascending: false }).limit(500),
