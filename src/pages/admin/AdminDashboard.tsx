@@ -1270,7 +1270,6 @@ const AdminDashboard = () => {
                     </Badge>
                   )}
                 </div>
-                </div>
 
                 {/* Store Status Toggle */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
