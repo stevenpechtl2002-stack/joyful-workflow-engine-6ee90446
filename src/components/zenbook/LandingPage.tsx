@@ -198,13 +198,22 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-background/20 to-transparent"></div>
         </div>
 
-        {/* Floating Glass Element */}
+        {/* Floating Glass Elements - behind content */}
         <motion.div
           className="absolute top-[30%] right-[12%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block z-[1] pointer-events-none"
           animate={{ y: [0, -20, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.div
+          className="absolute bottom-[25%] right-[30%] w-16 h-16 rounded-full bg-gradient-to-br from-[#D8B4FE]/12 to-[#C4B5FD]/10 backdrop-blur-xl border border-white/15 shadow-xl hidden lg:block z-[1] pointer-events-none"
+          animate={{ y: [0, 18, 0], rotate: [0, -8, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
+        <motion.div
+          className="absolute top-[55%] left-[15%] w-12 h-12 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/15 shadow-xl hidden lg:block z-[1] pointer-events-none"
+          animate={{ y: [0, -14, 0], rotate: [0, 10, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 3 }} />
 
         <FloatingShape type="circle" className="w-40 h-40 text-[#C4B5FD]/10 bottom-[15%] left-[5%]" duration={10} delay={0.5} />
+        <FloatingShape type="triangle" className="w-16 h-16 text-[#8B7FC7]/8 top-[20%] right-[35%]" duration={12} delay={2} />
         
 
         <div className="max-w-7xl mx-auto relative z-10">
