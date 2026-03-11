@@ -648,8 +648,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       {/* 11. Stats Section */}
       <section className="py-20 px-6 lg:px-12 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="absolute top-4 left-[25%] w-32 h-32 opacity-[0.04]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#F43F5E" /></svg>
-          <svg className="absolute -bottom-6 right-[20%] w-20 h-20 opacity-[0.05]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#C4A35A" /></svg>
+          <svg className="absolute top-4 left-[25%] w-32 h-32 opacity-[0.12]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#F43F5E" /></svg>
+          <svg className="absolute -bottom-6 right-[20%] w-20 h-20 opacity-[0.14]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#C4A35A" /></svg>
         </div>
         <motion.div className="absolute top-8 right-[15%] w-20 h-20 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/10 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -12, 0], rotate: [0, 4, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
         <motion.div className="absolute bottom-12 left-[10%] w-14 h-14 rounded-full bg-gradient-to-br from-[#D8B4FE]/12 to-[#C4B5FD]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
