@@ -687,9 +687,9 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
             <div>
               <h4 className="font-black text-white text-sm mb-4">Entdecke</h4>
               <ul className="space-y-2.5">
-                {['Treatment Guide', 'Blog', 'Gutscheine', 'Newsletter', 'Rewards'].map((item) => {}
-
-                )}
+                {['Treatment Guide', 'Blog', 'Gutscheine', 'Newsletter', 'Rewards'].map((item) => (
+                  <li key={item}><button className="text-sm text-white/70 hover:text-white transition-colors">{item}</button></li>
+                ))}
               </ul>
             </div>
             <div>
