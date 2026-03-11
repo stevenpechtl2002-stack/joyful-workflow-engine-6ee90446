@@ -42,6 +42,7 @@ const SalonProfile = () => {
     cover_image_url: '',
     cancellation_hours: 24,
     buffer_minutes: 0,
+    printer_ip: '',
   });
 
   useEffect(() => {
