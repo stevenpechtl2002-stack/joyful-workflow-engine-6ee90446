@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
         const clientResp = await fetch(`${FISKALY_MW}/tss/${tssId}/client/${finalClientId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${mwToken}` },
-          body: JSON.stringify({ serial_number: `ZENBOOK-${finalClientId.substring(0, 8).toUpperCase()}` }),
+          body: JSON.stringify({ serial_number: `ZENTIME-${finalClientId.substring(0, 8).toUpperCase()}` }),
         });
         if (!clientResp.ok) {
           const err = await clientResp.text();
@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
       const clientResp = await fetch(`${FISKALY_MW}/tss/${tssId}/client/${finalClientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${mwToken}` },
-        body: JSON.stringify({ serial_number: `ZENBOOK-${finalClientId.substring(0, 8).toUpperCase()}` }),
+        body: JSON.stringify({ serial_number: `ZENTIME-${finalClientId.substring(0, 8).toUpperCase()}` }),
       });
       if (!clientResp.ok) {
         const err = await clientResp.text();
