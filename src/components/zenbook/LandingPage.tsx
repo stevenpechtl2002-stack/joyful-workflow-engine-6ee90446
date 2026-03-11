@@ -537,7 +537,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 10. CTA Section */}
       <section className="py-24 px-6 lg:px-12 bg-muted/30 relative overflow-hidden">
-        <div className="max-w-3xl mx-auto text-center relative z-10">
+        <FloatingShape type="circle" className="w-52 h-52 text-[#F43F5E]/7 -top-16 right-[15%]" duration={10} />
+        <FloatingShape type="triangle" className="w-28 h-28 text-[#C4A35A]/8 bottom-10 left-[10%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-20 h-20 text-[#EC4899]/6 top-1/3 -left-5" duration={11} delay={2} />
+        <FloatingShape type="stripe" className="w-60 h-30 text-[#8B7355]/5 bottom-0 right-[5%]" duration={12} delay={0.5} />
           <AnimatedSection>
             <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-6">
               Bereit für deinen <span className="text-primary">nächsten Termin?</span>
