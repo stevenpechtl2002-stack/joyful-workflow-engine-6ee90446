@@ -372,6 +372,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
       {/* 5. Featured Salons */}
       <section className="px-6 lg:px-12 py-0 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <svg className="absolute -bottom-12 -left-12 w-56 h-56 opacity-[0.04]" viewBox="0 0 300 300"><path d="M50 280 L150 30 L280 260 Q280 290 250 290 L80 290 Q50 290 50 260Z" fill="#BE185D" /></svg>
+          <svg className="absolute top-10 right-[8%] w-28 h-28 opacity-[0.05]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#C4A35A" /></svg>
+        </div>
         <motion.div className="absolute top-20 left-[5%] w-20 h-20 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, -18, 0], rotate: [0, 6, 0], scale: [1, 1.04, 1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div className="absolute bottom-10 right-[12%] w-14 h-14 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block" animate={{ y: [0, 14, 0], rotate: [0, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
         <div className="max-w-7xl mx-auto relative z-10">
