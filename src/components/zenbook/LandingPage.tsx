@@ -295,10 +295,10 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
       {/* 4. Treatment Categories - Premium Grid */}
       <section className="lg:px-12 px-6 py-16 relative overflow-hidden">
         {/* Floating SVG Decorations */}
-        <FloatingShape type="circle" className="w-64 h-64 text-[#C4A35A]/8 -top-20 -left-20" duration={11} />
-        <FloatingShape type="triangle" className="w-24 h-24 text-[#F43F5E]/8 bottom-10 right-[15%]" duration={9} delay={1} />
-        <FloatingShape type="circle" className="w-32 h-32 text-[#9F7AEA]/6 top-1/3 right-[5%]" duration={10} delay={2} />
-        <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7355]/5 bottom-0 left-[20%]" duration={12} delay={0.5} />
+        <FloatingShape type="circle" className="w-64 h-64 text-[#C4B5FD]/8 -top-20 -left-20" duration={11} />
+        <FloatingShape type="triangle" className="w-24 h-24 text-[#8B7FC7]/8 bottom-10 right-[15%]" duration={9} delay={1} />
+        <FloatingShape type="circle" className="w-32 h-32 text-[#D8B4FE]/6 top-1/3 right-[5%]" duration={10} delay={2} />
+        <FloatingShape type="stripe" className="w-80 h-40 text-[#8B7FC7]/5 bottom-0 left-[20%]" duration={12} delay={0.5} />
         
         <div className="max-w-7xl mx-auto relative">
           <AnimatedSection>
