@@ -200,7 +200,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
         {/* Floating Glass Element */}
         <motion.div
-          className="absolute top-[30%] right-[12%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block z-20 pointer-events-none"
+          className="absolute top-[30%] right-[12%] w-24 h-24 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block z-[1] pointer-events-none"
           animate={{ y: [0, -20, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
 
