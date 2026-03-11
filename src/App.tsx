@@ -17,6 +17,7 @@ const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
 
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
 const Dashboard = lazy(() => import("./pages/portal/Dashboard"));
 
