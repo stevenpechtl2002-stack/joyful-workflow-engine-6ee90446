@@ -41,14 +41,12 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
   const navigate = useNavigate();
 
   const treatmentCategories = [
-  { icon: <Scissors className="w-7 h-7" />, label: 'Friseur', count: 'Neu', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop', gradient: 'from-violet-500/90 to-indigo-600/90', glow: 'shadow-violet-500/30' },
-  { icon: <Palette className="w-7 h-7" />, label: 'Nagelstudio', count: 'Neu', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop', gradient: 'from-pink-500/90 to-rose-600/90', glow: 'shadow-pink-500/30' },
-  { icon: <Flower2 className="w-7 h-7" />, label: 'Kosmetik', count: 'Neu', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop', gradient: 'from-emerald-500/90 to-teal-600/90', glow: 'shadow-emerald-500/30' },
-  { icon: <HandMetal className="w-7 h-7" />, label: 'Massage', count: 'Bald', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop', gradient: 'from-amber-500/90 to-orange-600/90', glow: 'shadow-amber-500/30' },
-  { icon: <Sparkles className="w-7 h-7" />, label: 'Waxing', count: 'Bald', image: 'https://images.unsplash.com/photo-1519824145371-296894a0daa9?w=400&h=300&fit=crop', gradient: 'from-fuchsia-500/90 to-purple-600/90', glow: 'shadow-fuchsia-500/30' },
-  { icon: <Heart className="w-7 h-7" />, label: 'Wellness', count: 'Bald', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6e?w=400&h=300&fit=crop', gradient: 'from-cyan-500/90 to-blue-600/90', glow: 'shadow-cyan-500/30' },
-  { icon: <Star className="w-7 h-7" />, label: 'Microblading', count: 'Bald', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop', gradient: 'from-rose-500/90 to-pink-600/90', glow: 'shadow-rose-500/30' },
-  { icon: <UserCircle className="w-7 h-7" />, label: 'Barbershop', count: 'Neu', image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&h=300&fit=crop', gradient: 'from-slate-600/90 to-zinc-800/90', glow: 'shadow-slate-500/30' }];
+  { icon: <Scissors className="w-7 h-7" />, label: 'Friseur', count: 'Neu', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop', gradient: 'from-violet-500/60 to-indigo-600/40', glow: 'shadow-violet-500/20' },
+  { icon: <Palette className="w-7 h-7" />, label: 'Nagelstudio', count: 'Neu', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop', gradient: 'from-pink-500/60 to-rose-600/40', glow: 'shadow-pink-500/20' },
+  { icon: <Flower2 className="w-7 h-7" />, label: 'Kosmetik', count: 'Neu', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop', gradient: 'from-emerald-500/60 to-teal-600/40', glow: 'shadow-emerald-500/20' },
+  { icon: <HandMetal className="w-7 h-7" />, label: 'Massage', count: 'Bald', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop', gradient: 'from-amber-500/60 to-orange-600/40', glow: 'shadow-amber-500/20' },
+  { icon: <Sparkles className="w-7 h-7" />, label: 'Waxing', count: 'Bald', image: 'https://images.unsplash.com/photo-1519824145371-296894a0daa9?w=400&h=300&fit=crop', gradient: 'from-fuchsia-500/60 to-purple-600/40', glow: 'shadow-fuchsia-500/20' },
+  { icon: <Heart className="w-7 h-7" />, label: 'Wellness', count: 'Bald', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6e?w=400&h=300&fit=crop', gradient: 'from-cyan-500/60 to-blue-600/40', glow: 'shadow-cyan-500/20' }];
 
 
   const featuredSalons = [
