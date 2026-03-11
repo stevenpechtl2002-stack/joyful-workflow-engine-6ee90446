@@ -198,25 +198,25 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
         {/* Floating 3D Glass Elements */}
         <motion.div
-          className="absolute top-20 right-[15%] w-28 h-28 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute top-20 right-[15%] w-28 h-28 rounded-2xl bg-gradient-to-br from-[#8B7FC7]/15 to-[#D8B4FE]/15 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
           animate={{ y: [0, -20, 0], rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           style={{ perspective: 800 }} />
 
         <motion.div
-          className="absolute bottom-20 right-[25%] w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-primary/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute bottom-20 right-[25%] w-20 h-20 rounded-full bg-gradient-to-br from-[#D8B4FE]/20 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
           animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
 
         <motion.div
-          className="absolute top-40 right-[8%] w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(var(--zen-emerald))]/15 to-primary/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
+          className="absolute top-40 right-[8%] w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/20 shadow-2xl hidden lg:block"
           animate={{ y: [0, 25, 0], rotate: [0, 12, 0] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
 
         {/* Floating SVG Decorations */}
-        <FloatingShape type="circle" className="w-48 h-48 text-[#F43F5E]/8 -bottom-10 left-[10%]" duration={10} delay={0.5} />
-        <FloatingShape type="triangle" className="w-20 h-20 text-[#C4A35A]/10 top-16 right-[30%]" duration={9} delay={1.5} />
-        <FloatingShape type="stripe" className="w-72 h-36 text-[#8B7355]/6 bottom-10 right-[5%]" duration={12} delay={2} />
+        <FloatingShape type="circle" className="w-48 h-48 text-[#C4B5FD]/10 -bottom-10 left-[10%]" duration={10} delay={0.5} />
+        <FloatingShape type="triangle" className="w-20 h-20 text-[#8B7FC7]/10 top-16 right-[30%]" duration={9} delay={1.5} />
+        <FloatingShape type="stripe" className="w-72 h-36 text-[#D8B4FE]/8 bottom-10 right-[5%]" duration={12} delay={2} />
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-2xl">
