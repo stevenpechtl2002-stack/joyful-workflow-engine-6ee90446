@@ -628,7 +628,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         <div className="absolute inset-0 pointer-events-none">
           <svg className="absolute top-[50%] left-[70%] w-20 h-20 opacity-[0.15]" viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="#FB7185" /></svg>
         </div>
-        <motion.div className="absolute top-[30%] left-[3%] w-14 h-14 rounded-full bg-gradient-to-br from-[#C4B5FD]/10 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-20 pointer-events-none" animate={{ y: [0, -12, 0], rotate: [0, 4, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+        <motion.div className="absolute top-[30%] left-[3%] w-14 h-14 rounded-full bg-gradient-to-br from-[#C4B5FD]/10 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -12, 0], rotate: [0, 4, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
