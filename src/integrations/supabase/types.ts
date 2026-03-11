@@ -327,6 +327,7 @@ export type Database = {
           phone: string | null
           plan: string
           postal_code: string | null
+          printer_ip: string | null
           published: boolean
           sales_rep_id: string | null
           slug: string | null
@@ -360,6 +361,7 @@ export type Database = {
           phone?: string | null
           plan?: string
           postal_code?: string | null
+          printer_ip?: string | null
           published?: boolean
           sales_rep_id?: string | null
           slug?: string | null
@@ -393,6 +395,7 @@ export type Database = {
           phone?: string | null
           plan?: string
           postal_code?: string | null
+          printer_ip?: string | null
           published?: boolean
           sales_rep_id?: string | null
           slug?: string | null
