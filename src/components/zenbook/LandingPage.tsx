@@ -469,9 +469,6 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
 
 
       <section className="py-16 px-6 lg:px-12 relative overflow-hidden">
-        <FloatingShape type="circle" className="w-44 h-44 text-[#C4B5FD]/7 top-20 right-[12%]" duration={11} />
-        <FloatingShape type="stripe" className="w-72 h-36 text-[#8B7FC7]/5 bottom-10 left-[8%]" duration={10} delay={1} />
-        <FloatingShape type="triangle" className="w-16 h-16 text-[#D8B4FE]/8 top-1/3 left-[3%]" duration={9} delay={2} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
