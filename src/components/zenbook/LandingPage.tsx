@@ -216,7 +216,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         {/* Floating SVG Decorations */}
         <FloatingShape type="circle" className="w-48 h-48 text-[#C4B5FD]/10 -bottom-10 left-[10%]" duration={10} delay={0.5} />
         <FloatingShape type="triangle" className="w-20 h-20 text-[#8B7FC7]/10 top-16 right-[30%]" duration={9} delay={1.5} />
-        <FloatingShape type="stripe" className="w-72 h-36 text-[#D8B4FE]/8 bottom-10 right-[5%]" duration={12} delay={2} />
+        
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-2xl">
