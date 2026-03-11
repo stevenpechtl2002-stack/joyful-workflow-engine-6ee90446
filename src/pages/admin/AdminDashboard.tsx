@@ -344,6 +344,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const togglePublished = async (customerId: string, currentPublished: boolean) => {
+    const newPublished = !currentPublished;
+    const { error } = await supabase.from('customers').update({ published: newPublished }).eq('id', customerId);
+    if (error) {
+      toast({ title: 'Fehler', description: 'Store-Status konnte nicht geändert werden', variant: 'destructive' });
+    } else {
+      setCustomers(customers.map(c => c.id === customerId ? { ...c, published: newPublished } : c));
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer(prev => prev ? { ...prev, published: newPublished } : null);
+      }
+      toast({ title: 'Erfolg', description: newPublished ? 'Store ist jetzt live' : 'Store wurde deaktiviert' });
+    }
+  };
+
   const openCustomerDetail = (customer: CustomerEnriched) => {
     setSelectedCustomer(customer);
     setEditNotes(customer.notes || '');
