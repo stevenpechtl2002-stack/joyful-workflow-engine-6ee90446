@@ -315,6 +315,8 @@ export type Database = {
           description: string | null
           email: string
           facebook_url: string | null
+          fiskaly_client_id: string | null
+          fiskaly_tss_id: string | null
           id: string
           instagram_url: string | null
           latitude: number | null
@@ -346,6 +348,8 @@ export type Database = {
           description?: string | null
           email: string
           facebook_url?: string | null
+          fiskaly_client_id?: string | null
+          fiskaly_tss_id?: string | null
           id: string
           instagram_url?: string | null
           latitude?: number | null
@@ -377,6 +381,8 @@ export type Database = {
           description?: string | null
           email?: string
           facebook_url?: string | null
+          fiskaly_client_id?: string | null
+          fiskaly_tss_id?: string | null
           id?: string
           instagram_url?: string | null
           latitude?: number | null
