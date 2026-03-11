@@ -770,7 +770,7 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
           
           <div className="pt-4 flex justify-center">
             <motion.button
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/portal/auth')}
               className="text-xs text-white/30 hover:text-white/60 transition-colors"
               whileHover={{ scale: 1.02 }}>
               Admin Login
