@@ -253,13 +253,8 @@ Deno.serve(async (req) => {
 
     if (updateError) throw updateError;
 
-    const serviceAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
     const paymentMethodMap: Record<string, string> = { online: "online", card: "karte_ec", cash: "bar" };
-    await serviceAdmin.from("transactions").insert({
+    await serviceClient.from("transactions").insert({
       user_id: userId,
       reservation_id,
       customer_name: reservation.customer_name,
