@@ -363,8 +363,8 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
         <div className="absolute inset-0 pointer-events-none">
           <svg className="absolute bottom-[25%] left-[50%] w-20 h-20 opacity-[0.15]" viewBox="0 0 100 100"><polygon points="50,10 90,85 10,85" fill="#F43F5E" /></svg>
         </div>
-        <motion.div className="absolute top-[40%] right-[6%] w-18 h-18 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-20 pointer-events-none" animate={{ y: [0, -18, 0], rotate: [0, 6, 0], scale: [1, 1.04, 1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
-        <motion.div className="absolute bottom-[15%] left-[4%] w-12 h-12 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-20 pointer-events-none" animate={{ y: [0, 14, 0], rotate: [0, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
+        <motion.div className="absolute top-[40%] right-[6%] w-18 h-18 rounded-2xl bg-gradient-to-br from-[#C4B5FD]/12 to-[#8B7FC7]/8 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, -18, 0], rotate: [0, 6, 0], scale: [1, 1.04, 1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
+        <motion.div className="absolute bottom-[15%] left-[4%] w-12 h-12 rounded-full bg-gradient-to-br from-[#D8B4FE]/15 to-[#8B7FC7]/10 backdrop-blur-xl border border-white/10 shadow-xl hidden lg:block z-[1] pointer-events-none" animate={{ y: [0, 14, 0], rotate: [0, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
         <div className="max-w-7xl mx-auto relative z-10">
           <AnimatedSection>
             <div className="flex items-end justify-between gap-8 mb-10">
