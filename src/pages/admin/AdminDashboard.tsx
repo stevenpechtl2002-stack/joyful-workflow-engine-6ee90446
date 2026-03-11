@@ -420,6 +420,13 @@ const AdminDashboard = () => {
     return stripeSubscriptions.find(s => s.customer_email === selectedCustomer.email) || null;
   }, [selectedCustomer, stripeSubscriptions]);
 
+  const customerTseTransactions = useMemo(() => {
+    if (!selectedCustomer) return [];
+    return transactions
+      .filter(t => t.user_id === selectedCustomer.id && (t.tse_transaction_id || t.tse_signature))
+      .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+  }, [selectedCustomer, transactions]);
+
   if (isLoading || dataLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
