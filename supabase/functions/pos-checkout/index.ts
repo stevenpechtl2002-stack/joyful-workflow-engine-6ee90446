@@ -8,11 +8,9 @@ const corsHeaders = {
 
 const FISKALY_MW = "https://kassensichv-middleware.fiskaly.com/api/v2";
 
-async function signWithTSE(paymentMethod: string, amount: number) {
+async function signWithTSE(paymentMethod: string, amount: number, tssId: string | null, clientId: string | null) {
   const fiskalyApiKey = Deno.env.get("FISKALY_API_KEY");
   const fiskalyApiSecret = Deno.env.get("FISKALY_API_SECRET");
-  const tssId = Deno.env.get("FISKALY_TSS_ID");
-  const clientId = Deno.env.get("FISKALY_CLIENT_ID");
 
   if (!fiskalyApiKey || !fiskalyApiSecret) {
     console.log("[POS-CHECKOUT] Fiskaly keys not configured - skipping TSE signing");
@@ -20,7 +18,7 @@ async function signWithTSE(paymentMethod: string, amount: number) {
   }
 
   if (!tssId || !clientId) {
-    console.error("[POS-CHECKOUT] FISKALY_TSS_ID or FISKALY_CLIENT_ID not configured");
+    console.error("[POS-CHECKOUT] No TSS/Client for this customer - run fiskaly-setup first");
     return { tseTransactionId: null, tseSignature: null, tseTimestamp: null };
   }
 
