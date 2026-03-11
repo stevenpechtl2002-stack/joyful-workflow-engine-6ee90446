@@ -737,7 +737,14 @@ const AdminDashboard = () => {
                               </Badge>
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{customer.plan}</Badge>
                               {customer.category && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{customer.category}</Badge>
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{customer.category}</Badge>
+                              )}
+                              <Badge 
+                                variant={customer.published ? 'default' : 'outline'} 
+                                className={`text-[10px] px-1.5 py-0 ${customer.published ? 'bg-emerald-500' : ''}`}
+                              >
+                                {customer.published ? 'Store Live' : 'Store Offline'}
+                              </Badge>
                               )}
                             </div>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
