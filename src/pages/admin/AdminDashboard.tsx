@@ -18,7 +18,7 @@ import {
   TrendingUp, Clock, Key, Copy, Eye, EyeOff, Link2,
   CreditCard, Bot, Globe, Building2, ChevronDown, ChevronUp,
   Mail, MapPin, Tag, BarChart3, UserX, Euro, ExternalLink,
-  UserPlus, Store, Power
+  UserPlus, Store, Power, FileCheck
 } from 'lucide-react';
 import { format, subWeeks, startOfWeek, endOfWeek, eachWeekOfInterval, eachMonthOfInterval, startOfMonth, subMonths, isWithinInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
