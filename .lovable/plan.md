@@ -1,38 +1,62 @@
 
 
-## Plan: Admin Dashboard modernisieren mit Statistiken und Diagrammen
+## Treatwell Gap Analysis — Was fehlt noch?
 
-### Was fehlt
-Das Dashboard hat bereits KPI-Karten und Tabellen, aber **keine Diagramme/Charts**. `recharts` ist installiert aber wird nicht genutzt. Es fehlt eine visuelle Übersicht über Trends.
+### Bereits implementiert
+- Salon-Marktplatz mit Suche, Filtern, Kategorien, Sortierung
+- Buchungsflow (Gast & Login, Service/Mitarbeiter/Zeitslot-Auswahl)
+- Online-Zahlung (Stripe Connect) & Vor-Ort-Zahlung
+- Salon-Profile (Mini-Website mit Tabs, Reviews, Team, Galerie)
+- Kalender mit Wochenansicht & Mitarbeiter-Grid
+- Dienstpläne & Schichtausnahmen
+- CRM/Kontakte mit Buchungshistorie
+- POS/Kassenbuch mit TSE-Signierung
+- Kundenprofile mit Favoriten & Buchungsübersicht
+- Stornierungsfristen & Pufferzeiten
+- Rabatte/Aktionen
+- Voice Agent Integration
+- Email-Queue-Infrastruktur (DNS pending)
 
-### Änderungen an `src/pages/admin/AdminDashboard.tsx`
+### Fehlende Features (Treatwell-Parität)
 
-**1. Charts-Sektion zwischen KPI-Karten und Tabs einfügen:**
-- **Registrierungen pro Monat** (BarChart) — aggregiert aus `customers.created_at`
-- **Umsatz-Trend** (AreaChart) — aggregiert aus `transactions` + `reservations.price_paid` nach Monat
-- **Reservierungen pro Woche** (LineChart) — aus `reservations` + `storefront_bookings` der letzten 8 Wochen
-- **Kundenverteilung nach Kategorie** (PieChart) — aus `customers.category`
+#### 1. Automatische E-Mail-Benachrichtigungen (Hoch)
+Treatwell sendet automatisch:
+- **Buchungsbestätigung** an Kunden nach Buchung
+- **Terminerinnerung** (24h vorher)
+- **Stornierungsbestätigung**
+- **Salon-Benachrichtigung** bei neuer Buchung
 
-**2. Neuer Tab "Registrierungen":**
-- Chronologische Liste aller Kunden-Registrierungen mit Datum, Name, E-Mail, Kategorie, Plan, Status
-- Sortiert nach `created_at` (neueste zuerst)
+**Plan:** Transaktionale E-Mail-Templates scaffolden (`scaffold_transactional_email`) für jeden Typ. Trigger in `storefront-book` und `create-storefront-checkout` Edge Functions einbauen, die E-Mails via `enqueue_email` in die Queue schreiben. Voraussetzung: DNS-Verifizierung für `notify.www.zentime.io` muss abgeschlossen sein.
 
-**3. Kundenprofile im Detail-Dialog erweitern:**
-- API-Key anzeigen (mit Sichtbarkeit-Toggle)
-- Webhook-URL pro Kunde
-- Voice Agent Status des Kunden
-- Stripe Abo-Status des Kunden (wenn vorhanden)
+#### 2. Kunden-Selbststornierung (Hoch)
+Kunden können bei Treatwell selbst stornieren (innerhalb der Frist). Aktuell fehlt:
+- Stornierungslink/Button in Buchungsbestätigungs-E-Mail
+- Stornierungsseite für Kunden (`/storefront/cancel/:bookingId`)
+- Frist-Prüfung gegen `cancellation_hours`
 
-**4. Visuelle Verbesserungen:**
-- Charts in 2x2 Grid mit Card-Wrappern
-- Responsive Layout für mobile Ansicht
-- Farblich abgestimmte Chart-Farben passend zum Theme
+**Plan:** Neue Route `/storefront/cancel/:bookingId` mit Token-basierter Stornierung. Edge Function `storefront-cancel` prüft Frist und aktualisiert Status in `storefront_bookings` + `reservations`.
 
-### Technische Details
-- Import von `BarChart, Bar, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer` aus `recharts`
-- Aggregationslogik mit `useMemo` für Chart-Daten aus den bereits geladenen Daten (kein neuer DB-Call nötig)
-- Registrierungen-Tab nutzt dieselben `enrichedCustomers`, sortiert nach Datum
+#### 3. Standortbasierte Suche (Mittel)
+Treatwell zeigt Salons nach Entfernung. Aktuell nur Text-Suche nach Stadt.
 
-### Dateien
-- `src/pages/admin/AdminDashboard.tsx` — Charts hinzufügen, Registrierungen-Tab, Detail-Dialog erweitern
+**Plan:** `latitude`/`longitude` Spalten zur `customers`-Tabelle hinzufügen. Geocoding beim Speichern der Adresse (via externem Service oder manuell). Sortierung nach Entfernung im `list-salons` Edge Function.
+
+#### 4. Kunden-Buchungshistorie im Profil (Bereits teilweise vorhanden)
+Existiert bereits in `CustomerProfile.tsx` — Past Bookings werden angezeigt. Fehlend: Service-Name und Salon-Details in der Buchungsliste.
+
+**Plan:** `storefront_bookings` Query in CustomerProfile um JOINs zu `products.name` und `customers.company_name` erweitern (via Edge Function).
+
+#### 5. Mehrere Bilder/Galerie pro Salon (Bereits vorhanden)
+Salon-Galerie existiert bereits über `salon_images` + `SalonImageManager`.
+
+---
+
+### Empfohlene Reihenfolge
+1. **E-Mail-Benachrichtigungen** — Buchungsbestätigungen sind das wichtigste fehlende Feature
+2. **Kunden-Selbststornierung** — Direkt verbunden mit E-Mails (Stornierungslink)
+3. **Standortbasierte Suche** — Nice-to-have für Marketplace-Wachstum
+4. **Buchungshistorie verbessern** — Kleiner UX-Fix
+
+### Zusammenfassung
+Die Kernfunktionalität ist zu ~85% Treatwell-konform. Die zwei kritischsten Lücken sind **automatische E-Mail-Benachrichtigungen** (Buchungsbestätigung + Erinnerung) und **Kunden-Selbststornierung**. Beides hängt von der DNS-Verifizierung für `notify.www.zentime.io` ab.
 
