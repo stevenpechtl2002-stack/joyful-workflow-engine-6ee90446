@@ -44,9 +44,11 @@ const LandingPage: React.FC<Props> = ({ onLogin, onStartRegistration }) => {
   { icon: <Scissors className="w-7 h-7" />, label: 'Friseur', count: 'Neu', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
   { icon: <Palette className="w-7 h-7" />, label: 'Nagelstudio', count: 'Neu', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
   { icon: <Flower2 className="w-7 h-7" />, label: 'Kosmetik', count: 'Neu', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
+  { icon: <UserCircle className="w-7 h-7" />, label: 'Barbershop', count: 'Neu', image: 'https://images.unsplash.com/photo-1503951914875-452c5ee72c68?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
   { icon: <HandMetal className="w-7 h-7" />, label: 'Massage', count: 'Bald', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
   { icon: <Sparkles className="w-7 h-7" />, label: 'Waxing', count: 'Bald', image: 'https://images.unsplash.com/photo-1519824145371-296894a0daa9?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
-  { icon: <Heart className="w-7 h-7" />, label: 'Wellness', count: 'Bald', image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' }];
+  { icon: <Heart className="w-7 h-7" />, label: 'Wellness', count: 'Bald', image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' },
+  { icon: <Award className="w-7 h-7" />, label: 'Microblading', count: 'Bald', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop', gradient: 'from-black/50 to-black/20', glow: 'shadow-black/10' }];
 
 
   const featuredSalons = [
